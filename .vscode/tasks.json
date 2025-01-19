@@ -1,0 +1,49 @@
+{
+	// See https://go.microsoft.com/fwlink/?LinkId=733558
+	// for the documentation about the tasks.json format
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Run build task",
+			"type": "shell",
+			"command": "npm run build",
+			"group": "build",
+			"presentation": {
+				"reveal": "always",
+				"panel": "new"
+			}
+		},
+		{
+			"label": "Start dev environment",
+			"dependsOn": ["Start dev server", "Start neo4j container"]
+		},
+		{
+			"label": "Start dev server",
+			"type": "shell",
+			"command": "npm run dev",
+			"presentation": {
+				"reveal": "always",
+				"panel": "new"
+			}
+		},
+		{
+			"label": "Start neo4j container",
+			"type": "shell",
+			"command": "docker compose up",
+			"presentation": {
+				"reveal": "always",
+				"panel": "new"
+			}
+		},
+		{
+			"label": "Run tests",
+			"type": "shell",
+			"command": "npm run test",
+			"group": "test",
+			"presentation": {
+				"reveal": "always",
+				"panel": "new"
+			}
+		}
+	]
+}
