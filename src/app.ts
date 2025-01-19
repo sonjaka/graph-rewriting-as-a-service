@@ -1,6 +1,10 @@
 import 'dotenv/config';
 
-import fastify, { FastifyInstance, FastifyLoggerOptions } from 'fastify';
+import fastify, {
+	FastifyInstance,
+	FastifyRequest,
+	FastifyReply,
+} from 'fastify';
 import { Server, IncomingMessage, ServerResponse } from 'http';
 
 import { loggerConfig } from './config/logger';
@@ -14,9 +18,16 @@ export function buildServer(): FastifyInstance {
 
 	const server: FastifyInstance<Server, IncomingMessage, ServerResponse> =
 		fastify({
-			logger: loggerConfig[appEnvConfig.APP_ENV] ?? true,
+			logger: loggerConfig[appEnvConfig.APP_ENV] ?? false,
 			ignoreTrailingSlash: true,
 		});
+
+	server.get(
+		'/helloworld',
+		async function (request: FastifyRequest, reply: FastifyReply) {
+			return { test: 'hello world' };
+		}
+	);
 
 	return server;
 }

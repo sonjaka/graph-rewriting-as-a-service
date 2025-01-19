@@ -8,6 +8,6 @@ export function getAppEnvConfig(): AppEnvConfig {
 	const { APP_ENV } = process.env as Record<string, any>;
 
 	return {
-		APP_ENV: APP_ENV ?? 'development',
+		APP_ENV: APP_ENV ?? 'production',
 	};
 }
