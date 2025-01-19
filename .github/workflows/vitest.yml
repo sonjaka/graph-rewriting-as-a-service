@@ -11,7 +11,7 @@ on:
 
 defaults:
   run:
-    working-directory: ./server
+    working-directory: .
 
 jobs:
   test:
@@ -29,11 +29,11 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-          cache-dependency-path: server/package-lock.json
+          cache-dependency-path: package-lock.json
       - run: npm ci
       - run: npm run test
       - name: Test Summary
         uses: test-summary/action@v2
         with:
-          paths: 'server/test/results/junit-report.xml'
+          paths: 'test/results/junit-report.xml'
         if: always()
