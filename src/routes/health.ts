@@ -4,7 +4,7 @@ const healthcheck = (
 	request: FastifyRequest,
 	reply: FastifyReply
 ): FastifyReply => {
-	return reply.code(200).send({});
+	return reply.code(200).send({ hello: 'fastify server' });
 };
 
 export default function routes(fastify: FastifyInstance) {
