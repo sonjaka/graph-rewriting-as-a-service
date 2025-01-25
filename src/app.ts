@@ -13,6 +13,8 @@ import SwaggerUI from '@fastify/swagger-ui';
 import { loggerConfig } from './config/logger';
 import { getAppEnvConfig } from './config/env';
 
+import healthRoutes from './routes/health';
+
 /**
  * Creates a fastify server instance
  */
@@ -30,7 +32,7 @@ export function buildServer(): FastifyInstance {
 	server.register(Swagger);
 	server.register(SwaggerUI);
 
-	);
+	server.register(healthRoutes);
 
 	return server;
 }
