@@ -1,10 +1,6 @@
 import 'dotenv/config';
 
-import fastify, {
-	FastifyInstance,
-	FastifyRequest,
-	FastifyReply,
-} from 'fastify';
+import fastify, { FastifyInstance } from 'fastify';
 import { Server, IncomingMessage, ServerResponse } from 'http';
 
 import Swagger from '@fastify/swagger';
