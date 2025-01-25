@@ -11,7 +11,8 @@
 		"start": "node dist/index.js",
 		"test": "vitest --coverage",
 		"prettier": "npx prettier . --check",
-		"prettier-watch": "onchange \"**/*\" -- prettier --write --ignore-unknown {{changed}}"
+		"prettier-watch": "onchange \"**/*\" -- prettier --write --ignore-unknown {{changed}}",
+		"lint": "npx eslint ."
 	},
 	"keywords": [
 		"graph rewriting",
