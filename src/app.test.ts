@@ -8,11 +8,11 @@ describe('Test Fastify Server', () => {
 
 		const response = await fastify.inject({
 			method: 'GET',
-			url: '/helloworld',
+			url: '/health',
 		});
 
 		expect(response.statusCode).toBe(200);
-		expect(response.body).toBe(JSON.stringify({ test: 'hello world' }));
+		expect(response.body).toBe(JSON.stringify({ hello: 'fastify server' }));
 	});
 
 	test('Request undefined route', async () => {

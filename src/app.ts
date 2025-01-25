@@ -7,8 +7,13 @@ import fastify, {
 } from 'fastify';
 import { Server, IncomingMessage, ServerResponse } from 'http';
 
+import Swagger from '@fastify/swagger';
+import SwaggerUI from '@fastify/swagger-ui';
+
 import { loggerConfig } from './config/logger';
 import { getAppEnvConfig } from './config/env';
+
+import healthRoutes from './routes/health';
 
 /**
  * Creates a fastify server instance
@@ -22,12 +27,12 @@ export function buildServer(): FastifyInstance {
 			ignoreTrailingSlash: true,
 		});
 
-	server.get(
-		'/helloworld',
-		async function (request: FastifyRequest, reply: FastifyReply) {
-			return { test: 'hello world' };
-		}
-	);
+	// Setup Swagger / SwaggerUI
+	// Access Swagger page through <root-route>/documentation endpoint
+	server.register(Swagger);
+	server.register(SwaggerUI);
+
+	server.register(healthRoutes);
 
 	return server;
 }

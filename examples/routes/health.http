@@ -1,0 +1,4 @@
+// Call health check route for server
+// Returns 200 if server is up and running
+GET http://localhost:8080/health
+Content-Type: application/json
