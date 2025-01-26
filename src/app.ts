@@ -11,6 +11,8 @@ import { getAppEnvConfig } from './config/env';
 
 import healthRoutes from './routes/health';
 
+import neo4jConnector from './plugins/neo4j/index';
+
 /**
  * Creates a fastify server instance
  */
@@ -29,6 +31,7 @@ export function buildServer(): FastifyInstance {
 	server.register(SwaggerUI);
 
 	server.register(healthRoutes);
+	server.register(neo4jConnector);
 
 	return server;
 }
