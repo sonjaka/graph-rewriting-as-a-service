@@ -1,0 +1,11 @@
+POST http://localhost:8080/node
+Content-Type: application/json
+
+{
+  "key": "testnode",
+  "attributes": {
+    "label": "This is the label",
+    "description": "This is an example node",
+    "type": "TestType"
+  }
+}

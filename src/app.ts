@@ -10,6 +10,7 @@ import { loggerConfig } from './config/logger';
 import { getAppEnvConfig } from './config/env';
 
 import healthRoutes from './routes/health';
+import nodeRoutes from './routes/nodes';
 
 import neo4jConnector from './plugins/neo4j/index';
 
@@ -31,7 +32,10 @@ export function buildServer(): FastifyInstance {
 	server.register(SwaggerUI);
 
 	server.register(healthRoutes);
+
+	// Use neo4j
 	server.register(neo4jConnector);
+	server.register(nodeRoutes);
 
 	return server;
 }
