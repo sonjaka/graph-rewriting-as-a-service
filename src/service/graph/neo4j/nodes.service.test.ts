@@ -30,8 +30,9 @@ describe('Test Node Service', () => {
 			{ hello: 'world' },
 			{ hello: 'world', test: 'testMe' },
 			{},
+			{ type: 'Gate', test: 'testMe' },
 		];
-		const testKey = ['key', '', 'key'];
+		const testKey = ['key', '', 'key', 'gateNode'];
 		const expectedResult = [
 			{
 				key: testKey[0],
@@ -48,6 +49,12 @@ describe('Test Node Service', () => {
 			{
 				key: testKey[2],
 				attributes: {},
+			},
+			{
+				key: testKey[3],
+				attributes: {
+					...testProperties[3],
+				},
 			},
 		];
 
