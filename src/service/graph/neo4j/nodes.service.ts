@@ -21,7 +21,9 @@ export async function createNode(
 	metadata: GraphNodeMetadata,
 	internalId?: GraphNodeInternalId
 ) {
-	metadata['_grs_internalId'] = internalId;
+	if (internalId) {
+		metadata['_grs_internalId'] = internalId;
+	}
 
 	// A default node type of "Node" will be set if no type metadata is set
 	let nodeType = 'Node';
