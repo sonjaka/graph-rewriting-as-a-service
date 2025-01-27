@@ -22,7 +22,7 @@
 	],
 	"devDependencies": {
 		"@eslint/js": "^9.19.0",
-		"@testcontainers/neo4j": "^10.16.0",
+		"@testcontainers/neo4j": "^10.17.1",
 		"@tsconfig/node20": "^20.1.4",
 		"@types/node": "^22.10.7",
 		"@vitest/coverage-v8": "^3.0.2",
