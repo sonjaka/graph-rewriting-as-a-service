@@ -1,61 +1,80 @@
-import {
-	expect,
-	test,
-	describe,
-	beforeAll,
-	afterAll,
-	beforeEach,
-	afterEach,
-	vi,
-} from 'vitest';
-import neo4j, { Driver, Session } from 'neo4j-driver';
-import { Neo4jContainer, StartedNeo4jContainer } from '@testcontainers/neo4j';
+import { expect, test, describe, beforeEach, vi } from 'vitest';
+import { Record, Session } from 'neo4j-driver';
 
+import driver from './testutils/driver';
 import { createNode } from './nodes.service';
 
-let container: StartedNeo4jContainer;
-let driver: Driver;
+vi.mock('./testutils/driver', () => {
+	return {
+		default: {
+			session: vi.fn(() => ({
+				executeWrite: mockExecuteWrite,
+				executeRead: mockExecuteRead,
+				close: vi.fn(),
+			})),
+		},
+	};
+});
+
+const mockExecuteWrite = vi.fn();
+const mockExecuteRead = vi.fn();
+
 let session: Session;
 describe('Test Node Service', () => {
-	beforeAll(async () => {
-		container = await new Neo4jContainer('neo4j:5.25.1').withApoc().start();
-
-		driver = neo4j.driver(
-			container.getBoltUri(),
-			neo4j.auth.basic(container.getUsername(), container.getPassword())
-		);
-	}, 10000);
-
 	beforeEach(() => {
 		session = driver.session();
 	});
 
-	afterEach(async () => {
-		await session.run(`MATCH (n) CALL (n) { DETACH DELETE n } IN TRANSACTIONS`);
-		await session.close();
-	});
-
-	afterAll(async () => {
-		await driver.close();
-		await container.stop();
-	});
-
-	test('Request existing route', async () => {
-		const result = await createNode(session, { hello: 'world' }, 'key');
-		const expectedResult = {
-			key: 'key',
-			attributes: {
-				hello: 'world',
+	test('Test adding nodes', async () => {
+		const testProperties = [
+			{ hello: 'world' },
+			{ hello: 'world', test: 'testMe' },
+			{},
+		];
+		const testKey = ['key', '', 'key'];
+		const expectedResult = [
+			{
+				key: testKey[0],
+				attributes: {
+					...testProperties[0],
+				},
 			},
-		};
-		expect(result).toEqual(expectedResult);
+			{
+				key: testKey[1],
+				attributes: {
+					...testProperties[1],
+				},
+			},
+			{
+				key: testKey[2],
+				attributes: {},
+			},
+		];
 
-		// const result2 = await createNode(session, { hello: 'world' }, 'key');
-		// const expectedResult2 = {
-		// 	attributes: {
-		// 		hello: 'world',
-		// 	},
-		// };
-		// expect(result2).toEqual(expectedResult2);
+		for (let index = 0; index < testProperties.length; index++) {
+			mockExecuteWrite.mockImplementationOnce(() => ({
+				records: [
+					new Record(
+						['n'],
+						[
+							{
+								properties: {
+									...testProperties[index],
+									_grs_internalId: testKey[index],
+								},
+							},
+						],
+						{ n: 0 }
+					),
+				],
+			}));
+
+			const result = await createNode(
+				session,
+				{ ...testProperties[index], _grs_internalId: testKey[index] },
+				testKey[index]
+			);
+			expect(result).toEqual(expectedResult[index]);
+		}
 	});
 });
