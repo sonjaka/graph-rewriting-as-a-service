@@ -10,7 +10,6 @@ import { loggerConfig } from './config/logger';
 import { getAppEnvConfig } from './config/env';
 
 import healthRoutes from './routes/health';
-import nodeRoutes from './routes/nodes';
 
 import GraphNodeSchema from './schemas/node.schema.json';
 
@@ -39,7 +38,6 @@ export function buildServer(): FastifyInstance {
 
 	// Use neo4j
 	server.register(neo4jConnector);
-	server.register(nodeRoutes);
 
 	return server;
 }

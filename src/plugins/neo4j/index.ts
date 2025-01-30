@@ -4,6 +4,7 @@ import neo4j, { Driver, Session } from 'neo4j-driver';
 import { getNeo4jEnvConfig } from './env';
 
 import healthRoutes from './routes/health';
+import nodeRoutes from './routes/nodes';
 
 declare module 'fastify' {
 	interface FastifyInstance {
@@ -80,6 +81,8 @@ const neo4jConnector: FastifyPluginAsync = async (fastify: FastifyInstance) => {
 	fastify.register(healthRoutes, {
 		prefix: '/neo4j',
 	});
+
+	fastify.register(nodeRoutes);
 };
 
 export default fastifyPlugin(neo4jConnector, {
