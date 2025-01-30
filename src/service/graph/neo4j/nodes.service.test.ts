@@ -2,7 +2,7 @@ import { expect, test, describe, beforeEach, vi } from 'vitest';
 import { Record, Session } from 'neo4j-driver';
 
 import driver from './testutils/driver';
-import { createNode } from './nodes.service';
+import { NodeService } from './nodes.service';
 
 vi.mock('./testutils/driver', () => {
 	return {
@@ -76,8 +76,9 @@ describe('Test Node Service', () => {
 				],
 			}));
 
-			const result = await createNode(
-				session,
+			const nodeService = new NodeService(session);
+
+			const result = await nodeService.createNode(
 				{ ...testProperties[index], _grs_internalId: testKey[index] },
 				testKey[index]
 			);

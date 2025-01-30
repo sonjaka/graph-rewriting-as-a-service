@@ -1,11 +1,4 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
-import {
-	createNode,
-	deleteNode,
-	deleteAllNodes,
-	getNode,
-	getAllNodes,
-} from '../../../service/graph/neo4j/nodes.service';
 
 import { GraphNodeSchema as GraphNodeSchemaInterface } from '../../../types/node.schema';
 
@@ -17,13 +10,12 @@ export const createNodeHandler = async (
 	request: FastifyRequest<{ Body: GraphNodeSchemaInterface }>,
 	reply: FastifyReply<{ Body: GraphNodeSchemaInterface }>
 ): Promise<FastifyReply<{ Body: GraphNodeSchemaInterface }>> => {
-	const session = request.neo4j;
-
+	const nodeService = request.nodeService;
 	const body = request.body;
 
 	let result = null;
-	if (session) {
-		result = await createNode(session, body?.attributes, body?.key);
+	if (nodeService) {
+		result = await nodeService.createNode(body?.attributes, body?.key);
 	}
 
 	return reply.code(201).send(result);
@@ -33,12 +25,12 @@ export const getNodeHandler = async (
 	request: FastifyRequest<{ Params: ISingleNodeParams }>,
 	reply: FastifyReply
 ): Promise<FastifyReply> => {
-	const session = request.neo4j;
+	const nodeService = request.nodeService;
 	const params = request.params;
 
 	let result = null;
-	if (session && params?.nodeInternalId) {
-		result = await getNode(session, params.nodeInternalId);
+	if (nodeService && params?.nodeInternalId) {
+		result = await nodeService.getNode(params.nodeInternalId);
 	}
 
 	return reply.code(201).send(result);
@@ -48,11 +40,11 @@ export const getAllHandler = async (
 	request: FastifyRequest,
 	reply: FastifyReply
 ): Promise<FastifyReply> => {
-	const session = request.neo4j;
+	const nodeService = request.nodeService;
 
 	let result = null;
-	if (session) {
-		result = await getAllNodes(session);
+	if (nodeService) {
+		result = await nodeService.getAllNodes();
 	}
 
 	return reply.code(201).send(result);
@@ -62,10 +54,10 @@ export const deleteNodeHandler = async (
 	request: FastifyRequest<{ Params: ISingleNodeParams }>,
 	reply: FastifyReply
 ) => {
-	const session = request.neo4j;
+	const nodeService = request.nodeService;
 	const params = request.params;
-	if (session && params?.nodeInternalId) {
-		await deleteNode(session, params.nodeInternalId);
+	if (nodeService && params?.nodeInternalId) {
+		await nodeService.deleteNode(params.nodeInternalId);
 	}
 
 	return reply.code(204).send({});
@@ -75,9 +67,9 @@ export const deleteAllHandler = async (
 	request: FastifyRequest,
 	reply: FastifyReply
 ) => {
-	const session = request.neo4j;
-	if (session) {
-		await deleteAllNodes(session);
+	const nodeService = request.nodeService;
+	if (nodeService) {
+		await nodeService.deleteAllNodes();
 	}
 
 	return reply.code(204).send({});
