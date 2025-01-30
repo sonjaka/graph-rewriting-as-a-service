@@ -128,9 +128,8 @@ function mapNodeRecordsToNodesResult(
 			},
 		};
 		// Remove all keys that were only for internal use
-		if (nodeData.attributes?.__grs_internalId) {
-			delete nodeData.attributes._grs_internalId;
-		}
+
+		delete nodeData.attributes?._grs_internalId;
 
 		return nodeData;
 	});
