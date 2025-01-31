@@ -9,33 +9,33 @@ import {
 	GraphNodeInternalId,
 	GraphNodeMetadata,
 	GraphNodeProperties,
+	GraphNodeResult,
+	IGraphService,
 	// GraphEdgeProperties,
 } from '../types';
 
 type Neo4jNode = Node<Integer, GraphNodeProperties>;
 // type Neo4jRelationship = Relationship<Integer, GraphEdgeProperties>;
 
-interface Neo4jCreateNodeResult {
+interface Neo4jSingleNodeResult {
 	n: Neo4jNode;
 }
+
+type Neo4jCreateNodeResult = Neo4jSingleNodeResult;
+type Neo4jUpdateNodeResult = Neo4jSingleNodeResult;
 
 interface Neo4jGetNodesResult {
 	nodes: Neo4jNode[];
 	// relationships: Neo4jRelationship[];
 }
 
-interface Neo4jNodeResult {
-	key: GraphNodeInternalId;
-	attributes: GraphNodeMetadata;
-}
-
-export class NodeService {
+export class NodeService implements IGraphService {
 	constructor(private readonly session: Session) {}
 
 	public async createNode(
 		metadata: GraphNodeMetadata,
 		internalId?: GraphNodeInternalId
-	) {
+	): Promise<GraphNodeResult> {
 		if (internalId) {
 			metadata['_grs_internalId'] = internalId;
 		}
@@ -50,6 +50,40 @@ export class NodeService {
 
 		const res = await this.session.executeWrite((tx: ManagedTransaction) =>
 			tx.run<Neo4jCreateNodeResult>(cypher, { metadata })
+		);
+
+		const nodeRecords = res.records.map((record) => record.get('n'));
+		const nodes = this.mapNodeRecordsToNodesResult(nodeRecords);
+
+		return nodes[0];
+	}
+
+	public async updateNode(
+		metadata: GraphNodeMetadata,
+		internalId: GraphNodeInternalId,
+		label: string,
+		oldTypes: string[] = []
+	): Promise<GraphNodeResult> {
+		metadata['label'] = label;
+
+		if (internalId) {
+			metadata['_grs_internalId'] = internalId;
+		}
+
+		let nodeType = 'Node';
+		if (metadata.type) {
+			nodeType = metadata.type;
+		}
+
+		const oldNodeType = oldTypes.join(':');
+
+		const cypher = `MATCH (n:\`${oldNodeType}\` { internalId: $internalId }) \
+		    REMOVE n:\`${oldNodeType}\` \
+		    SET n:\`${nodeType}\`, n = $metadata \
+		    RETURN n`;
+
+		const res = await this.session.executeWrite((tx: ManagedTransaction) =>
+			tx.run<Neo4jUpdateNodeResult>(cypher, { internalId, metadata })
 		);
 
 		const nodeRecords = res.records.map((record) => record.get('n'));
@@ -98,7 +132,10 @@ export class NodeService {
 		const res = await this.session.executeWrite((tx: ManagedTransaction) =>
 			tx.run(cypher, { internalId })
 		);
-		return res;
+		const nodeRecords = res.records.map((record) => record.get('n'));
+		const nodes = this.mapNodeRecordsToNodesResult(nodeRecords);
+
+		return nodes[0];
 	}
 
 	public async deleteAllNodes() {
@@ -107,16 +144,19 @@ export class NodeService {
         { DETACH DELETE n \
         } IN TRANSACTIONS';
 
-		const result = await this.session.run(cypher);
+		const res = await this.session.run(cypher);
 
-		return result.records;
+		const nodeRecords = res.records.map((record) => record.get('n'));
+		const nodes = nodeRecords.map(this.mapNodeRecordsToNodesResult);
+
+		return nodes;
 	}
 
 	private mapNodeRecordsToNodesResult(
 		nodeRecords: Neo4jNode[]
-	): Neo4jNodeResult[] {
+	): GraphNodeResult[] {
 		const nodes = nodeRecords.map((node) => {
-			const nodeData: Neo4jNodeResult = {
+			const nodeData: GraphNodeResult = {
 				key: node.properties?._grs_internalId,
 				attributes: {
 					...node.properties,

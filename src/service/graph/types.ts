@@ -15,3 +15,25 @@ export interface GraphNodeProperties {
 export interface GraphEdgeProperties {
 	_grs_label: GraphElementLabel;
 }
+
+export interface GraphNodeResult {
+	key: GraphNodeInternalId;
+	attributes: GraphNodeMetadata;
+}
+
+export interface IGraphService {
+	createNode(
+		metadata: GraphNodeMetadata,
+		internalId?: GraphNodeInternalId
+	): Promise<GraphNodeResult>;
+	updateNode(
+		metadata: GraphNodeMetadata,
+		internalId: GraphNodeInternalId,
+		label: string,
+		oldTypes: string[]
+	): Promise<GraphNodeResult>;
+	getNode(internalId: GraphNodeInternalId): Promise<GraphNodeResult>;
+	deleteNode(internalId: GraphNodeInternalId): Promise<GraphNodeResult>;
+	getAllNodes(): Promise<GraphNodeResult[][]>;
+	deleteAllNodes(): Promise<GraphNodeResult[][]>;
+}
