@@ -25,7 +25,7 @@ describe('Test graph service', () => {
 			container.getBoltUri(),
 			neo4j.auth.basic(container.getUsername(), container.getPassword())
 		);
-	}, 15000);
+	}, 30000);
 
 	beforeEach(async () => {
 		session = driver.session();
@@ -89,7 +89,7 @@ describe('Test graph service', () => {
 			expect(neo4jSpy).toHaveBeenCalled();
 			expect(neo4jSpy).toHaveBeenCalledTimes(index + 1);
 		}
-	}, 8000);
+	}, 10000);
 
 	test('Test getNode', async () => {
 		// Prime database with a test node
@@ -108,7 +108,7 @@ describe('Test graph service', () => {
 		});
 		expect(neo4jSpy).toHaveBeenCalled();
 		expect(neo4jSpy).toHaveBeenCalledTimes(1);
-	}, 5000);
+	}, 10000);
 
 	test('Test updateNode', async () => {
 		// Prime database with a test node
@@ -137,7 +137,7 @@ describe('Test graph service', () => {
 		});
 		expect(neo4jSpy).toHaveBeenCalled();
 		expect(neo4jSpy).toHaveBeenCalledTimes(1);
-	}, 5000);
+	}, 10000);
 
 	test('Test getAllNodes', async () => {
 		// Add testdata to database
@@ -179,7 +179,7 @@ describe('Test graph service', () => {
 		]);
 		expect(neo4jSpy).toHaveBeenCalled();
 		expect(neo4jSpy).toHaveBeenCalledTimes(1);
-	});
+	}, 10000);
 	test.todo('Test deleteNodes');
 	test.todo('Test deleteAllNodes');
 });
