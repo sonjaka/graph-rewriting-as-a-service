@@ -1,31 +1,49 @@
-import { expect, test, describe, beforeEach, vi } from 'vitest';
-import { Record, Session } from 'neo4j-driver';
+import neo4j, { Driver, Session } from 'neo4j-driver';
+import { Neo4jContainer } from '@testcontainers/neo4j';
 
-import driver from './testutils/driver';
+import {
+	vi,
+	expect,
+	test,
+	describe,
+	beforeAll,
+	afterAll,
+	beforeEach,
+	afterEach,
+} from 'vitest';
+
 import { NodeService } from './nodes.service';
 
-vi.mock('./testutils/driver', () => {
-	return {
-		default: {
-			session: vi.fn(() => ({
-				executeWrite: mockExecuteWrite,
-				executeRead: mockExecuteRead,
-				close: vi.fn(),
-			})),
-		},
-	};
-});
-
-const mockExecuteWrite = vi.fn();
-const mockExecuteRead = vi.fn();
-
+let container: any;
+let driver: Driver;
 let session: Session;
-describe('Test Node Service', () => {
-	beforeEach(() => {
+describe('Test graph service', () => {
+	beforeAll(async () => {
+		container = await new Neo4jContainer('neo4j:5.25.1').withApoc().start();
+
+		driver = neo4j.driver(
+			container.getBoltUri(),
+			neo4j.auth.basic(container.getUsername(), container.getPassword())
+		);
+	}, 15000);
+
+	beforeEach(async () => {
 		session = driver.session();
 	});
 
-	test('Test adding nodes', async () => {
+	afterEach(async () => {
+		// Clean up database after each test
+		await session.run(`MATCH (n) CALL (n) { DETACH DELETE n } IN TRANSACTIONS`);
+
+		await session.close();
+	});
+
+	afterAll(async () => {
+		await driver.close();
+		await container.stop();
+	});
+
+	test('Test createNode', async () => {
 		const testProperties = [
 			{ hello: 'world' },
 			{ hello: 'world', test: 'testMe' },
@@ -58,31 +76,110 @@ describe('Test Node Service', () => {
 			},
 		];
 
-		for (let index = 0; index < testProperties.length; index++) {
-			mockExecuteWrite.mockImplementationOnce(() => ({
-				records: [
-					new Record(
-						['n'],
-						[
-							{
-								properties: {
-									...testProperties[index],
-									_grs_internalId: testKey[index],
-								},
-							},
-						],
-						{ n: 0 }
-					),
-				],
-			}));
+		const nodeService = new NodeService(session);
 
-			const nodeService = new NodeService(session);
+		for (let index = 0; index < testProperties.length; index++) {
+			const neo4jSpy = vi.spyOn(session, 'executeWrite');
 
 			const result = await nodeService.createNode(
 				{ ...testProperties[index], _grs_internalId: testKey[index] },
 				testKey[index]
 			);
 			expect(result).toEqual(expectedResult[index]);
+			expect(neo4jSpy).toHaveBeenCalled();
+			expect(neo4jSpy).toHaveBeenCalledTimes(index + 1);
 		}
+	}, 8000);
+
+	test('Test getNode', async () => {
+		// Prime database with a test node
+		await session.run(
+			`CREATE (n:Node {label: 'Test', _grs_internalId: 'testnode1'})`
+		);
+
+		const nodeService = new NodeService(session);
+		const neo4jSpy = vi.spyOn(session, 'executeRead');
+		const result = await nodeService.getNode('testnode1');
+		expect(result).toEqual({
+			key: 'testnode1',
+			attributes: {
+				label: 'Test',
+			},
+		});
+		expect(neo4jSpy).toHaveBeenCalled();
+		expect(neo4jSpy).toHaveBeenCalledTimes(1);
+	}, 5000);
+
+	test('Test updateNode', async () => {
+		// Prime database with a test node
+		await session.run(
+			`CREATE (n:Node {label: 'Test', _grs_internalId: 'testnode1'})`
+		);
+
+		// Setup test
+		const nodeService = new NodeService(session);
+		const updatedNodeData = {
+			metadata: {
+				hello: 'world',
+			},
+			internalId: 'testnode1',
+		};
+		const neo4jSpy = vi.spyOn(session, 'executeWrite');
+		const result = await nodeService.updateNode(
+			updatedNodeData.metadata,
+			updatedNodeData.internalId
+		);
+		expect(result).toEqual({
+			key: 'testnode1',
+			attributes: {
+				hello: 'world',
+			},
+		});
+		expect(neo4jSpy).toHaveBeenCalled();
+		expect(neo4jSpy).toHaveBeenCalledTimes(1);
+	}, 5000);
+
+	test('Test getAllNodes', async () => {
+		// Add testdata to database
+		const props = {
+			attributes: [
+				{ label: 'A', key: 'testnodeA' },
+				{ label: 'B', key: 'testnodeB' },
+				{ label: 'C', key: 'testnodeC' },
+			],
+		};
+		await session.run(
+			`UNWIND $attributes AS config \
+			CREATE (n:Node {label: config.label, _grs_internalId: config.key})`,
+			props
+		);
+
+		const nodeService = new NodeService(session);
+		const neo4jSpy = vi.spyOn(session, 'executeRead');
+		const result = await nodeService.getAllNodes();
+		expect(result).toMatchObject([
+			{
+				key: 'testnodeA',
+				attributes: {
+					label: 'A',
+				},
+			},
+			{
+				key: 'testnodeB',
+				attributes: {
+					label: 'B',
+				},
+			},
+			{
+				key: 'testnodeC',
+				attributes: {
+					label: 'C',
+				},
+			},
+		]);
+		expect(neo4jSpy).toHaveBeenCalled();
+		expect(neo4jSpy).toHaveBeenCalledTimes(1);
 	});
+	test.todo('Test deleteNodes');
+	test.todo('Test deleteAllNodes');
 });

@@ -29,11 +29,10 @@ export interface IGraphService {
 	updateNode(
 		metadata: GraphNodeMetadata,
 		internalId: GraphNodeInternalId,
-		label: string,
 		oldTypes: string[]
 	): Promise<GraphNodeResult>;
 	getNode(internalId: GraphNodeInternalId): Promise<GraphNodeResult>;
 	deleteNode(internalId: GraphNodeInternalId): Promise<GraphNodeResult>;
-	getAllNodes(): Promise<GraphNodeResult[][]>;
+	getAllNodes(): Promise<GraphNodeResult[]>;
 	deleteAllNodes(): Promise<GraphNodeResult[][]>;
 }

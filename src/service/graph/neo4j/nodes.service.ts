@@ -17,17 +17,13 @@ import {
 type Neo4jNode = Node<Integer, GraphNodeProperties>;
 // type Neo4jRelationship = Relationship<Integer, GraphEdgeProperties>;
 
-interface Neo4jSingleNodeResult {
+interface Neo4jNodeResult {
 	n: Neo4jNode;
 }
 
-type Neo4jCreateNodeResult = Neo4jSingleNodeResult;
-type Neo4jUpdateNodeResult = Neo4jSingleNodeResult;
-
-interface Neo4jGetNodesResult {
-	nodes: Neo4jNode[];
-	// relationships: Neo4jRelationship[];
-}
+type Neo4jCreateNodeResult = Neo4jNodeResult;
+type Neo4jUpdateNodeResult = Neo4jNodeResult;
+type Neo4jGetNodesResult = Neo4jNodeResult;
 
 export class NodeService implements IGraphService {
 	constructor(private readonly session: Session) {}
@@ -61,11 +57,8 @@ export class NodeService implements IGraphService {
 	public async updateNode(
 		metadata: GraphNodeMetadata,
 		internalId: GraphNodeInternalId,
-		label: string,
 		oldTypes: string[] = []
 	): Promise<GraphNodeResult> {
-		metadata['label'] = label;
-
 		if (internalId) {
 			metadata['_grs_internalId'] = internalId;
 		}
@@ -75,12 +68,19 @@ export class NodeService implements IGraphService {
 			nodeType = metadata.type;
 		}
 
-		const oldNodeType = oldTypes.join(':');
+		let cypher = '';
+		if (oldTypes.length) {
+			const oldNodeType = oldTypes.join(':');
 
-		const cypher = `MATCH (n:\`${oldNodeType}\` { internalId: $internalId }) \
-		    REMOVE n:\`${oldNodeType}\` \
-		    SET n:\`${nodeType}\`, n = $metadata \
-		    RETURN n`;
+			cypher = `MATCH (n:\`${oldNodeType}\` { _grs_internalId: $internalId }) \
+		        REMOVE n:\`${oldNodeType}\` \
+		        SET n:\`${nodeType}\`, n = $metadata \
+		        RETURN n`;
+		} else {
+			cypher = `MATCH (n { _grs_internalId: $internalId }) \
+		        SET n = $metadata \
+		        RETURN n`;
+		}
 
 		const res = await this.session.executeWrite((tx: ManagedTransaction) =>
 			tx.run<Neo4jUpdateNodeResult>(cypher, { internalId, metadata })
@@ -112,14 +112,14 @@ export class NodeService implements IGraphService {
 		// OPTIONAL MATCH (n)-[r]-(m)
 		// RETURN COLLECT(DISTINCT n) AS nodes, COLLECT(DISTINCT r) AS relationships`;
 		const cypher = `MATCH (n)
-            RETURN COLLECT(DISTINCT n) AS nodes`;
+		    RETURN DISTINCT n`;
 
 		const res = await this.session.executeRead((tx: ManagedTransaction) =>
 			tx.run<Neo4jGetNodesResult>(cypher)
 		);
 
-		const nodeRecords = res.records.map((record) => record.get('nodes'));
-		const nodes = nodeRecords.map(this.mapNodeRecordsToNodesResult);
+		const nodeRecords = res.records.map((record) => record.get('n'));
+		const nodes = this.mapNodeRecordsToNodesResult(nodeRecords);
 
 		return nodes;
 	}
