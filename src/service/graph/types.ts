@@ -32,7 +32,9 @@ export interface IGraphService {
 		oldTypes: string[]
 	): Promise<GraphNodeResult>;
 	getNode(internalId: GraphNodeInternalId): Promise<GraphNodeResult>;
-	deleteNode(internalId: GraphNodeInternalId): Promise<undefined>;
+	deleteNode(
+		internalId: GraphNodeInternalId
+	): Promise<GraphNodeResult | undefined>;
 	getAllNodes(): Promise<GraphNodeResult[]>;
 	deleteAllNodes(): Promise<GraphNodeResult[]>;
 }
