@@ -141,15 +141,17 @@ export class NodeService implements IGraphService {
 	public async deleteAllNodes() {
 		const cypher =
 			'MATCH (n) CALL (n) \
-        { DETACH DELETE n \
-        } IN TRANSACTIONS';
+            { DETACH DELETE n } \
+            IN TRANSACTIONS';
 
 		const res = await this.session.run(cypher);
 
 		const nodeRecords = res.records.map((record) => record.get('n'));
-		const nodes = nodeRecords.map(this.mapNodeRecordsToNodesResult);
+		const nodes = this.mapNodeRecordsToNodesResult(nodeRecords);
 
-		return nodes;
+		console.log(nodes);
+
+		return nodes || [];
 	}
 
 	private mapNodeRecordsToNodesResult(

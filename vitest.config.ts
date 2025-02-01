@@ -13,5 +13,6 @@ export default defineConfig({
 			reportsDirectory: './test/coverage',
 		},
 		testTimeout: 30000,
+		hookTimeout: 30000,
 	},
 });
