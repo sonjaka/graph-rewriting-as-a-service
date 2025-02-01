@@ -35,7 +35,6 @@ describe('Test graph service', () => {
 	afterEach(async () => {
 		// Clean up database after each test
 		await session.run(`MATCH (n) CALL (n) { DETACH DELETE n } IN TRANSACTIONS`);
-
 		await session.close();
 	});
 

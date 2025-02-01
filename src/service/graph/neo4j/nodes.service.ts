@@ -149,8 +149,6 @@ export class NodeService implements IGraphService {
 		const nodeRecords = res.records.map((record) => record.get('n'));
 		const nodes = this.mapNodeRecordsToNodesResult(nodeRecords);
 
-		console.log(nodes);
-
 		return nodes || [];
 	}
 
