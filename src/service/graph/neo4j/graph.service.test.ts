@@ -12,7 +12,7 @@ import {
 	afterEach,
 } from 'vitest';
 
-import { NodeService } from './nodes.service';
+import { Neo4jGraphService } from './graph.service';
 import { getApocJsonAllExport } from './testutils/helpers';
 
 let container: StartedNeo4jContainer;
@@ -76,7 +76,7 @@ describe('Test graph service', () => {
 			},
 		];
 
-		const nodeService = new NodeService(session);
+		const nodeService = new Neo4jGraphService(session);
 
 		for (let index = 0; index < testProperties.length; index++) {
 			const neo4jSpy = vi.spyOn(session, 'executeWrite');
@@ -102,7 +102,7 @@ describe('Test graph service', () => {
 			`CREATE (n:Node {label: 'Test', _grs_internalId: 'testnode1'})`
 		);
 
-		const nodeService = new NodeService(session);
+		const nodeService = new Neo4jGraphService(session);
 		const neo4jSpy = vi.spyOn(session, 'executeRead');
 		const result = await nodeService.getNode('testnode1');
 		expect(result).toEqual({
@@ -122,7 +122,7 @@ describe('Test graph service', () => {
 		);
 
 		// Setup test
-		const nodeService = new NodeService(session);
+		const nodeService = new Neo4jGraphService(session);
 		const updatedNodeData = {
 			metadata: {
 				hello: 'world',
@@ -159,7 +159,7 @@ describe('Test graph service', () => {
 			props
 		);
 
-		const nodeService = new NodeService(session);
+		const nodeService = new Neo4jGraphService(session);
 		const neo4jSpy = vi.spyOn(session, 'executeRead');
 		const result = await nodeService.getAllNodes();
 		expect(result).toMatchObject([
@@ -201,7 +201,7 @@ describe('Test graph service', () => {
 			props
 		);
 
-		const nodeService = new NodeService(session);
+		const nodeService = new Neo4jGraphService(session);
 		const neo4jSpy = vi.spyOn(session, 'executeWrite');
 		const result = await nodeService.deleteNode('testnodeA');
 		// Check result
@@ -238,7 +238,7 @@ describe('Test graph service', () => {
 			props
 		);
 
-		const nodeService = new NodeService(session);
+		const nodeService = new Neo4jGraphService(session);
 		const neo4jSpy = vi.spyOn(session, 'run');
 		const result = await nodeService.deleteAllNodes();
 		// Check result

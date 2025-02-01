@@ -1,24 +1,41 @@
-export interface GraphNodeMetadata {
-	type?: string;
-	[key: string]: unknown;
-}
 export type GraphNodeInternalId = string;
+export type GraphEdgeInternalId = string;
+
 type GraphElementLabel = string;
 export type GraphNodeLabel = GraphElementLabel;
 export type GraphEdgeLabel = GraphElementLabel;
 
 export interface GraphNodeProperties {
 	_grs_internalId: GraphNodeInternalId;
-	_grs_label: GraphElementLabel;
+	// _grs_label: GraphElementLabel;
 }
 
 export interface GraphEdgeProperties {
-	_grs_label: GraphElementLabel;
+	_grs_internalId: GraphEdgeInternalId;
+	_grs_source: GraphNodeInternalId;
+	_grs_target: GraphNodeInternalId;
+}
+
+export interface GraphNodeMetadata {
+	type?: string;
+	[key: string]: unknown;
+}
+
+export interface GraphEdgeMetadata {
+	type?: string;
+	[key: string]: unknown;
 }
 
 export interface GraphNodeResult {
 	key: GraphNodeInternalId;
 	attributes: GraphNodeMetadata;
+}
+
+export interface GraphEdgeResult {
+	key: GraphEdgeInternalId;
+	attributes: GraphEdgeMetadata;
+	source: GraphNodeInternalId;
+	target: GraphNodeInternalId;
 }
 
 export interface IGraphService {

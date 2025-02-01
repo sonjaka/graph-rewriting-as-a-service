@@ -2,7 +2,7 @@ POST http://localhost:8080/node
 Content-Type: application/json
 
 {
-  "key": "testnode",
+  "key": "testnodeA",
   "attributes": {
     "label": "This is the label",
     "description": "This is an example node",
@@ -10,10 +10,22 @@ Content-Type: application/json
   }
 }
 
-GET http://localhost:8080/node/testnode
+POST http://localhost:8080/node
+Content-Type: application/json
+
+{
+  "key": "testnodeB",
+  "attributes": {
+    "label": "This is the label",
+    "description": "This is an example node",
+    "type": "TestType"
+  }
+}
+
+GET http://localhost:8080/node/testnodeA
 
 GET http://localhost:8080/nodes
 
-DELETE http://localhost:8080/node/testnode
+DELETE http://localhost:8080/node/testnodeA
 
 DELETE http://localhost:8080/nodes

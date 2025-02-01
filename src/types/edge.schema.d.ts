@@ -5,8 +5,10 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
-export interface GraphNodeSchema {
+export interface GraphEdgeSchema {
   key: string;
+  source: string;
+  target: string;
   attributes: {
     type?: string;
     [k: string]: unknown;

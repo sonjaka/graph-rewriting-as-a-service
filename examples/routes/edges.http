@@ -1,0 +1,15 @@
+POST http://localhost:8080/edge
+Content-Type: application/json
+
+{
+  "key": "testedge",
+  "source": "testnodeA",
+  "target": "testnodeB",
+  "attributes": {
+    "type": "TestType",
+    "description": "This is an example relationshio",
+    "label": "Relationship label"
+  }
+}
+
+DELETE http://localhost:8080/edge/testedge

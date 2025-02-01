@@ -3,29 +3,36 @@ import {
 	Session,
 	Node,
 	Integer,
-	// Relationship,
+	Relationship,
 } from 'neo4j-driver';
 import {
+	GraphEdgeInternalId,
 	GraphNodeInternalId,
 	GraphNodeMetadata,
 	GraphNodeProperties,
 	GraphNodeResult,
 	IGraphService,
-	// GraphEdgeProperties,
+	GraphEdgeProperties,
+	GraphEdgeResult,
+	GraphEdgeMetadata,
 } from '../types';
 
 type Neo4jNode = Node<Integer, GraphNodeProperties>;
-// type Neo4jRelationship = Relationship<Integer, GraphEdgeProperties>;
+type Neo4jRelationship = Relationship<Integer, GraphEdgeProperties>;
 
 interface Neo4jNodeResult {
 	n: Neo4jNode;
+}
+
+interface Neo4jRelationshipResult {
+	r: Neo4jRelationship;
 }
 
 type Neo4jCreateNodeResult = Neo4jNodeResult;
 type Neo4jUpdateNodeResult = Neo4jNodeResult;
 type Neo4jGetNodesResult = Neo4jNodeResult;
 
-export class NodeService implements IGraphService {
+export class Neo4jGraphService implements IGraphService {
 	constructor(private readonly session: Session) {}
 
 	public async createNode(
@@ -152,6 +159,59 @@ export class NodeService implements IGraphService {
 		return nodes || [];
 	}
 
+	// TODO: check which what kind of content can be saved in neo4j properties and type metadata accordingly
+	public async createEdge(
+		internalIdSource: GraphNodeInternalId,
+		internalIdTarget: GraphNodeInternalId,
+		internalId: string,
+		metadata: GraphEdgeMetadata
+	) {
+		const relation = `_grs_relationship`;
+
+		const properties = {
+			_grs_internalId: internalId,
+			_grs_source: internalIdSource,
+			_grs_target: internalIdTarget,
+		};
+
+		const attributes = {
+			...metadata,
+			...properties,
+		};
+
+		const cypher = `MATCH (a),(b) \
+			WHERE a._grs_internalId = $internalIdSource \
+			AND b._grs_internalId = $internalIdTarget \
+			CREATE (a)-[r:${relation} $attributes ]->(b) RETURN r`;
+
+		const res = await this.session.executeWrite((tx: ManagedTransaction) =>
+			tx.run<Neo4jRelationshipResult>(cypher, {
+				internalIdSource,
+				internalIdTarget,
+				attributes,
+			})
+		);
+
+		const edgeRecords = res.records.map((record) => record.get('r'));
+		const edges = this.mapEdgeRecordsToEdgesResult(edgeRecords);
+
+		return edges[0];
+	}
+
+	// public async deleteEdge(internalId: GraphEdgeInternalId) {
+	// 	const cypher = `MATCH ()-[r]-()
+	// 		WHERE r.internalId = $internalId \
+	// 		DELETE r`;
+
+	// 	const res = await session.executeWrite((tx: ManagedTransaction) => {
+	// 		tx.run<BaseRelationship>(cypher, {
+	// 			internalId,
+	// 		});
+	// 	});
+
+	// 	return res;
+	// }
+
 	private mapNodeRecordsToNodesResult(
 		nodeRecords: Neo4jNode[]
 	): GraphNodeResult[] {
@@ -169,5 +229,28 @@ export class NodeService implements IGraphService {
 		});
 
 		return nodes;
+	}
+
+	private mapEdgeRecordsToEdgesResult(
+		edgeRecords: Neo4jRelationship[]
+	): GraphEdgeResult[] {
+		const edges = edgeRecords.map((edge) => {
+			const edgeData: GraphEdgeResult = {
+				key: edge.properties._grs_internalId,
+				source: edge.properties._grs_source,
+				target: edge.properties._grs_target,
+				attributes: {
+					...edge.properties,
+				},
+			};
+			// Remove all keys that were only for internal use
+			delete edgeData.attributes?._grs_internalId;
+			delete edgeData.attributes?._grs_source;
+			delete edgeData.attributes?._grs_target;
+
+			return edgeData;
+		});
+
+		return edges;
 	}
 }
