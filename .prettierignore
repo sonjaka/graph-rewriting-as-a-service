@@ -1,3 +1,6 @@
 # Ignore artifacts:
 build
 coverage
+
+# Ignore compiled schema files
+src/types/*.d.ts
