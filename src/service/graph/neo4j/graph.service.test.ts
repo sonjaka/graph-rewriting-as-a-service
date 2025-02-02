@@ -182,26 +182,29 @@ describe('Test graph service', () => {
 		const graphService = new Neo4jGraphService(session);
 		const neo4jSpy = vi.spyOn(session, 'executeRead');
 		const result = await graphService.getAllNodes();
-		expect(result).toMatchObject([
-			{
-				key: 'testnodeA',
-				attributes: {
-					label: 'A',
+
+		expect(result).toEqual(
+			expect.arrayContaining([
+				{
+					key: 'testnodeA',
+					attributes: {
+						label: 'A',
+					},
 				},
-			},
-			{
-				key: 'testnodeB',
-				attributes: {
-					label: 'B',
+				{
+					key: 'testnodeB',
+					attributes: {
+						label: 'B',
+					},
 				},
-			},
-			{
-				key: 'testnodeC',
-				attributes: {
-					label: 'C',
+				{
+					key: 'testnodeC',
+					attributes: {
+						label: 'C',
+					},
 				},
-			},
-		]);
+			])
+		);
 		expect(neo4jSpy).toHaveBeenCalled();
 		expect(neo4jSpy).toHaveBeenCalledTimes(1);
 	}, 10000);
@@ -405,4 +408,9 @@ describe('Test graph service', () => {
 
 		// Todo: check if the specific edge doesn't still exist
 	});
+
+	// TOOD: Add tests for edge cases
+	test.todo('Test node not found');
+	test.todo("Test node can't be deleted due to remaining edges");
+	test.todo('Test edge not found');
 });
