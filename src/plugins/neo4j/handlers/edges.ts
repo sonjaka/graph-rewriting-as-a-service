@@ -1,6 +1,7 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
 
 import { GraphEdgeSchema as GraphEdgeSchemaInterface } from '../../../types/edge.schema';
+import { createdReply, deletedReply, notFoundReply, okReply } from './response';
 
 export interface ISingleEdgeParams {
 	edgeInternalId: string;
@@ -23,7 +24,7 @@ export const createEdgeHandler = async (
 		);
 	}
 
-	return reply.code(201).send(result);
+	return createdReply(reply, result);
 };
 
 export const getEdgeHandler = async (
@@ -32,11 +33,16 @@ export const getEdgeHandler = async (
 ) => {
 	const neo4jGraphService = request.neo4jGraphService;
 	const params = request.params;
+	let result = null;
 	if (neo4jGraphService && params?.edgeInternalId) {
-		await neo4jGraphService.getEdge(params.edgeInternalId);
+		result = await neo4jGraphService.getEdge(params.edgeInternalId);
 	}
 
-	return reply.code(204).send({});
+	if (!result) {
+		return notFoundReply(reply, 'Edge not found');
+	}
+
+	return okReply(reply, result);
 };
 
 export const deleteEdgeHandler = async (
@@ -49,7 +55,7 @@ export const deleteEdgeHandler = async (
 		await neo4jGraphService.deleteEdge(params.edgeInternalId);
 	}
 
-	return reply.code(204).send({});
+	return deletedReply(reply);
 };
 
 // TODO: implement

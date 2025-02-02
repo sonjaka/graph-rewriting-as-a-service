@@ -1,4 +1,5 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import { okReply } from '../handlers/response';
 
 const healthcheck = async (
 	request: FastifyRequest,
@@ -7,7 +8,7 @@ const healthcheck = async (
 	const session = request.neo4j;
 
 	if (session) {
-		reply.code(200).send({});
+		return okReply(reply, {});
 	}
 
 	throw Error('Neo4j session not found');

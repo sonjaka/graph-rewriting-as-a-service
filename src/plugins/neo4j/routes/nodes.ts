@@ -17,10 +17,10 @@ export default async function routes(fastify: FastifyInstance) {
 		{ schema: { body: GraphNodeSchema } },
 		createNodeHandler
 	);
-	fastify.get<{ Params: ISingleNodeParams }>(
-		'/node/:nodeInternalId',
-		getNodeHandler
-	);
+	fastify.get<{
+		Params: ISingleNodeParams;
+	}>('/node/:nodeInternalId', getNodeHandler);
+
 	fastify.delete<{ Params: ISingleNodeParams }>(
 		'/node/:nodeInternalId',
 		deleteNodeHandler

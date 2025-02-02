@@ -1,6 +1,7 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
 
 import { GraphNodeSchema as GraphNodeSchemaInterface } from '../../../types/node.schema';
+import { createdReply, deletedReply, notFoundReply, okReply } from './response';
 
 export interface ISingleNodeParams {
 	nodeInternalId: string;
@@ -8,8 +9,8 @@ export interface ISingleNodeParams {
 
 export const createNodeHandler = async (
 	request: FastifyRequest<{ Body: GraphNodeSchemaInterface }>,
-	reply: FastifyReply<{ Body: GraphNodeSchemaInterface }>
-): Promise<FastifyReply<{ Body: GraphNodeSchemaInterface }>> => {
+	reply: FastifyReply
+): Promise<FastifyReply> => {
 	const neo4jGraphService = request.neo4jGraphService;
 	const body = request.body;
 
@@ -18,7 +19,7 @@ export const createNodeHandler = async (
 		result = await neo4jGraphService.createNode(body?.attributes, body?.key);
 	}
 
-	return reply.code(201).send(result);
+	return createdReply(reply, result);
 };
 
 export const getNodeHandler = async (
@@ -33,7 +34,11 @@ export const getNodeHandler = async (
 		result = await neo4jGraphService.getNode(params.nodeInternalId);
 	}
 
-	return reply.code(201).send(result);
+	if (!result) {
+		return notFoundReply(reply, 'Node not found');
+	}
+
+	return okReply(reply, result);
 };
 
 export const getAllHandler = async (
@@ -47,7 +52,7 @@ export const getAllHandler = async (
 		result = await neo4jGraphService.getAllNodes();
 	}
 
-	return reply.code(201).send(result);
+	return okReply(reply, result);
 };
 
 export const deleteNodeHandler = async (
@@ -60,7 +65,7 @@ export const deleteNodeHandler = async (
 		await neo4jGraphService.deleteNode(params.nodeInternalId);
 	}
 
-	return reply.code(204).send({});
+	return deletedReply(reply);
 };
 
 export const deleteAllHandler = async (
@@ -72,5 +77,5 @@ export const deleteAllHandler = async (
 		await neo4jGraphService.deleteAllNodes();
 	}
 
-	return reply.code(204).send({});
+	return deletedReply(reply);
 };
