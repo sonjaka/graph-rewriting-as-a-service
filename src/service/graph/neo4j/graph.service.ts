@@ -231,7 +231,6 @@ export class Neo4jGraphService implements IGraphService {
 				internalId,
 			})
 		);
-		console.log(cypher, res.records);
 		const edgeRecords = res.records.map((record) => record.get('r'));
 		const edges = this.mapEdgeRecordsToEdgesResult(edgeRecords);
 
