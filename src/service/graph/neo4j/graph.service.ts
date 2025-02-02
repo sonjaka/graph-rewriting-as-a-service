@@ -33,12 +33,17 @@ type Neo4jUpdateNodeResult = Neo4jNodeResult;
 type Neo4jGetNodesResult = Neo4jNodeResult;
 
 export class Neo4jGraphService implements IGraphService {
+	defaultNodeLabel = `GRS_Node`;
+	defaultRelationshipLabel = `GRS_Relationship`;
+
 	constructor(private readonly session: Session) {}
 
 	public async createNode(
 		metadata: GraphNodeMetadata,
 		internalId?: GraphNodeInternalId
 	): Promise<GraphNodeResult> {
+		await this.ensureConstraints();
+
 		if (internalId) {
 			metadata['_grs_internalId'] = internalId;
 		}
@@ -49,7 +54,7 @@ export class Neo4jGraphService implements IGraphService {
 			nodeType = metadata.type;
 		}
 
-		const cypher = `CREATE (n:\`${nodeType}\` $metadata) RETURN n`;
+		const cypher = `CREATE (n:${this.defaultNodeLabel}:\`${nodeType}\` $metadata) RETURN n`;
 
 		const res = await this.session.executeWrite((tx: ManagedTransaction) =>
 			tx.run<Neo4jCreateNodeResult>(cypher, { metadata })
@@ -163,10 +168,13 @@ export class Neo4jGraphService implements IGraphService {
 	public async createEdge(
 		internalIdSource: GraphNodeInternalId,
 		internalIdTarget: GraphNodeInternalId,
-		internalId: string,
+		internalId: GraphNodeInternalId,
 		metadata: GraphEdgeMetadata
 	) {
-		const relation = `_grs_relationship`;
+		await this.ensureConstraints();
+
+		// Each relation in neo4j needs to have a relationship type
+		const relation = this.defaultRelationshipLabel;
 
 		const properties = {
 			_grs_internalId: internalId,
@@ -252,5 +260,37 @@ export class Neo4jGraphService implements IGraphService {
 		});
 
 		return edges;
+	}
+
+	private async ensureConstraints() {
+		const constraints = {
+			grs_node_id_unique: `CREATE CONSTRAINT grs_node_id_unique FOR (n:${this.defaultNodeLabel}) REQUIRE n._grs_internalId IS UNIQUE`,
+			grs_edge_id_unique: `CREATE CONSTRAINT grs_edge_id_unique FOR ()-[r:${this.defaultRelationshipLabel}]-() REQUIRE r._grs_internalId IS UNIQUE`,
+			// existence constraints are an enterprise only feature :(
+			// grs_node_id_exists: `CREATE CONSTRAINT node_grs_id_exists FOR (n:${this.defaultNodeLabel}) REQUIRE n._grs_internalId IS NOT NULL`,
+			// grs_edge_id_exists: `CREATE CONSTRAINT edge_grs_id_exists FOR ()-[r:${this.defaultRelationshipLabel}]-() REQUIRE r._grs_internalId IS NOT NULL`,
+			// NODE KEYS & RELATIONSHIP KEYS constraints are an enterprise only feature :(
+			// grs_node_key: `CREATE CONSTRAINT grs_node_key FOR (n:${this.defaultNodeLabel}) REQUIRE (n._grs_internalId) IS NODE KEY`,
+			// grs_edge_key: `CREATE CONSTRAINT grs_edge_key FOR ()-[r:${this.defaultRelationshipLabel}]-() REQUIRE r._grs_internalId IS RELATIONSHIP KEY`,
+		};
+
+		// get all constraints
+		const res = await this.session.executeRead((tx: ManagedTransaction) =>
+			tx.run(`SHOW CONSTRAINTS`)
+		);
+
+		const constraintNames = res.records.map((record) => record.get('name'));
+
+		// check if the necessary constraints exists
+		// and create them if they don't exist
+		for (const [constraintKey, constraintCypher] of Object.entries(
+			constraints
+		)) {
+			if (!constraintNames.includes(constraintKey)) {
+				await this.session.executeWrite((tx: ManagedTransaction) =>
+					tx.run(constraintCypher)
+				);
+			}
+		}
 	}
 }

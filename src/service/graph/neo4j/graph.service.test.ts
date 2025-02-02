@@ -33,8 +33,10 @@ describe('Test graph service', () => {
 	});
 
 	afterEach(async () => {
-		// Clean up database after each test
+		// Delete all nodes & relationships
 		await session.run(`MATCH (n) CALL (n) { DETACH DELETE n } IN TRANSACTIONS`);
+		// Drop all indexes & constraints
+		await session.run(`CALL apoc.schema.assert({}, {})`);
 		await session.close();
 	});
 
@@ -76,18 +78,20 @@ describe('Test graph service', () => {
 			},
 		];
 
-		const nodeService = new Neo4jGraphService(session);
+		const graphService = new Neo4jGraphService(session);
 
 		for (let index = 0; index < testProperties.length; index++) {
 			const neo4jSpy = vi.spyOn(session, 'executeWrite');
 
-			const result = await nodeService.createNode(
+			const result = await graphService.createNode(
 				{ ...testProperties[index], _grs_internalId: testKey[index] },
 				testKey[index]
 			);
 			expect(result).toEqual(expectedResult[index]);
 			expect(neo4jSpy).toHaveBeenCalled();
-			expect(neo4jSpy).toHaveBeenCalledTimes(index + 1);
+			// should have been called once for each node
+			// plus twice for the constraints
+			expect(neo4jSpy).toHaveBeenCalledTimes(index + 3);
 		}
 
 		// Check that database contains the correct data
@@ -96,15 +100,31 @@ describe('Test graph service', () => {
 		expect(finalNodesCount.toNumber()).toEqual(testKey.length);
 	}, 10000);
 
+	test('Test createNode should fail for duplicate key', async () => {
+		const graphService = new Neo4jGraphService(session);
+		const neo4jSpy = vi.spyOn(session, 'executeWrite');
+
+		await graphService.createNode({ hello: 'world' }, 'testnode1');
+
+		await expect(() =>
+			graphService.createNode({ hello: 'world' }, 'testnode1')
+		).rejects.toThrowError();
+
+		expect(neo4jSpy).toHaveBeenCalled();
+		// should have beeen called once for each node
+		// plus twice to set constraints
+		expect(neo4jSpy).toHaveBeenCalledTimes(4);
+	}, 10000);
+
 	test('Test getNode', async () => {
 		// Prime database with a test node
 		await session.run(
 			`CREATE (n:Node {label: 'Test', _grs_internalId: 'testnode1'})`
 		);
 
-		const nodeService = new Neo4jGraphService(session);
+		const graphService = new Neo4jGraphService(session);
 		const neo4jSpy = vi.spyOn(session, 'executeRead');
-		const result = await nodeService.getNode('testnode1');
+		const result = await graphService.getNode('testnode1');
 		expect(result).toEqual({
 			key: 'testnode1',
 			attributes: {
@@ -122,7 +142,7 @@ describe('Test graph service', () => {
 		);
 
 		// Setup test
-		const nodeService = new Neo4jGraphService(session);
+		const graphService = new Neo4jGraphService(session);
 		const updatedNodeData = {
 			metadata: {
 				hello: 'world',
@@ -130,7 +150,7 @@ describe('Test graph service', () => {
 			internalId: 'testnode1',
 		};
 		const neo4jSpy = vi.spyOn(session, 'executeWrite');
-		const result = await nodeService.updateNode(
+		const result = await graphService.updateNode(
 			updatedNodeData.metadata,
 			updatedNodeData.internalId
 		);
@@ -159,9 +179,9 @@ describe('Test graph service', () => {
 			props
 		);
 
-		const nodeService = new Neo4jGraphService(session);
+		const graphService = new Neo4jGraphService(session);
 		const neo4jSpy = vi.spyOn(session, 'executeRead');
-		const result = await nodeService.getAllNodes();
+		const result = await graphService.getAllNodes();
 		expect(result).toMatchObject([
 			{
 				key: 'testnodeA',
@@ -201,9 +221,9 @@ describe('Test graph service', () => {
 			props
 		);
 
-		const nodeService = new Neo4jGraphService(session);
+		const graphService = new Neo4jGraphService(session);
 		const neo4jSpy = vi.spyOn(session, 'executeWrite');
-		const result = await nodeService.deleteNode('testnodeA');
+		const result = await graphService.deleteNode('testnodeA');
 		// Check result
 		expect(result).toBeUndefined();
 		expect(neo4jSpy).toHaveBeenCalled();
@@ -238,9 +258,9 @@ describe('Test graph service', () => {
 			props
 		);
 
-		const nodeService = new Neo4jGraphService(session);
+		const graphService = new Neo4jGraphService(session);
 		const neo4jSpy = vi.spyOn(session, 'run');
-		const result = await nodeService.deleteAllNodes();
+		const result = await graphService.deleteAllNodes();
 		// Check result
 		expect(result).toEqual([]);
 		expect(neo4jSpy).toHaveBeenCalled();
@@ -250,5 +270,71 @@ describe('Test graph service', () => {
 		const finalState = await getApocJsonAllExport(session);
 		const finalNodesCount = finalState.records[0].get('nodes');
 		expect(finalNodesCount.toNumber()).toEqual(0);
+	});
+
+	test('Test createEdge', async () => {
+		const props = {
+			attributes: [
+				{ label: 'A', key: 'testnodeA' },
+				{ label: 'B', key: 'testnodeB' },
+			],
+		};
+		await session.run(
+			`UNWIND $attributes AS config \
+			CREATE (n:Node {label: config.label, _grs_internalId: config.key})`,
+			props
+		);
+
+		const graphService = new Neo4jGraphService(session);
+		const neo4jSpy = vi.spyOn(session, 'executeWrite');
+		const result = await graphService.createEdge(
+			'testnodeA',
+			'testnodeB',
+			'testrelation',
+			{ type: 'relation', hello: 'world' }
+		);
+		// Check result
+		expect(result).toEqual({
+			key: 'testrelation',
+			source: 'testnodeA',
+			target: 'testnodeB',
+			attributes: {
+				type: 'relation',
+				hello: 'world',
+			},
+		});
+		expect(neo4jSpy).toHaveBeenCalled();
+		// should have been called once for edge
+		// plus twice for the constraints
+		expect(neo4jSpy).toHaveBeenCalledTimes(2 + 1);
+
+		// Check that database contains the correct data
+		const finalState = await getApocJsonAllExport(session);
+		const finalEdgesCount = finalState.records[0].get('relationships');
+		expect(finalEdgesCount.toNumber()).toEqual(1);
+	});
+
+	test('Test createEdge should fail for duplicate key', async () => {
+		const props = {
+			attributes: [
+				{ label: 'A', key: 'testnodeA' },
+				{ label: 'B', key: 'testnodeB' },
+			],
+		};
+		await session.run(
+			`UNWIND $attributes AS config \
+				CREATE (n:Node {label: config.label, _grs_internalId: config.key})`,
+			props
+		);
+
+		const graphService = new Neo4jGraphService(session);
+		await graphService.createEdge('testnodeA', 'testnodeB', 'testrelation', {
+			type: 'relation',
+			hello: 'world',
+		});
+
+		await expect(() =>
+			graphService.createEdge('testnodeA', 'testnodeB', 'testrelation', {})
+		).rejects.toThrowError();
 	});
 });
