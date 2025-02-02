@@ -12,7 +12,8 @@
 		"test": "vitest --coverage",
 		"prettier": "npx prettier . --check",
 		"prettier-watch": "onchange \"**/*\" -- prettier --write --ignore-unknown {{changed}}",
-		"lint": "npx eslint ."
+		"lint": "npx eslint .",
+		"compile-schemas": "json2ts -i src/schemas -o src/types"
 	},
 	"keywords": [
 		"graph rewriting",
@@ -21,11 +22,12 @@
 	],
 	"devDependencies": {
 		"@eslint/js": "^9.19.0",
-		"@testcontainers/neo4j": "^10.16.0",
+		"@testcontainers/neo4j": "^10.17.1",
 		"@tsconfig/node20": "^20.1.4",
 		"@types/node": "^22.10.7",
 		"@vitest/coverage-v8": "^3.0.2",
 		"eslint": "^9.19.0",
+		"json-schema-to-typescript": "^15.0.4",
 		"prettier": "^3.4.2",
 		"tsx": "^4.19.2",
 		"typescript": "^5.7.3",

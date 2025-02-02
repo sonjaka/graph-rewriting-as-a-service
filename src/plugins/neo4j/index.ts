@@ -4,6 +4,9 @@ import neo4j, { Driver, Session } from 'neo4j-driver';
 import { getNeo4jEnvConfig } from './env';
 
 import healthRoutes from './routes/health';
+import nodeRoutes from './routes/nodes';
+import edgeRoutes from './routes/edges';
+import { Neo4jGraphService } from '../../service/graph/neo4j/graph.service';
 
 declare module 'fastify' {
 	interface FastifyInstance {
@@ -12,6 +15,7 @@ declare module 'fastify' {
 
 	interface FastifyRequest {
 		neo4j: Session | null;
+		neo4jGraphService: Neo4jGraphService;
 	}
 }
 
@@ -60,6 +64,8 @@ const neo4jConnector: FastifyPluginAsync = async (fastify: FastifyInstance) => {
 		fastify.addHook('onRequest', (request, reply, done) => {
 			const session = driver?.session();
 			request.neo4j = session;
+			const neo4jGraphService = new Neo4jGraphService(session);
+			request.neo4jGraphService = neo4jGraphService;
 			done();
 		});
 
@@ -80,6 +86,9 @@ const neo4jConnector: FastifyPluginAsync = async (fastify: FastifyInstance) => {
 	fastify.register(healthRoutes, {
 		prefix: '/neo4j',
 	});
+
+	fastify.register(nodeRoutes);
+	fastify.register(edgeRoutes);
 };
 
 export default fastifyPlugin(neo4jConnector, {

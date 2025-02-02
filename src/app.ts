@@ -11,6 +11,11 @@ import { getAppEnvConfig } from './config/env';
 
 import healthRoutes from './routes/health';
 
+import GraphNodeSchema from './schemas/node.schema.json';
+import GraphEdgeSchema from './schemas/edge.schema.json';
+
+import neo4jConnector from './plugins/neo4j/index';
+
 /**
  * Creates a fastify server instance
  */
@@ -29,6 +34,12 @@ export function buildServer(): FastifyInstance {
 	server.register(SwaggerUI);
 
 	server.register(healthRoutes);
+
+	server.addSchema(GraphNodeSchema);
+	server.addSchema(GraphEdgeSchema);
+
+	// Use neo4j
+	server.register(neo4jConnector);
 
 	return server;
 }
