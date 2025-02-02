@@ -54,4 +54,12 @@ export interface IGraphService {
 	): Promise<GraphNodeResult | undefined>;
 	getAllNodes(): Promise<GraphNodeResult[]>;
 	deleteAllNodes(): Promise<GraphNodeResult[]>;
+	createEdge(
+		internalIdSource: GraphNodeInternalId,
+		internalIdTarget: GraphNodeInternalId,
+		internalId: GraphEdgeInternalId,
+		metadata: GraphEdgeMetadata
+	): Promise<GraphEdgeResult>;
+	getEdge(internalId: GraphEdgeInternalId): Promise<GraphEdgeResult>;
+	deleteEdge(internalId: GraphEdgeInternalId): Promise<GraphEdgeResult>;
 }

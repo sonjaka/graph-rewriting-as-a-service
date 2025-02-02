@@ -206,19 +206,51 @@ export class Neo4jGraphService implements IGraphService {
 		return edges[0];
 	}
 
-	// public async deleteEdge(internalId: GraphEdgeInternalId) {
-	// 	const cypher = `MATCH ()-[r]-()
-	// 		WHERE r.internalId = $internalId \
-	// 		DELETE r`;
+	public async getEdge(internalId: GraphEdgeInternalId) {
+		const cypher = `MATCH ()-[r]-() \
+            WHERE r._grs_internalId = $internalId \
+            RETURN r`;
 
-	// 	const res = await session.executeWrite((tx: ManagedTransaction) => {
-	// 		tx.run<BaseRelationship>(cypher, {
-	// 			internalId,
-	// 		});
-	// 	});
+		const res = await this.session.executeRead((tx: ManagedTransaction) =>
+			tx.run(cypher, { internalId })
+		);
 
-	// 	return res;
-	// }
+		const edgeRecords = res.records.map((record) => record.get('r'));
+		const edges = this.mapEdgeRecordsToEdgesResult(edgeRecords);
+
+		return edges[0];
+	}
+
+	public async deleteEdge(internalId: GraphEdgeInternalId) {
+		const cypher = `MATCH ()-[r]-()
+			WHERE r._grs_internalId = $internalId \
+			DELETE r`;
+
+		const res = await this.session.executeWrite((tx: ManagedTransaction) =>
+			tx.run<Neo4jRelationshipResult>(cypher, {
+				internalId,
+			})
+		);
+		console.log(cypher, res.records);
+		const edgeRecords = res.records.map((record) => record.get('r'));
+		const edges = this.mapEdgeRecordsToEdgesResult(edgeRecords);
+
+		return edges[0];
+	}
+
+	public async getAllEdges() {
+		const cypher = `MATCH ()-[r]-() \
+			RETURN DISTINCT r`;
+
+		const res = await this.session.executeRead((tx: ManagedTransaction) =>
+			tx.run<Neo4jRelationshipResult>(cypher)
+		);
+
+		const edgeRecords = res.records.map((record) => record.get('r'));
+		const edges = this.mapEdgeRecordsToEdgesResult(edgeRecords);
+
+		return edges;
+	}
 
 	private mapNodeRecordsToNodesResult(
 		nodeRecords: Neo4jNode[]

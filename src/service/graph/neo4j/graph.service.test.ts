@@ -337,4 +337,72 @@ describe('Test graph service', () => {
 			graphService.createEdge('testnodeA', 'testnodeB', 'testrelation', {})
 		).rejects.toThrowError();
 	});
+
+	test('Test getEdge', async () => {
+		// Prime database with nodes & relationship
+		const props = {
+			attributes: [
+				{ label: 'A', key: 'testnodeA' },
+				{ label: 'B', key: 'testnodeB' },
+			],
+		};
+		await session.run(
+			`UNWIND $attributes AS config \
+			CREATE (n:Node {label: config.label, _grs_internalId: config.key})`,
+			props
+		);
+		await session.run(`MATCH (a),(b) \
+			WHERE a._grs_internalId = 'testnodeA' \
+			AND b._grs_internalId = 'testnodeB' \
+			CREATE (a)-[r:\`_grs_relationship\` {_grs_internalId: 'testedge', _grs_source: 'testnodeA', _grs_target: 'testnodeB', hello: 'world'}]->(b) RETURN r`);
+
+		const graphService = new Neo4jGraphService(session);
+		const neo4jSpy = vi.spyOn(session, 'executeRead');
+		const result = await graphService.getEdge('testedge');
+		expect(result).toEqual({
+			key: 'testedge',
+			source: 'testnodeA',
+			target: 'testnodeB',
+			attributes: {
+				hello: 'world',
+			},
+		});
+		expect(neo4jSpy).toHaveBeenCalled();
+		expect(neo4jSpy).toHaveBeenCalledTimes(1);
+	}, 10000);
+
+	test('Test deleteEdge', async () => {
+		const props = {
+			attributes: [
+				{ label: 'A', key: 'testnodeA' },
+				{ label: 'B', key: 'testnodeB' },
+			],
+		};
+		await session.run(
+			`UNWIND $attributes AS config \
+			CREATE (n:GRS_NODE {label: config.label, _grs_internalId: config.key})`,
+			props
+		);
+		await session.run(`MATCH (a),(b) \
+			WHERE a._grs_internalId = 'testnodeA' \
+			AND b._grs_internalId = 'testnodeB' \
+			CREATE (a)-[r:\`GRS_relationship\` {_grs_internalId: 'testedge', _grs_source: 'testnodeA', _grs_target: 'testnodeB', hello: 'world'}]->(b) RETURN r`);
+
+		const graphService = new Neo4jGraphService(session);
+		const neo4jSpy = vi.spyOn(session, 'executeWrite');
+		const result = await graphService.deleteEdge('testedge');
+		// Check result
+		expect(result).toBeUndefined();
+		expect(neo4jSpy).toHaveBeenCalled();
+		expect(neo4jSpy).toHaveBeenCalledTimes(1);
+
+		// Check that database contains the correct data
+		const finalState = await getApocJsonAllExport(session);
+		const finalNodesCount = finalState.records[0].get('nodes');
+		const finalEdgesCount = finalState.records[0].get('relationships');
+		expect(finalEdgesCount.toNumber()).toEqual(0);
+		expect(finalNodesCount.toNumber()).toEqual(2);
+
+		// Todo: check if the specific edge doesn't still exist
+	});
 });

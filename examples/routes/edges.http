@@ -11,5 +11,6 @@ Content-Type: application/json
     "label": "Relationship label"
   }
 }
+GET http://localhost:8080/edge/testedge
 
 DELETE http://localhost:8080/edge/testedge

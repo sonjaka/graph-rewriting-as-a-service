@@ -26,21 +26,31 @@ export const createEdgeHandler = async (
 	return reply.code(201).send(result);
 };
 
-// TODO: implement
-// export const getEdgeHandler = async () => {};
+export const getEdgeHandler = async (
+	request: FastifyRequest<{ Params: ISingleEdgeParams }>,
+	reply: FastifyReply
+) => {
+	const neo4jGraphService = request.neo4jGraphService;
+	const params = request.params;
+	if (neo4jGraphService && params?.edgeInternalId) {
+		await neo4jGraphService.getEdge(params.edgeInternalId);
+	}
 
-// export const deleteEdgeHandler = async (
-// 	request: FastifyRequest<{ Params: ISingleEdgeParams }>,
-// 	reply: FastifyReply
-// ) => {
-// 	const neo4jGraphService = request.neo4jGraphService;
-// 	const params = request.params;
-// 	if (neo4jGraphService && params?.edgeInternalId) {
-// 		await neo4jGraphService.deleteEdge(params.edgeInternalId);
-// 	}
+	return reply.code(204).send({});
+};
 
-// 	return reply.code(204).send({});
-// };
+export const deleteEdgeHandler = async (
+	request: FastifyRequest<{ Params: ISingleEdgeParams }>,
+	reply: FastifyReply
+) => {
+	const neo4jGraphService = request.neo4jGraphService;
+	const params = request.params;
+	if (neo4jGraphService && params?.edgeInternalId) {
+		await neo4jGraphService.deleteEdge(params.edgeInternalId);
+	}
+
+	return reply.code(204).send({});
+};
 
 // TODO: implement
 // export const getAllEdgesHandler = async () => {};
