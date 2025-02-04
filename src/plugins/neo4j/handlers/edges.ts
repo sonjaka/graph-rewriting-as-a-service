@@ -1,7 +1,12 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
 
 import { GraphEdgeSchema as GraphEdgeSchemaInterface } from '../../../types/edge.schema';
-import { createdReply, deletedReply, notFoundReply, okReply } from './response';
+import {
+	createdReply,
+	deletedReply,
+	notFoundReply,
+	okReply,
+} from '../../../utils/response';
 
 export interface ISingleEdgeParams {
 	edgeInternalId: string;
