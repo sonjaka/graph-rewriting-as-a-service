@@ -13,6 +13,8 @@ describe('Test Fastify Server', () => {
 
 		expect(response.statusCode).toBe(200);
 		expect(response.body).toBe(JSON.stringify({ hello: 'fastify server' }));
+
+		fastify.close();
 	});
 
 	test('Request undefined route', async () => {
@@ -31,5 +33,7 @@ describe('Test Fastify Server', () => {
 				statusCode: 404,
 			})
 		);
+
+		fastify.close();
 	});
 });
