@@ -14,8 +14,8 @@ export interface ISingleEdgeParams {
 
 export const createEdgeHandler = async (
 	request: FastifyRequest<{ Body: GraphEdgeSchemaInterface }>,
-	reply: FastifyReply<{ Body: GraphEdgeSchemaInterface }>
-): Promise<FastifyReply<{ Body: GraphEdgeSchemaInterface }>> => {
+	reply: FastifyReply
+): Promise<FastifyReply> => {
 	const neo4jGraphService = request.neo4jGraphService;
 	const body = request.body;
 
