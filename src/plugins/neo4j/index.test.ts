@@ -1,5 +1,5 @@
-import fastify, { FastifyInstance } from 'fastify';
-import { assert, expect, test, describe, vi, afterEach } from 'vitest';
+import fastify from 'fastify';
+import { expect, test, describe, vi, afterEach } from 'vitest';
 
 import neo4j, { Driver } from 'neo4j-driver';
 import { getNeo4jEnvConfig } from './env';
@@ -41,7 +41,7 @@ describe('Test Neo4j plugin registration', () => {
 		expect(server.hasDecorator('neo4j')).toBe(true);
 		expect(server.hasRequestDecorator('neo4jGraphService')).toBe(true);
 
-		server.get('/', async (request, reply) => {
+		server.get('/', async (request) => {
 			expect(request.neo4jGraphService).not.toBe(undefined);
 			return { hello: 'world' };
 		});
