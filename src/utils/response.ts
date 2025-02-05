@@ -7,7 +7,7 @@ const enum Status {
 	Success = 'success',
 }
 
-type ResponseCode = 200 | 201 | 204 | 404 | 500;
+type ResponseCode = 200 | 201 | 204 | 403 | 404 | 500;
 
 export interface ApiResponse<Data> {
 	status: Status;
@@ -17,7 +17,7 @@ export interface ApiResponse<Data> {
 }
 
 const buildResponseObject = <Data>(
-	code: number,
+	code: ResponseCode,
 	message?: string,
 	error?: Error,
 	data?: Data

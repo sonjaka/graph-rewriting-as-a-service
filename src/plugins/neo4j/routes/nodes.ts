@@ -4,9 +4,9 @@ import GraphNodeSchema from '../../../schemas/node.schema.json';
 import { GraphNodeSchema as GraphNodeSchemaInterface } from '../../../types/node.schema';
 import {
 	createNodeHandler,
-	deleteAllHandler,
+	deleteAllNodesHandler,
 	deleteNodeHandler,
-	getAllHandler,
+	getAllNodesHandler,
 	getNodeHandler,
 	type ISingleNodeParams,
 } from '../handlers/nodes';
@@ -26,6 +26,6 @@ export default async function routes(fastify: FastifyInstance) {
 		deleteNodeHandler
 	);
 
-	fastify.get('/nodes', getAllHandler);
-	fastify.delete('/nodes', deleteAllHandler);
+	fastify.get('/nodes', getAllNodesHandler);
+	fastify.delete('/nodes', deleteAllNodesHandler);
 }

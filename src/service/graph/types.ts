@@ -48,7 +48,9 @@ export interface IGraphService {
 		internalId: GraphNodeInternalId,
 		oldTypes: string[]
 	): Promise<GraphNodeResult>;
-	getNode(internalId: GraphNodeInternalId): Promise<GraphNodeResult>;
+	getNode(
+		internalId: GraphNodeInternalId
+	): Promise<GraphNodeResult | undefined>;
 	deleteNode(
 		internalId: GraphNodeInternalId
 	): Promise<GraphNodeResult | undefined>;
@@ -60,6 +62,8 @@ export interface IGraphService {
 		internalId: GraphEdgeInternalId,
 		metadata: GraphEdgeMetadata
 	): Promise<GraphEdgeResult>;
-	getEdge(internalId: GraphEdgeInternalId): Promise<GraphEdgeResult>;
+	getEdge(
+		internalId: GraphEdgeInternalId
+	): Promise<GraphEdgeResult | undefined>;
 	deleteEdge(internalId: GraphEdgeInternalId): Promise<GraphEdgeResult>;
 }

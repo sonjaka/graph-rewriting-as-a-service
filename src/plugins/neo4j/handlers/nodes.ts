@@ -46,7 +46,7 @@ export const getNodeHandler = async (
 	return okReply(reply, result);
 };
 
-export const getAllHandler = async (
+export const getAllNodesHandler = async (
 	request: FastifyRequest,
 	reply: FastifyReply
 ): Promise<FastifyReply> => {
@@ -73,7 +73,7 @@ export const deleteNodeHandler = async (
 	return deletedReply(reply);
 };
 
-export const deleteAllHandler = async (
+export const deleteAllNodesHandler = async (
 	request: FastifyRequest,
 	reply: FastifyReply
 ) => {
