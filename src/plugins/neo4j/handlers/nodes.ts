@@ -1,7 +1,12 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
 
 import { GraphNodeSchema as GraphNodeSchemaInterface } from '../../../types/node.schema';
-import { createdReply, deletedReply, notFoundReply, okReply } from './response';
+import {
+	createdReply,
+	deletedReply,
+	notFoundReply,
+	okReply,
+} from '../../../utils/response';
 
 export interface ISingleNodeParams {
 	nodeInternalId: string;
@@ -41,7 +46,7 @@ export const getNodeHandler = async (
 	return okReply(reply, result);
 };
 
-export const getAllHandler = async (
+export const getAllNodesHandler = async (
 	request: FastifyRequest,
 	reply: FastifyReply
 ): Promise<FastifyReply> => {
@@ -68,7 +73,7 @@ export const deleteNodeHandler = async (
 	return deletedReply(reply);
 };
 
-export const deleteAllHandler = async (
+export const deleteAllNodesHandler = async (
 	request: FastifyRequest,
 	reply: FastifyReply
 ) => {

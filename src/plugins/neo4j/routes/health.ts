@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { okReply } from '../handlers/response';
+import { okReply } from '../../../utils/response';
 
 const healthcheck = async (
 	request: FastifyRequest,
