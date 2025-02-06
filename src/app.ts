@@ -11,10 +11,8 @@ import { getAppEnvConfig } from './config/env';
 
 import healthRoutes from './routes/health';
 
-import GraphNodeSchema from './schemas/node.schema.json';
-import GraphEdgeSchema from './schemas/edge.schema.json';
-
 import neo4jConnector from './plugins/neo4j/index';
+import grsPlugin from './plugins/grs/index';
 
 /**
  * Creates a fastify server instance
@@ -35,11 +33,10 @@ export function buildServer(): FastifyInstance {
 
 	server.register(healthRoutes);
 
-	server.addSchema(GraphNodeSchema);
-	server.addSchema(GraphEdgeSchema);
-
 	// Use neo4j
 	server.register(neo4jConnector);
+	// Add grs plugin
+	server.register(grsPlugin);
 
 	return server;
 }

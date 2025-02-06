@@ -34,7 +34,7 @@ describe('Tests node route handlers', () => {
 		} as unknown as FastifyReply;
 
 		mockRequest = {
-			neo4jGraphService: {
+			graphService: {
 				createEdge: vi.fn(),
 				getEdge: vi.fn(),
 				deleteEdge: vi.fn(),
@@ -56,18 +56,18 @@ describe('Tests node route handlers', () => {
 		mockRequest.body = body as GraphEdgeSchemaInterface;
 
 		// Ensure neo4jGraphService is not null
-		if (!mockRequest.neo4jGraphService) {
+		if (!mockRequest.graphService) {
 			throw new Error('neo4jGraphService is null');
 		}
 
-		mockRequest.neo4jGraphService.createEdge = vi.fn().mockResolvedValue(body);
+		mockRequest.graphService.createEdge = vi.fn().mockResolvedValue(body);
 
 		await createEdgeHandler(
 			mockRequest as FastifyRequest<{ Body: GraphEdgeSchemaInterface }>,
 			mockReply
 		);
 
-		expect(mockRequest?.neo4jGraphService?.createEdge).toHaveBeenCalledWith(
+		expect(mockRequest?.graphService?.createEdge).toHaveBeenCalledWith(
 			body.source,
 			body.target,
 			body.key,
@@ -81,7 +81,7 @@ describe('Tests node route handlers', () => {
 		mockRequest.params = params;
 
 		// Ensure neo4jGraphService is not null
-		if (!mockRequest.neo4jGraphService) {
+		if (!mockRequest.graphService) {
 			throw new Error('neo4jGraphService is null');
 		}
 
@@ -91,16 +91,14 @@ describe('Tests node route handlers', () => {
 			key: 'testEdge',
 			attributes: { label: 'testLabel' },
 		};
-		mockRequest.neo4jGraphService.getEdge = vi
-			.fn()
-			.mockResolvedValue(returnValue);
+		mockRequest.graphService.getEdge = vi.fn().mockResolvedValue(returnValue);
 
 		await getEdgeHandler(
 			mockRequest as FastifyRequest<{ Params: ISingleEdgeParams }>,
 			mockReply
 		);
 
-		expect(mockRequest.neo4jGraphService.getEdge).toHaveBeenCalledWith(
+		expect(mockRequest.graphService.getEdge).toHaveBeenCalledWith(
 			params.edgeInternalId
 		);
 		expect(okReply).toHaveBeenCalledWith(mockReply, returnValue);
@@ -110,20 +108,18 @@ describe('Tests node route handlers', () => {
 		const params: ISingleEdgeParams = { edgeInternalId: 'unknownTestId' };
 		mockRequest.params = params;
 
-		if (!mockRequest.neo4jGraphService) {
+		if (!mockRequest.graphService) {
 			throw new Error('neo4jGraphService is null');
 		}
 
-		mockRequest.neo4jGraphService.getEdge = vi
-			.fn()
-			.mockResolvedValue(undefined);
+		mockRequest.graphService.getEdge = vi.fn().mockResolvedValue(undefined);
 
 		await getEdgeHandler(
 			mockRequest as FastifyRequest<{ Params: ISingleEdgeParams }>,
 			mockReply
 		);
 
-		expect(mockRequest.neo4jGraphService.getEdge).toHaveBeenCalledWith(
+		expect(mockRequest.graphService.getEdge).toHaveBeenCalledWith(
 			params.edgeInternalId
 		);
 		expect(notFoundReply).toHaveBeenCalledWith(mockReply, 'Edge not found');
@@ -134,18 +130,18 @@ describe('Tests node route handlers', () => {
 		mockRequest.params = params;
 
 		// Ensure neo4jGraphService is not null
-		if (!mockRequest.neo4jGraphService) {
+		if (!mockRequest.graphService) {
 			throw new Error('neo4jGraphService is null');
 		}
 
-		mockRequest.neo4jGraphService.deleteEdge = vi.fn();
+		mockRequest.graphService.deleteEdge = vi.fn();
 
 		await deleteEdgeHandler(
 			mockRequest as FastifyRequest<{ Params: ISingleEdgeParams }>,
 			mockReply
 		);
 
-		expect(mockRequest.neo4jGraphService.deleteEdge).toHaveBeenCalledWith(
+		expect(mockRequest.graphService.deleteEdge).toHaveBeenCalledWith(
 			params.edgeInternalId
 		);
 		expect(deletedReply).toHaveBeenCalledWith(mockReply);

@@ -39,10 +39,10 @@ describe('Test Neo4j plugin registration', () => {
 		expect(server.neo4j).not.toBe(undefined);
 		expect(server.neo4j).toBe(mockDriver);
 		expect(server.hasDecorator('neo4j')).toBe(true);
-		expect(server.hasRequestDecorator('neo4jGraphService')).toBe(true);
+		expect(server.hasRequestDecorator('graphService')).toBe(true);
 
 		server.get('/', async (request) => {
-			expect(request.neo4jGraphService).not.toBe(undefined);
+			expect(request.graphService).not.toBe(undefined);
 			return { hello: 'world' };
 		});
 
