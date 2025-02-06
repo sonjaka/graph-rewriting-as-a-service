@@ -1,6 +1,6 @@
 {
 	"$schema": "http://json-schema.org/draft-07/schema#",
-	"$id": "grsGraphNodeSchema",
+	"$id": "https://grs.com/schemas/node",
 	"title": "Graph Node Schema",
 	"type": "object",
 	"additionalProperties": false,

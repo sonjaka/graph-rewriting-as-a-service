@@ -1,6 +1,6 @@
 {
 	"$schema": "http://json-schema.org/draft-07/schema#",
-	"$id": "grsGraphEdgeSchema",
+	"$id": "https://grs.com/schemas/edge",
 	"title": "Graph Edge Schema",
 	"type": "object",
 	"additionalProperties": false,
