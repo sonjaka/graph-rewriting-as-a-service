@@ -36,7 +36,7 @@ describe('Tests node route handlers', () => {
 		} as unknown as FastifyReply;
 
 		mockRequest = {
-			neo4jGraphService: {
+			graphService: {
 				createNode: vi.fn(),
 				getNode: vi.fn(),
 				getAllNodes: vi.fn(),
@@ -58,11 +58,11 @@ describe('Tests node route handlers', () => {
 		mockRequest.body = body as GraphNodeSchemaInterface;
 
 		// Ensure neo4jGraphService is not null
-		if (!mockRequest.neo4jGraphService) {
+		if (!mockRequest.graphService) {
 			throw new Error('neo4jGraphService is null');
 		}
 
-		mockRequest.neo4jGraphService.createNode = vi.fn().mockResolvedValue({
+		mockRequest.graphService.createNode = vi.fn().mockResolvedValue({
 			key: 'testKey',
 			attributes: { label: 'testLabel' },
 		});
@@ -72,7 +72,7 @@ describe('Tests node route handlers', () => {
 			mockReply
 		);
 
-		expect(mockRequest?.neo4jGraphService?.createNode).toHaveBeenCalledWith(
+		expect(mockRequest?.graphService?.createNode).toHaveBeenCalledWith(
 			body.attributes,
 			body.key
 		);
@@ -84,11 +84,11 @@ describe('Tests node route handlers', () => {
 		mockRequest.params = params;
 
 		// Ensure neo4jGraphService is not null
-		if (!mockRequest.neo4jGraphService) {
+		if (!mockRequest.graphService) {
 			throw new Error('neo4jGraphService is null');
 		}
 
-		mockRequest.neo4jGraphService.getNode = vi
+		mockRequest.graphService.getNode = vi
 			.fn()
 			.mockResolvedValue({ key: 'testId' });
 
@@ -97,7 +97,7 @@ describe('Tests node route handlers', () => {
 			mockReply
 		);
 
-		expect(mockRequest.neo4jGraphService.getNode).toHaveBeenCalledWith(
+		expect(mockRequest.graphService.getNode).toHaveBeenCalledWith(
 			params.nodeInternalId
 		);
 		expect(okReply).toHaveBeenCalledWith(mockReply, { key: 'testId' });
@@ -107,31 +107,29 @@ describe('Tests node route handlers', () => {
 		const params: ISingleNodeParams = { nodeInternalId: 'unknownTestId' };
 		mockRequest.params = params;
 
-		if (!mockRequest.neo4jGraphService) {
+		if (!mockRequest.graphService) {
 			throw new Error('neo4jGraphService is null');
 		}
 
-		mockRequest.neo4jGraphService.getNode = vi
-			.fn()
-			.mockResolvedValue(undefined);
+		mockRequest.graphService.getNode = vi.fn().mockResolvedValue(undefined);
 
 		await getNodeHandler(
 			mockRequest as FastifyRequest<{ Params: ISingleNodeParams }>,
 			mockReply
 		);
 
-		expect(mockRequest.neo4jGraphService.getNode).toHaveBeenCalledWith(
+		expect(mockRequest.graphService.getNode).toHaveBeenCalledWith(
 			params.nodeInternalId
 		);
 		expect(notFoundReply).toHaveBeenCalledWith(mockReply, 'Node not found');
 	});
 
 	test('Test getAllNodes', async () => {
-		if (!mockRequest.neo4jGraphService) {
+		if (!mockRequest.graphService) {
 			throw new Error('neo4jGraphService is null');
 		}
 
-		mockRequest.neo4jGraphService.getAllNodes = vi
+		mockRequest.graphService.getAllNodes = vi
 			.fn()
 			.mockResolvedValue([{ key: 'testKey' }, { key: 'testKey2' }]);
 
@@ -140,7 +138,7 @@ describe('Tests node route handlers', () => {
 			mockReply
 		);
 
-		expect(mockRequest.neo4jGraphService.getAllNodes).toHaveBeenCalled();
+		expect(mockRequest.graphService.getAllNodes).toHaveBeenCalled();
 		expect(okReply).toHaveBeenCalledWith(mockReply, [
 			{ key: 'testKey' },
 			{ key: 'testKey2' },
@@ -152,18 +150,18 @@ describe('Tests node route handlers', () => {
 		mockRequest.params = params;
 
 		// Ensure neo4jGraphService is not null
-		if (!mockRequest.neo4jGraphService) {
+		if (!mockRequest.graphService) {
 			throw new Error('neo4jGraphService is null');
 		}
 
-		mockRequest.neo4jGraphService.deleteNode = vi.fn();
+		mockRequest.graphService.deleteNode = vi.fn();
 
 		await deleteNodeHandler(
 			mockRequest as FastifyRequest<{ Params: ISingleNodeParams }>,
 			mockReply
 		);
 
-		expect(mockRequest.neo4jGraphService.deleteNode).toHaveBeenCalledWith(
+		expect(mockRequest.graphService.deleteNode).toHaveBeenCalledWith(
 			params.nodeInternalId
 		);
 		expect(deletedReply).toHaveBeenCalledWith(mockReply);
@@ -176,18 +174,18 @@ describe('Tests node route handlers', () => {
 		mockRequest.params = params;
 
 		// Ensure neo4jGraphService is not null
-		if (!mockRequest.neo4jGraphService) {
+		if (!mockRequest.graphService) {
 			throw new Error('neo4jGraphService is null');
 		}
 
-		mockRequest.neo4jGraphService.deleteAllNodes = vi.fn();
+		mockRequest.graphService.deleteAllNodes = vi.fn();
 
 		await deleteAllNodesHandler(
 			mockRequest as FastifyRequest<{ Params: ISingleNodeParams }>,
 			mockReply
 		);
 
-		expect(mockRequest.neo4jGraphService.deleteAllNodes).toHaveBeenCalled();
+		expect(mockRequest.graphService.deleteAllNodes).toHaveBeenCalled();
 		expect(deletedReply).toHaveBeenCalledWith(mockReply);
 	});
 });
