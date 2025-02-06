@@ -92,8 +92,6 @@ const neo4jConnector: FastifyPluginAsync = async (fastify: FastifyInstance) => {
 
 	fastify.register(nodeRoutes);
 	fastify.register(edgeRoutes);
-
-	fastify.register(grsPlugin);
 };
 
 export default fastifyPlugin(neo4jConnector, {
