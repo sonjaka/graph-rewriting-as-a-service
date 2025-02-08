@@ -1,4 +1,9 @@
-POST http://localhost:8080/hostgraph
+# POST http://localhost:8080/hostgraph
+# Content-Type: application/json
+
+# < ../data/simple_graph.json
+
+POST http://localhost:8080/grs
 Content-Type: application/json
 
-< ../data/simple_graph.json
+< ../data/hostgraph_only.json

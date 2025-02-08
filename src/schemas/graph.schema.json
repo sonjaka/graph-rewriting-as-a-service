@@ -23,6 +23,7 @@
 					"type": "boolean"
 				}
 			},
+			"required": ["type"],
 			"additionalProperties": false
 		},
 		"nodes": {
@@ -38,5 +39,5 @@
 			}
 		}
 	},
-	"required": ["options", "nodes", "edges"]
+	"required": ["options", "attributes", "nodes", "edges"]
 }
