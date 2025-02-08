@@ -9,7 +9,7 @@ export interface GraphRewritingRequestSchema {
   hostgraph: GraphSchema;
 }
 export interface GraphSchema {
-  attributes?: {
+  attributes: {
     [k: string]: unknown;
   };
   options: {
