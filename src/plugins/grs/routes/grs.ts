@@ -40,8 +40,6 @@ const grsHandler = async (
 		const grsService = new GrsService(graphService);
 
 		const hostgraph = await grsService.importHostgraph(hostgraphData);
-		console.log(hostgraph);
-
 		return okReply(reply, hostgraph);
 	}
 
