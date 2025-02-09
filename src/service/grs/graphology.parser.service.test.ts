@@ -14,7 +14,7 @@ describe('Test graphology parser service', () => {
 
 			// Our sample graph nodes contains one attribute: "label"
 			expect(attributes).toEqual({
-				internalId: expect.stringMatching(/^(n_)/),
+				_grs_internalId: expect.stringMatching(/^(n_)/),
 				label: expect.any(String),
 			});
 		});
@@ -25,7 +25,7 @@ describe('Test graphology parser service', () => {
 			// Our sample graph contains one attribute: "label"
 			expect(attributes).toEqual(
 				expect.objectContaining({
-					internalId: expect.stringMatching(/^(e_)/),
+					_grs_internalId: expect.stringMatching(/^(e_)/),
 				})
 			);
 		});
