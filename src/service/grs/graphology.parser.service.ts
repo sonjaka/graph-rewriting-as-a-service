@@ -22,11 +22,11 @@ export class GraphologyParserService {
 		graph: AbstractGraph
 	): Graph<GrsGraphNodeMetadata, GrsGraphEdgeMetadata, GrsGraphMetadata> {
 		graph.forEachNode((nodeKey) => {
-			graph.setNodeAttribute(nodeKey, 'internalId', createNodeUuid());
+			graph.setNodeAttribute(nodeKey, '_grs_internalId', createNodeUuid());
 		});
 
 		graph.forEachEdge((edgeKey) => {
-			graph.setEdgeAttribute(edgeKey, 'internalId', createEdgeUuid());
+			graph.setEdgeAttribute(edgeKey, '_grs_internalId', createEdgeUuid());
 		});
 
 		return graph as Graph<

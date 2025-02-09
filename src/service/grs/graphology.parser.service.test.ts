@@ -10,7 +10,7 @@ describe('Test graphology parser service', () => {
 		const parsedGraph = graphParserService.parseGraph(sampleGraphData);
 
 		parsedGraph.forEachNode((node, attributes) => {
-			expect(attributes).toHaveProperty('internalId');
+			expect(attributes).toHaveProperty('_grs_internalId');
 
 			// Our sample graph nodes contains one attribute: "label"
 			expect(attributes).toEqual({
@@ -20,7 +20,7 @@ describe('Test graphology parser service', () => {
 		});
 
 		parsedGraph.forEachEdge((edge, attributes) => {
-			expect(attributes).toHaveProperty('internalId');
+			expect(attributes).toHaveProperty('_grs_internalId');
 
 			// Our sample graph contains one attribute: "label"
 			expect(attributes).toEqual(

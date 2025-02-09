@@ -66,4 +66,5 @@ export interface IGraphService {
 		internalId: GraphEdgeInternalId
 	): Promise<GraphEdgeResult | undefined>;
 	deleteEdge(internalId: GraphEdgeInternalId): Promise<GraphEdgeResult>;
+	getAllEdges(): Promise<GraphEdgeResult[]>;
 }

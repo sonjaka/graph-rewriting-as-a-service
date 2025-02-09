@@ -1,11 +1,11 @@
 export type GrsGraphMetadata = Record<string, unknown>;
 
 export interface GrsGraphNodeMetadata {
-	internalId: string;
+	_grs_internalId: string;
 	[name: string]: unknown;
 }
 
 export interface GrsGraphEdgeMetadata {
-	internalId: string;
+	_grs_internalId: string;
 	[name: string]: unknown;
 }

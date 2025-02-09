@@ -9,6 +9,8 @@ const enum Status {
 
 type ResponseCode = 200 | 201 | 204 | 403 | 404 | 500;
 
+export type IReply<Payload> = Record<ResponseCode, ApiResponse<Payload>>;
+
 export interface ApiResponse<Data> {
 	status: Status;
 	code: ResponseCode;
