@@ -1,0 +1,13 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "grs.schema.json",
+	"title": "Graph Rewriting Request Schema",
+	"type": "object",
+	"additionalProperties": false,
+	"properties": {
+		"hostgraph": {
+			"$ref": "graph.schema.json"
+		}
+	},
+	"required": ["hostgraph"]
+}

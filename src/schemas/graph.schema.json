@@ -1,6 +1,6 @@
 {
 	"$schema": "http://json-schema.org/draft-07/schema#",
-	"$id": "https://grs.com/schemas/graph",
+	"$id": "graph.schema.json",
 	"title": "Graph Schema",
 	"type": "object",
 	"additionalProperties": false,
@@ -23,20 +23,21 @@
 					"type": "boolean"
 				}
 			},
+			"required": ["type"],
 			"additionalProperties": false
 		},
 		"nodes": {
 			"type": "array",
 			"items": {
-				"$ref": "https://grs.com/schemas/node"
+				"$ref": "node.schema.json"
 			}
 		},
 		"edges": {
 			"type": "array",
 			"items": {
-				"$ref": "https://grs.com/schemas/edge"
+				"$ref": "edge.schema.json"
 			}
 		}
 	},
-	"required": ["options", "nodes", "edges"]
+	"required": ["options", "attributes", "nodes", "edges"]
 }

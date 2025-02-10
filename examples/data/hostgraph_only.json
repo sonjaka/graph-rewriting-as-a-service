@@ -1,0 +1,30 @@
+{
+	"hostgraph": {
+		"options": {
+			"type": "directed"
+		},
+		"attributes": {},
+		"nodes": [
+			{
+				"key": "A",
+				"attributes": {
+					"label": "Start"
+				}
+			},
+			{
+				"key": "B",
+				"attributes": {
+					"label": "Ende"
+				}
+			}
+		],
+		"edges": [
+			{
+				"key": "connectingEdge",
+				"source": "A",
+				"target": "B",
+				"attributes": {}
+			}
+		]
+	}
+}
