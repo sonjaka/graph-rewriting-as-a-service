@@ -62,21 +62,4 @@ export class GrsService {
 
 		return { options, attributes, nodes, edges };
 	}
-
-	private prepareReturnGraph(
-		graph: Graph<GrsGraphNodeMetadata, GrsGraphEdgeMetadata, GrsGraphMetadata>
-	): Graph {
-		for (const node of graph.nodeEntries()) {
-			console.log(node);
-			graph.removeNodeAttribute(node.node, '_grs_internalId');
-		}
-
-		for (const edge of graph.edgeEntries()) {
-			graph.removeEdgeAttribute(edge.edge, '_grs_internalId');
-			graph.removeEdgeAttribute(edge.edge, '_grs_source');
-			graph.removeEdgeAttribute(edge.edge, '_grs_target');
-		}
-
-		return graph;
-	}
 }
