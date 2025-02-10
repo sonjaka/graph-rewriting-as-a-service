@@ -5,9 +5,10 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
-export interface GraphRewritingRequestSchema {
-  hostgraph: GraphSchema;
-  rules?: GraphRewritingRuleSchema[];
+export interface GraphRewritingRuleSchema {
+  key: string;
+  lhs: GraphSchema;
+  rhs: GraphSchema;
 }
 export interface GraphSchema {
   attributes: {
@@ -39,9 +40,4 @@ export interface GraphEdgeSchema {
     type?: string;
     [k: string]: unknown;
   };
-}
-export interface GraphRewritingRuleSchema {
-  key: string;
-  lhs: GraphSchema;
-  rhs: GraphSchema;
 }

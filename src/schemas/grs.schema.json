@@ -7,6 +7,12 @@
 	"properties": {
 		"hostgraph": {
 			"$ref": "graph.schema.json"
+		},
+		"rules": {
+			"type": "array",
+			"items": {
+				"$ref": "rewrite-rule.schema.json"
+			}
 		}
 	},
 	"required": ["hostgraph"]
