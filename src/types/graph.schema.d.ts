@@ -6,14 +6,14 @@
  */
 
 export interface GraphSchema {
-  attributes?: {
+  attributes: {
     [k: string]: unknown;
   };
   options: {
     /**
      * One of mixed, directed or undirected
      */
-    type?: "mixed" | "directed" | "undirected";
+    type: "mixed" | "directed" | "undirected";
     allowSelfLoops?: boolean;
     multi?: boolean;
   };

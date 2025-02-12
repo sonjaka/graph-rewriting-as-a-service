@@ -1,0 +1,19 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "rewrite-rule.schema.json",
+	"title": "Graph Rewriting Rule Schema",
+	"type": "object",
+	"additionalProperties": false,
+	"properties": {
+		"key": {
+			"type": "string"
+		},
+		"lhs": {
+			"$ref": "graph.schema.json"
+		},
+		"rhs": {
+			"$ref": "graph.schema.json"
+		}
+	},
+	"required": ["key", "lhs", "rhs"]
+}
