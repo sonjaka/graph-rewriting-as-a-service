@@ -1,0 +1,23 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "https://grs.com/schemas/response/404",
+	"title": "404 Not found Response",
+	"type": "object",
+	"additionalProperties": false,
+	"properties": {
+		"code": {
+			"enum": [404]
+		},
+		"status": {
+			"enum": ["error"]
+		},
+		"message": {
+			"type": "string"
+		},
+		"data": {
+			"type": "object",
+			"additionalProperties": true
+		}
+	},
+	"required": ["code", "status", "message"]
+}
