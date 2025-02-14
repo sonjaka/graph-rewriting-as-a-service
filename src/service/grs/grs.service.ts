@@ -1,6 +1,6 @@
 import Graph from 'graphology';
 import { GraphSchema } from '../../types/grs.schema';
-import { IGraphService } from '../graph/types';
+import { IDBGraphService } from '../db/types';
 import { GraphologyParserService } from './graphology.parser.service';
 import {
 	GrsGraphEdgeMetadata,
@@ -9,7 +9,7 @@ import {
 } from './types';
 
 export class GrsService {
-	constructor(private readonly graphService: IGraphService) {}
+	constructor(private readonly graphService: IDBGraphService) {}
 
 	public async importHostgraph(
 		hostgraphData: GraphSchema

@@ -16,7 +16,7 @@ export const createNodeHandler = async (
 	request: FastifyRequest<{ Body: GraphNodeSchemaInterface }>,
 	reply: FastifyReply
 ): Promise<FastifyReply> => {
-	const neo4jGraphService = request.graphService;
+	const neo4jGraphService = request.dbGraphService;
 	const body = request.body;
 
 	let result = null;
@@ -31,7 +31,7 @@ export const getNodeHandler = async (
 	request: FastifyRequest<{ Params: ISingleNodeParams }>,
 	reply: FastifyReply
 ): Promise<FastifyReply> => {
-	const neo4jGraphService = request.graphService;
+	const neo4jGraphService = request.dbGraphService;
 	const params = request.params;
 
 	let result = null;
@@ -50,7 +50,7 @@ export const getAllNodesHandler = async (
 	request: FastifyRequest,
 	reply: FastifyReply
 ): Promise<FastifyReply> => {
-	const neo4jGraphService = request.graphService;
+	const neo4jGraphService = request.dbGraphService;
 
 	let result = null;
 	if (neo4jGraphService) {
@@ -64,7 +64,7 @@ export const deleteNodeHandler = async (
 	request: FastifyRequest<{ Params: ISingleNodeParams }>,
 	reply: FastifyReply
 ) => {
-	const neo4jGraphService = request.graphService;
+	const neo4jGraphService = request.dbGraphService;
 	const params = request.params;
 	if (neo4jGraphService && params?.nodeInternalId) {
 		await neo4jGraphService.deleteNode(params.nodeInternalId);
@@ -77,7 +77,7 @@ export const deleteAllNodesHandler = async (
 	request: FastifyRequest,
 	reply: FastifyReply
 ) => {
-	const neo4jGraphService = request.graphService;
+	const neo4jGraphService = request.dbGraphService;
 	if (neo4jGraphService) {
 		await neo4jGraphService.deleteAllNodes();
 	}

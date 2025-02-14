@@ -16,7 +16,7 @@ export const createEdgeHandler = async (
 	request: FastifyRequest<{ Body: GraphEdgeSchemaInterface }>,
 	reply: FastifyReply
 ): Promise<FastifyReply> => {
-	const neo4jGraphService = request.graphService;
+	const neo4jGraphService = request.dbGraphService;
 	const body = request.body;
 
 	let result = null;
@@ -36,7 +36,7 @@ export const getEdgeHandler = async (
 	request: FastifyRequest<{ Params: ISingleEdgeParams }>,
 	reply: FastifyReply
 ) => {
-	const neo4jGraphService = request.graphService;
+	const neo4jGraphService = request.dbGraphService;
 	const params = request.params;
 	let result = null;
 	if (neo4jGraphService && params?.edgeInternalId) {
@@ -54,7 +54,7 @@ export const deleteEdgeHandler = async (
 	request: FastifyRequest<{ Params: ISingleEdgeParams }>,
 	reply: FastifyReply
 ) => {
-	const neo4jGraphService = request.graphService;
+	const neo4jGraphService = request.dbGraphService;
 	const params = request.params;
 	if (neo4jGraphService && params?.edgeInternalId) {
 		await neo4jGraphService.deleteEdge(params.edgeInternalId);
