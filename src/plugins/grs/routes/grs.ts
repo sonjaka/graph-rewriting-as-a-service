@@ -10,12 +10,12 @@ const importHostgraph = async (
 	request: FastifyRequest<{ Body: GrsSchemaInterface }>,
 	reply: FastifyReply
 ): Promise<FastifyReply> => {
-	const graphService = request.graphService;
+	const dbGraphService = request.dbGraphService;
 
-	if (graphService) {
+	if (dbGraphService) {
 		const hostgraphData = request.body.hostgraph;
 
-		const grsService = new GrsService(graphService);
+		const grsService = new GrsService(dbGraphService);
 		grsService.importHostgraph(hostgraphData);
 
 		return okReply(reply, {});
@@ -28,16 +28,16 @@ const grsHandler = async (
 	request: FastifyRequest<{ Body: GrsSchemaInterface }>,
 	reply: FastifyReply
 ): Promise<IReply<GraphSchemaInterface>> => {
-	const graphService = request.graphService;
+	const dbGraphService = request.dbGraphService;
 
 	const hostgraphData = request.body.hostgraph;
 
-	if (!graphService) {
+	if (!dbGraphService) {
 		throw new Error('Graph Service not set');
 	}
 
-	if (graphService) {
-		const grsService = new GrsService(graphService);
+	if (dbGraphService) {
+		const grsService = new GrsService(dbGraphService);
 
 		const hostgraph = await grsService.importHostgraph(hostgraphData);
 		return okReply(reply, hostgraph);

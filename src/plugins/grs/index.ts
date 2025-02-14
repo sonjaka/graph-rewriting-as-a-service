@@ -10,7 +10,7 @@ import GrsSchema from '../../schemas/grs.schema.json';
 import grsRoutes from '../grs/routes/grs';
 
 const grsPlugin: FastifyPluginAsync = async (fastify: FastifyInstance) => {
-	if (fastify.hasRequestDecorator('graphService')) {
+	if (fastify.hasRequestDecorator('dbGraphService')) {
 		fastify.register(grsRoutes);
 	}
 

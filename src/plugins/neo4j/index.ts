@@ -16,7 +16,7 @@ declare module 'fastify' {
 
 	interface FastifyRequest {
 		neo4j: Session | null;
-		graphService: Neo4jGraphService | null;
+		dbGraphService: Neo4jGraphService | null;
 	}
 }
 
@@ -59,8 +59,8 @@ const neo4jConnector: FastifyPluginAsync = async (fastify: FastifyInstance) => {
 		if (!fastify?.neo4j) {
 			fastify.decorate('neo4j', driver);
 			// fastify.decorateRequest<Session | null, 'neo4j'>('neo4j', null);
-			fastify.decorateRequest<Neo4jGraphService | null, 'graphService'>(
-				'graphService',
+			fastify.decorateRequest<Neo4jGraphService | null, 'dbGraphService'>(
+				'dbGraphService',
 				null
 			);
 		}
@@ -68,7 +68,7 @@ const neo4jConnector: FastifyPluginAsync = async (fastify: FastifyInstance) => {
 		fastify.addHook('onRequest', (request, reply, done) => {
 			const session = driver?.session();
 			const neo4jGraphService = new Neo4jGraphService(session);
-			request.graphService = neo4jGraphService;
+			request.dbGraphService = neo4jGraphService;
 			done();
 		});
 
