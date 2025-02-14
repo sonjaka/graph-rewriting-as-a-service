@@ -1,6 +1,8 @@
 {
 	"key": "hello",
-	"options": {},
+	"options": {
+		"type": "directed"
+	},
 	"attributes": {},
 	"nodes": [
 		{

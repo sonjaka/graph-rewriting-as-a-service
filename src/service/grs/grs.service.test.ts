@@ -3,6 +3,7 @@ import { describe, expect, test, vi, beforeEach, afterEach } from 'vitest';
 import sampleGraphData from './testutils/samplegraph.json';
 import { GrsService } from './grs.service';
 import { IDBGraphService } from '../db/types';
+import { GraphSchema } from '../../types/graph.schema';
 
 describe('Test graphology parser service', () => {
 	let mockGraphService: IDBGraphService;
@@ -35,7 +36,9 @@ describe('Test graphology parser service', () => {
 			.fn()
 			.mockResolvedValue(sampleGraphData.edges);
 
-		const result = await grsService.importHostgraph(sampleGraphData);
+		const result = await grsService.importHostgraph(
+			sampleGraphData as GraphSchema
+		);
 
 		// Old nodes should have been deleted
 		expect(deleteAllNodesSpy).toHaveBeenCalled();
