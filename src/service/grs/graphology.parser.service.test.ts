@@ -2,12 +2,15 @@ import { describe, expect, test } from 'vitest';
 import { GraphologyParserService } from './graphology.parser.service';
 
 import sampleGraphData from './testutils/samplegraph.json';
+import { SerializedGraph } from 'graphology-types';
 
 describe('Test graphology parser service', () => {
 	test('Test graphologyParser should add internalId', async () => {
 		const graphParserService = new GraphologyParserService();
 
-		const parsedGraph = graphParserService.parseGraph(sampleGraphData);
+		const parsedGraph = graphParserService.parseGraph(
+			sampleGraphData as SerializedGraph
+		);
 
 		parsedGraph.forEachNode((node, attributes) => {
 			expect(attributes).toHaveProperty('_grs_internalId');
