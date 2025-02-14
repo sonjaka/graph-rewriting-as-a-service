@@ -2,10 +2,10 @@ import { describe, expect, test, vi, beforeEach, afterEach } from 'vitest';
 
 import sampleGraphData from './testutils/samplegraph.json';
 import { GrsService } from './grs.service';
-import { IGraphService } from '../graph/types';
+import { IDBGraphService } from '../db/types';
 
 describe('Test graphology parser service', () => {
-	let mockGraphService: IGraphService;
+	let mockGraphService: IDBGraphService;
 
 	beforeEach(() => {
 		mockGraphService = {
@@ -14,7 +14,7 @@ describe('Test graphology parser service', () => {
 			deleteAllNodes: vi.fn(),
 			createEdge: vi.fn(),
 			getAllEdges: vi.fn(),
-		} as unknown as IGraphService;
+		} as unknown as IDBGraphService;
 	});
 
 	afterEach(() => {

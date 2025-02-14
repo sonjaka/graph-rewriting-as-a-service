@@ -7,7 +7,7 @@ import healthRoutes from './routes/health';
 import nodeRoutes from './routes/nodes';
 import edgeRoutes from './routes/edges';
 
-import { Neo4jGraphService } from '../../service/graph/neo4j/graph.service';
+import { Neo4jGraphService } from '../../service/db/neo4j/graph.service';
 
 declare module 'fastify' {
 	interface FastifyInstance {

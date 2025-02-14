@@ -5,7 +5,7 @@ import {
 	GraphNodeSchema,
 	GraphNodeSchema as GraphNodeSchemaInterface,
 } from '../../../types/node.schema';
-import { Neo4jGraphService } from '../../../service/graph/neo4j/graph.service';
+import { Neo4jGraphService } from '../../../service/db/neo4j/graph.service';
 
 import {
 	createNodeHandler,

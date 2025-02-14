@@ -6,19 +6,19 @@ import {
 	Relationship,
 } from 'neo4j-driver';
 import {
-	GraphEdgeInternalId,
-	GraphNodeInternalId,
-	GraphNodeMetadata,
-	GraphNodeProperties,
-	GraphNodeResult,
-	IGraphService,
-	GraphEdgeProperties,
-	GraphEdgeResult,
-	GraphEdgeMetadata,
+	DBGraphEdgeInternalId,
+	DBGraphNodeInternalId,
+	DBGraphNodeMetadata,
+	DBGraphNodeProperties,
+	DBGraphNodeResult,
+	IDBGraphService,
+	DBGraphEdgeProperties,
+	DBGraphEdgeResult,
+	DBGraphEdgeMetadata,
 } from '../types';
 
-type Neo4jNode = Node<Integer, GraphNodeProperties>;
-type Neo4jRelationship = Relationship<Integer, GraphEdgeProperties>;
+type Neo4jNode = Node<Integer, DBGraphNodeProperties>;
+type Neo4jRelationship = Relationship<Integer, DBGraphEdgeProperties>;
 
 interface Neo4jNodeResult {
 	n: Neo4jNode;
@@ -32,16 +32,16 @@ type Neo4jCreateNodeResult = Neo4jNodeResult;
 type Neo4jUpdateNodeResult = Neo4jNodeResult;
 type Neo4jGetNodesResult = Neo4jNodeResult;
 
-export class Neo4jGraphService implements IGraphService {
+export class Neo4jGraphService implements IDBGraphService {
 	defaultNodeLabel = `GRS_Node`;
 	defaultRelationshipLabel = `GRS_Relationship`;
 
 	constructor(private readonly session: Session) {}
 
 	public async createNode(
-		metadata: GraphNodeMetadata,
-		internalId?: GraphNodeInternalId
-	): Promise<GraphNodeResult> {
+		metadata: DBGraphNodeMetadata,
+		internalId?: DBGraphNodeInternalId
+	): Promise<DBGraphNodeResult> {
 		await this.ensureConstraints();
 
 		if (internalId) {
@@ -67,10 +67,10 @@ export class Neo4jGraphService implements IGraphService {
 	}
 
 	public async updateNode(
-		metadata: GraphNodeMetadata,
-		internalId: GraphNodeInternalId,
+		metadata: DBGraphNodeMetadata,
+		internalId: DBGraphNodeInternalId,
 		oldTypes: string[] = []
-	): Promise<GraphNodeResult> {
+	): Promise<DBGraphNodeResult> {
 		if (internalId) {
 			metadata['_grs_internalId'] = internalId;
 		}
@@ -104,7 +104,7 @@ export class Neo4jGraphService implements IGraphService {
 		return nodes[0];
 	}
 
-	public async getNode(internalId: GraphNodeInternalId) {
+	public async getNode(internalId: DBGraphNodeInternalId) {
 		const cypher = `MATCH (n) \
             WHERE n._grs_internalId = $internalId \
             RETURN n`;
@@ -136,7 +136,7 @@ export class Neo4jGraphService implements IGraphService {
 		return nodes;
 	}
 
-	public async deleteNode(internalId: GraphNodeInternalId) {
+	public async deleteNode(internalId: DBGraphNodeInternalId) {
 		const cypher = `MATCH (n) \
             WHERE n._grs_internalId = $internalId \
             DETACH DELETE n`;
@@ -166,10 +166,10 @@ export class Neo4jGraphService implements IGraphService {
 
 	// TODO: check which what kind of content can be saved in neo4j properties and type metadata accordingly
 	public async createEdge(
-		internalIdSource: GraphNodeInternalId,
-		internalIdTarget: GraphNodeInternalId,
-		internalId: GraphNodeInternalId,
-		metadata: GraphEdgeMetadata
+		internalIdSource: DBGraphNodeInternalId,
+		internalIdTarget: DBGraphNodeInternalId,
+		internalId: DBGraphNodeInternalId,
+		metadata: DBGraphEdgeMetadata
 	) {
 		await this.ensureConstraints();
 
@@ -206,7 +206,7 @@ export class Neo4jGraphService implements IGraphService {
 		return edges[0];
 	}
 
-	public async getEdge(internalId: GraphEdgeInternalId) {
+	public async getEdge(internalId: DBGraphEdgeInternalId) {
 		const cypher = `MATCH ()-[r]-() \
             WHERE r._grs_internalId = $internalId \
             RETURN r`;
@@ -221,7 +221,7 @@ export class Neo4jGraphService implements IGraphService {
 		return edges[0];
 	}
 
-	public async deleteEdge(internalId: GraphEdgeInternalId) {
+	public async deleteEdge(internalId: DBGraphEdgeInternalId) {
 		const cypher = `MATCH ()-[r]-()
 			WHERE r._grs_internalId = $internalId \
 			DELETE r`;
@@ -253,9 +253,9 @@ export class Neo4jGraphService implements IGraphService {
 
 	private mapNodeRecordsToNodesResult(
 		nodeRecords: Neo4jNode[]
-	): GraphNodeResult[] {
+	): DBGraphNodeResult[] {
 		const nodes = nodeRecords.map((node) => {
-			const nodeData: GraphNodeResult = {
+			const nodeData: DBGraphNodeResult = {
 				key: node.properties?._grs_internalId,
 				attributes: {
 					...node.properties,
@@ -272,9 +272,9 @@ export class Neo4jGraphService implements IGraphService {
 
 	private mapEdgeRecordsToEdgesResult(
 		edgeRecords: Neo4jRelationship[]
-	): GraphEdgeResult[] {
+	): DBGraphEdgeResult[] {
 		const edges = edgeRecords.map((edge) => {
-			const edgeData: GraphEdgeResult = {
+			const edgeData: DBGraphEdgeResult = {
 				key: edge.properties._grs_internalId,
 				source: edge.properties._grs_source,
 				target: edge.properties._grs_target,
