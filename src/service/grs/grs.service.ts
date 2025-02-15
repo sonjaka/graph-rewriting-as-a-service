@@ -21,7 +21,7 @@ export class GrsService {
 		hostgraphData: GraphSchema,
 		rules: GraphRewritingRuleSchema[]
 	): Promise<GraphSchema> {
-		const hostgraph = await this.importHostgraph(hostgraphData);
+		await this.importHostgraph(hostgraphData);
 
 		let ruleSet;
 		if (rules) {
