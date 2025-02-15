@@ -1,8 +1,12 @@
 import { describe, expect, test, vi, beforeEach, afterEach } from 'vitest';
 
 import sampleGraphData from './testutils/samplegraph.json';
+import sampleRules from './testutils/samplerules.json';
 import { GrsService } from './grs.service';
 import { IDBGraphService } from '../db/types';
+import { GraphSchema } from '../../types/graph.schema';
+import { GraphRewritingRuleSchema } from '../../types/grs.schema';
+import Graph from 'graphology';
 
 describe('Test graphology parser service', () => {
 	let mockGraphService: IDBGraphService;
@@ -35,7 +39,9 @@ describe('Test graphology parser service', () => {
 			.fn()
 			.mockResolvedValue(sampleGraphData.edges);
 
-		const result = await grsService.importHostgraph(sampleGraphData);
+		const result = await grsService.importHostgraph(
+			sampleGraphData as GraphSchema
+		);
 
 		// Old nodes should have been deleted
 		expect(deleteAllNodesSpy).toHaveBeenCalled();
@@ -54,5 +60,25 @@ describe('Test graphology parser service', () => {
 			nodes: result.nodes,
 			edges: result.edges,
 		});
+	});
+
+	test('Test rules are correctly parsed into graphs', () => {
+		const grsService = new GrsService(mockGraphService);
+
+		const rulesData = sampleRules as GraphRewritingRuleSchema[];
+
+		const rules = grsService.parseRules(rulesData);
+
+		expect(rules.has('add_triangle')).toBe(true);
+		expect(rules.get('add_triangle')).toHaveProperty('lhs');
+		expect(rules.get('add_triangle')).toHaveProperty('rhs');
+
+		const singleRule = rules.get('add_triangle');
+
+		const lhs = singleRule?.lhs;
+		const rhs = singleRule?.rhs;
+
+		expect(lhs).toBeInstanceOf(Graph);
+		expect(rhs).toBeInstanceOf(Graph);
 	});
 });

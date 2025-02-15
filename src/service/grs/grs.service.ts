@@ -1,5 +1,6 @@
 import Graph from 'graphology';
 import { GraphSchema } from '../../types/grs.schema';
+import { GraphRewritingRuleSchema } from '../../types/rewrite-rule.schema';
 import { IDBGraphService } from '../db/types';
 import { GraphologyParserService } from './graphology.parser.service';
 import {
@@ -8,8 +9,29 @@ import {
 	GrsGraphNodeMetadata,
 } from './types';
 
+interface GrsRewriteRule {
+	lhs: Graph<GrsGraphNodeMetadata, GrsGraphEdgeMetadata, GrsGraphMetadata>;
+	rhs: Graph<GrsGraphNodeMetadata, GrsGraphEdgeMetadata, GrsGraphMetadata>;
+}
+
 export class GrsService {
 	constructor(private readonly graphService: IDBGraphService) {}
+
+	public async replaceGraph(
+		hostgraphData: GraphSchema,
+		rules: GraphRewritingRuleSchema[]
+	): Promise<GraphSchema> {
+		await this.importHostgraph(hostgraphData);
+
+		let ruleSet;
+		if (rules) {
+			ruleSet = this.parseRules(rules);
+		}
+
+		console.log('handle rules', ruleSet);
+
+		return this.exportHostgraph(hostgraphData);
+	}
 
 	public async importHostgraph(
 		hostgraphData: GraphSchema
@@ -30,6 +52,24 @@ export class GrsService {
 		await this.loadGraphIntoDB(hostgraph);
 
 		return this.exportHostgraph(hostgraphData);
+	}
+
+	public parseRules(
+		rules: GraphRewritingRuleSchema[]
+	): Map<string, GrsRewriteRule> {
+		const parser = new GraphologyParserService();
+		const ruleMap = new Map();
+		for (const rule of rules) {
+			const lhs = parser.parseGraph(rule.lhs);
+			const rhs = parser.parseGraph(rule.rhs);
+
+			ruleMap.set(rule.key, {
+				lhs,
+				rhs,
+			});
+		}
+
+		return ruleMap;
 	}
 
 	private async loadGraphIntoDB(
