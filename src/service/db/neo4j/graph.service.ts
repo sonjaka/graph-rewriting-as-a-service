@@ -16,6 +16,7 @@ import {
 	DBGraphEdgeResult,
 	DBGraphEdgeMetadata,
 } from '../types';
+import { createNodeCypher } from './utils/cypher';
 
 type Neo4jNode = Node<Integer, DBGraphNodeProperties>;
 type Neo4jRelationship = Relationship<Integer, DBGraphEdgeProperties>;
@@ -54,10 +55,18 @@ export class Neo4jGraphService implements IDBGraphService {
 			nodeType = metadata.type;
 		}
 
-		const cypher = `CREATE (n:${this.defaultNodeLabel}:\`${nodeType}\` $metadata) RETURN n`;
+		// const cypher = `CREATE (n:${this.defaultNodeLabel}:\`${nodeType}\` $metadata) RETURN n`;
 
+		// const res = await this.session.executeWrite((tx: ManagedTransaction) =>
+		// 	tx.run<Neo4jCreateNodeResult>(cypher, { metadata })
+		// );
+		const cypher = createNodeCypher(
+			'n',
+			[this.defaultNodeLabel, nodeType],
+			metadata
+		);
 		const res = await this.session.executeWrite((tx: ManagedTransaction) =>
-			tx.run<Neo4jCreateNodeResult>(cypher, { metadata })
+			tx.run<Neo4jCreateNodeResult>(cypher)
 		);
 
 		const nodeRecords = res.records.map((record) => record.get('n'));
