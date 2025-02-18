@@ -56,13 +56,13 @@ export class Neo4jGraphService implements IDBGraphService {
 		}
 
 		const $nodeVar = 'n';
-		const cypher = createNodeCypher(
+		const { cypher, params } = createNodeCypher(
 			$nodeVar,
 			[this.defaultNodeLabel, nodeType],
 			metadata
 		);
 		const res = await this.session.executeWrite((tx: ManagedTransaction) =>
-			tx.run<Neo4jCreateNodeResult>(cypher)
+			tx.run<Neo4jCreateNodeResult>(cypher, params)
 		);
 
 		const nodeRecords = res.records.map((record) => record.get($nodeVar));

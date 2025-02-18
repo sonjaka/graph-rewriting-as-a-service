@@ -14,7 +14,11 @@ export function createNodeCypher(
 ) {
 	const nodeLabels = labels.map((label) => `\`${label}\``).join(':');
 
-	const nodeAttributes = computeAttributesString(attributes);
+	const params: Record<string, Record<string, unknown>> = {};
+	if (attributes) {
+		params.nodeMetadata = attributes;
+	}
+	const cypher = `CREATE (${matchVariable}:${nodeLabels}${Object.entries(params?.nodeMetadata).length ? ' $nodeMetadata' : ''}) RETURN ${matchVariable}`;
 
-	return `CREATE (${matchVariable}:${nodeLabels} ${nodeAttributes}) RETURN ${matchVariable}`;
+	return { cypher, params };
 }
