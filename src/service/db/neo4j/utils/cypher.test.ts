@@ -10,6 +10,13 @@ describe('Test cypher utils', () => {
 			expect(params).toStrictEqual({ nodeMetadata: {} });
 		});
 
+		test('Test createNodeCypher with single label with special chars and no attributes', () => {
+			const { cypher, params } = createNodeCypher('n', ['Label`A']);
+
+			expect(cypher).toBe('CREATE (n:`Label``A`) RETURN n');
+			expect(params).toStrictEqual({ nodeMetadata: {} });
+		});
+
 		test('Test createNodeCypher with multiple labels and no attributes', () => {
 			const { cypher, params } = createNodeCypher('n', ['LabelA', 'LabelB']);
 
