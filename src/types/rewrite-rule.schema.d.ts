@@ -16,9 +16,9 @@ export interface GraphSchema {
   };
   options: {
     /**
-     * One of mixed, directed or undirected
+     * One of directed or undirected
      */
-    type: "mixed" | "directed" | "undirected";
+    type: "directed" | "undirected";
     allowSelfLoops?: boolean;
     multi?: boolean;
   };

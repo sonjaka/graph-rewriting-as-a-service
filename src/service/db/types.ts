@@ -37,6 +37,7 @@ export interface DBGraphEdgeResult {
 	source: DBGraphNodeInternalId;
 	target: DBGraphNodeInternalId;
 }
+export type DBGraphType = 'directed' | 'undirected';
 
 export interface IDBGraphService {
 	createNode(
