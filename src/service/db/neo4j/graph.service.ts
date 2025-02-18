@@ -55,13 +55,9 @@ export class Neo4jGraphService implements IDBGraphService {
 			nodeType = metadata.type;
 		}
 
-		// const cypher = `CREATE (n:${this.defaultNodeLabel}:\`${nodeType}\` $metadata) RETURN n`;
-
-		// const res = await this.session.executeWrite((tx: ManagedTransaction) =>
-		// 	tx.run<Neo4jCreateNodeResult>(cypher, { metadata })
-		// );
+		const $nodeVar = 'n';
 		const cypher = createNodeCypher(
-			'n',
+			$nodeVar,
 			[this.defaultNodeLabel, nodeType],
 			metadata
 		);
@@ -69,7 +65,7 @@ export class Neo4jGraphService implements IDBGraphService {
 			tx.run<Neo4jCreateNodeResult>(cypher)
 		);
 
-		const nodeRecords = res.records.map((record) => record.get('n'));
+		const nodeRecords = res.records.map((record) => record.get($nodeVar));
 		const nodes = this.mapNodeRecordsToNodesResult(nodeRecords);
 
 		return nodes[0];

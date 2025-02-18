@@ -1,15 +1,20 @@
+function computeAttributesString(attributes: Record<string, unknown>) {
+	const attributeStrings = [];
+	for (const [key, value] of Object.entries(attributes)) {
+		attributeStrings.push(`${key}:"${value}"`);
+	}
+
+	return attributeStrings.length ? `{${attributeStrings.join(', ')}}` : '';
+}
+
 export function createNodeCypher(
 	matchVariable: string,
 	labels: string[],
-	attributes: Record<string, unknown>
+	attributes: Record<string, unknown> = {}
 ) {
 	const nodeLabels = labels.map((label) => `\`${label}\``).join(':');
 
-	let nodeAttributes = '';
-	for (const [key, value] of Object.entries(attributes)) {
-		if (nodeAttributes !== '') nodeAttributes += ', ';
-		nodeAttributes += `${key}:'${value}'`;
-	}
+	const nodeAttributes = computeAttributesString(attributes);
 
-	return `CREATE (${matchVariable}:${nodeLabels} {${nodeAttributes}}) RETURN n`;
+	return `CREATE (${matchVariable}:${nodeLabels} ${nodeAttributes}) RETURN ${matchVariable}`;
 }
