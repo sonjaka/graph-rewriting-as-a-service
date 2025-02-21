@@ -24,6 +24,36 @@ function computeAttributesString(attributes: Record<string, unknown>) {
 	return attributeStrings.length ? `{${attributeStrings.join(', ')}}` : '';
 }
 
+export function computeNodeQueryString(
+	matchVariable: string,
+	labels: string[],
+	attributes: Record<string, unknown>
+) {
+	matchVariable = sanitizeIdentifier(matchVariable);
+
+	// TODO: Use parameters instead of string concatenation for attributes
+	const nodeLabels = labels
+		.map((label) => `\`${sanitizeIdentifier(label)}\``)
+		.join(':');
+
+	const metadata = computeAttributesString(attributes);
+
+	return `(\`${matchVariable}\`:${nodeLabels}${metadata.length ? ` ${metadata}` : ''})`;
+}
+
+export function computeEdgeQueryString(
+	matchVariable: string,
+	type: string,
+	attributes: Record<string, unknown>,
+	source: string,
+	target: string,
+	directed = false
+) {
+	matchVariable = sanitizeIdentifier(matchVariable);
+
+	return `(${source})-${type ? `[\`${matchVariable}\`:${type}]` : ''}-${directed ? '>' : ''}(${target})`;
+}
+
 export function createNodeCypher(
 	matchVariable: string,
 	labels: string[],
