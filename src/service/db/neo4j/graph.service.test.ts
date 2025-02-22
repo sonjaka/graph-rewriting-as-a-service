@@ -1,4 +1,4 @@
-import neo4j, { Driver, Session } from 'neo4j-driver';
+import neo4j, { Driver, ManagedTransaction, Session } from 'neo4j-driver';
 import { Neo4jContainer, StartedNeo4jContainer } from '@testcontainers/neo4j';
 
 import {
@@ -18,7 +18,7 @@ import { getApocJsonAllExport } from './testutils/helpers';
 let container: StartedNeo4jContainer;
 let driver: Driver;
 let session: Session;
-describe('Test graph service', () => {
+describe('Integration tests for graph service with testcontainers', () => {
 	beforeAll(async () => {
 		container = await new Neo4jContainer('neo4j:5.25.1').withApoc().start();
 
@@ -413,4 +413,232 @@ describe('Test graph service', () => {
 	test.todo('Test node not found');
 	test.todo("Test node can't be deleted due to remaining edges");
 	test.todo('Test edge not found');
+	test.todo('Test pattern matching for single node');
+	test.todo('Test pattern matching for single edge');
+	test.todo('Test pattern matching for two connected nodes');
+	test.todo('Test pattern matching for simple pattern');
+	test.todo('Test pattern matching for complex pattern');
+});
+
+describe('Unit tests for graph service with mocked neo4j functions', () => {
+	let mockSession: Session;
+	let mockTx: ManagedTransaction;
+	let graphService: Neo4jGraphService;
+
+	beforeEach(() => {
+		mockTx = {
+			run: vi.fn(),
+		} as unknown as ManagedTransaction;
+
+		mockSession = {
+			executeRead: vi.fn(
+				(callback: (tx: ManagedTransaction) => Promise<never>) =>
+					callback(mockTx)
+			),
+			executeWrite: vi.fn(
+				(callback: (tx: ManagedTransaction) => Promise<never>) =>
+					callback(mockTx)
+			),
+		} as unknown as Session;
+
+		graphService = new Neo4jGraphService(mockSession);
+		graphService.mapPatternMatchToResult = vi.fn();
+	});
+
+	afterEach(async () => {
+		vi.clearAllMocks();
+	});
+
+	// Tests for pattern matching
+	describe('Test pattern matching', () => {
+		test('Match single node', async () => {
+			// test case pattern
+			const nodes = [
+				{
+					key: 'A',
+					attributes: {},
+				},
+			];
+
+			const neo4jSpy = vi.spyOn(mockSession, 'executeRead');
+			await graphService.findPatternMatch(nodes, []);
+			expect(neo4jSpy).toHaveBeenCalled();
+			expect(mockTx.run).toHaveBeenCalledWith(
+				'MATCH (`A`:`GRS_Node`:`Node`) RETURN A'
+			);
+		});
+
+		test('Match two nodes with attribute(s)', async () => {
+			// test case pattern
+			const nodes = [
+				{
+					key: 'A',
+					attributes: {
+						test: 'hello world',
+					},
+				},
+				{
+					key: 'B',
+					attributes: {
+						test: 'hello world',
+						numberAttribute: 1,
+					},
+				},
+			];
+
+			const neo4jSpy = vi.spyOn(mockSession, 'executeRead');
+			await graphService.findPatternMatch(nodes, []);
+			expect(neo4jSpy).toHaveBeenCalled();
+			expect(mockTx.run).toHaveBeenCalledWith(
+				'MATCH (`A`:`GRS_Node`:`Node` {test:"hello world"}), (`B`:`GRS_Node`:`Node` {test:"hello world", numberAttribute:"1"}) RETURN A, B'
+			);
+		});
+
+		test('Match two nodes with no edge', async () => {
+			// test case pattern
+			const nodes = [
+				{
+					key: 'A',
+					attributes: {},
+				},
+				{
+					key: 'B',
+					attributes: {},
+				},
+			];
+
+			const neo4jSpy = vi.spyOn(mockSession, 'executeRead');
+			await graphService.findPatternMatch(nodes, []);
+			expect(neo4jSpy).toHaveBeenCalled();
+			expect(mockTx.run).toHaveBeenCalledWith(
+				'MATCH (`A`:`GRS_Node`:`Node`), (`B`:`GRS_Node`:`Node`) RETURN A, B'
+			);
+		});
+
+		test('Match single edge with attributes', async () => {
+			// test case pattern
+			const edges = [
+				{
+					key: 'aToB',
+					source: 'A',
+					target: 'B',
+					attributes: {
+						hello: 'world',
+						attribute: 'value',
+					},
+				},
+			];
+
+			const neo4jSpy = vi.spyOn(mockSession, 'executeRead');
+			await graphService.findPatternMatch([], edges);
+			expect(neo4jSpy).toHaveBeenCalled();
+			expect(mockTx.run).toHaveBeenCalledWith(
+				'MATCH (A)-[`aToB`:GRS_Relationship {hello:"world", attribute:"value"}]-(B) RETURN aToB'
+			);
+		});
+
+		test('Match two nodes with undirected edge', async () => {
+			// test case pattern
+			const nodes = [
+				{
+					key: 'A',
+					attributes: {},
+				},
+				{
+					key: 'B',
+					attributes: {},
+				},
+			];
+
+			const edges = [
+				{
+					key: 'aToB',
+					source: 'A',
+					target: 'B',
+					attributes: {},
+				},
+			];
+
+			const neo4jSpy = vi.spyOn(mockSession, 'executeRead');
+			await graphService.findPatternMatch(nodes, edges);
+			expect(neo4jSpy).toHaveBeenCalled();
+			expect(mockTx.run).toHaveBeenCalledWith(
+				'MATCH (`A`:`GRS_Node`:`Node`), (`B`:`GRS_Node`:`Node`), (A)-[`aToB`:GRS_Relationship]-(B) RETURN A, B, aToB'
+			);
+		});
+
+		test('Match two nodes with directed edge', async () => {
+			// test case pattern
+			const nodes = [
+				{
+					key: 'A',
+					attributes: {},
+				},
+				{
+					key: 'B',
+					attributes: {},
+				},
+			];
+
+			const edges = [
+				{
+					key: 'aToB',
+					source: 'A',
+					target: 'B',
+					attributes: {},
+				},
+			];
+
+			const neo4jSpy = vi.spyOn(mockSession, 'executeRead');
+			await graphService.findPatternMatch(nodes, edges, 'directed');
+			expect(neo4jSpy).toHaveBeenCalled();
+			expect(mockTx.run).toHaveBeenCalledWith(
+				'MATCH (`A`:`GRS_Node`:`Node`), (`B`:`GRS_Node`:`Node`), (A)-[`aToB`:GRS_Relationship]->(B) RETURN A, B, aToB'
+			);
+		});
+
+		test('Match simple pattern', async () => {
+			// test case pattern
+			const nodes = [
+				{
+					key: 'A',
+					attributes: {},
+				},
+				{
+					key: 'B',
+					attributes: {
+						type: 'BType',
+					},
+				},
+				{
+					key: 'C',
+					attributes: {},
+				},
+			];
+
+			const edges = [
+				{
+					key: 'aToB',
+					source: 'A',
+					target: 'B',
+					attributes: {
+						type: 'edge connector',
+					},
+				},
+				{
+					key: 'bToC',
+					source: 'B',
+					target: 'C',
+					attributes: {},
+				},
+			];
+
+			const neo4jSpy = vi.spyOn(mockSession, 'executeRead');
+			await graphService.findPatternMatch(nodes, edges, 'directed');
+			expect(neo4jSpy).toHaveBeenCalled();
+			expect(mockTx.run).toHaveBeenCalledWith(
+				'MATCH (`A`:`GRS_Node`:`Node`), (`B`:`GRS_Node`:`BType` {type:"BType"}), (`C`:`GRS_Node`:`Node`), (A)-[`aToB`:GRS_Relationship {type:"edge connector"}]->(B), (B)-[`bToC`:GRS_Relationship]->(C) RETURN A, B, C, aToB, bToC'
+			);
+		});
+	});
 });

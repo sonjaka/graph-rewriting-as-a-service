@@ -13,8 +13,8 @@
 			"type": "object",
 			"properties": {
 				"type": {
-					"description": "One of mixed, directed or undirected",
-					"enum": ["mixed", "directed", "undirected"]
+					"description": "One of directed or undirected",
+					"enum": ["directed", "undirected"]
 				},
 				"allowSelfLoops": {
 					"type": "boolean"

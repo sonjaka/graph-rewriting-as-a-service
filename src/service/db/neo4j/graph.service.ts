@@ -4,6 +4,7 @@ import {
 	Node,
 	Integer,
 	Relationship,
+	QueryResult,
 } from 'neo4j-driver';
 import {
 	DBGraphEdgeInternalId,
@@ -15,7 +16,16 @@ import {
 	DBGraphEdgeProperties,
 	DBGraphEdgeResult,
 	DBGraphEdgeMetadata,
+	DBGraphType,
+	DBGraphNode,
+	DBGraphEdge,
+	DBGraphPatternMatchResult,
 } from '../types';
+import {
+	computeEdgeQueryString,
+	computeNodeQueryString,
+	createNodeCypher,
+} from './utils/cypher';
 
 type Neo4jNode = Node<Integer, DBGraphNodeProperties>;
 type Neo4jRelationship = Relationship<Integer, DBGraphEdgeProperties>;
@@ -28,6 +38,11 @@ interface Neo4jRelationshipResult {
 	r: Neo4jRelationship;
 }
 
+type Neo4jPatternMatchResult = Record<
+	string,
+	Neo4jRelationship | Neo4jNodeResult
+>;
+
 type Neo4jCreateNodeResult = Neo4jNodeResult;
 type Neo4jUpdateNodeResult = Neo4jNodeResult;
 type Neo4jGetNodesResult = Neo4jNodeResult;
@@ -37,6 +52,9 @@ export class Neo4jGraphService implements IDBGraphService {
 	defaultRelationshipLabel = `GRS_Relationship`;
 
 	constructor(private readonly session: Session) {}
+
+	// TODO: Fix how type is handled
+	public graphType: DBGraphType = 'undirected';
 
 	public async createNode(
 		metadata: DBGraphNodeMetadata,
@@ -54,13 +72,17 @@ export class Neo4jGraphService implements IDBGraphService {
 			nodeType = metadata.type;
 		}
 
-		const cypher = `CREATE (n:${this.defaultNodeLabel}:\`${nodeType}\` $metadata) RETURN n`;
-
+		const $nodeVar = 'n';
+		const { cypher, params } = createNodeCypher(
+			$nodeVar,
+			[this.defaultNodeLabel, nodeType],
+			metadata
+		);
 		const res = await this.session.executeWrite((tx: ManagedTransaction) =>
-			tx.run<Neo4jCreateNodeResult>(cypher, { metadata })
+			tx.run<Neo4jCreateNodeResult>(cypher, params)
 		);
 
-		const nodeRecords = res.records.map((record) => record.get('n'));
+		const nodeRecords = res.records.map((record) => record.get($nodeVar));
 		const nodes = this.mapNodeRecordsToNodesResult(nodeRecords);
 
 		return nodes[0];
@@ -251,46 +273,136 @@ export class Neo4jGraphService implements IDBGraphService {
 		return edges;
 	}
 
+	public async findPatternMatch(
+		nodes: DBGraphNode[],
+		edges: DBGraphEdge[],
+		type: DBGraphType = 'undirected'
+	): Promise<DBGraphPatternMatchResult[] | []> {
+		let query = 'MATCH ';
+		const queryVars: string[] = [];
+
+		const nodesQueries: string[] = [];
+		nodes.forEach((node) => {
+			queryVars.push(node.key);
+
+			let nodeType = 'Node';
+			if (node.attributes.type) {
+				nodeType = node.attributes.type;
+			}
+			nodesQueries.push(
+				computeNodeQueryString(
+					node.key,
+					[this.defaultNodeLabel, nodeType],
+					node.attributes
+				)
+			);
+		});
+		query += nodesQueries.join(', ');
+
+		const edgesQueries: string[] = [];
+		edges.forEach((edge) => {
+			queryVars.push(edge.key);
+
+			edgesQueries.push(
+				computeEdgeQueryString(
+					edge.key,
+					this.defaultRelationshipLabel,
+					edge.attributes,
+					edge.source,
+					edge.target,
+					type === 'directed'
+				)
+			);
+		});
+		if (nodesQueries.length && edgesQueries.length) query += ', ';
+		query += edgesQueries.join(', ');
+
+		query += ` RETURN ${queryVars.join(', ')}`;
+
+		const res = await this.session.executeRead((tx: ManagedTransaction) =>
+			tx.run<Neo4jPatternMatchResult>(query)
+		);
+
+		const result = this.mapPatternMatchToResult(res, queryVars);
+
+		return result;
+	}
+
+	public mapPatternMatchToResult(
+		queryResult: QueryResult<Neo4jPatternMatchResult>,
+		queryVars: string[]
+	): DBGraphPatternMatchResult[] {
+		const records = queryResult.records;
+		const result: DBGraphPatternMatchResult[] = [];
+		records.forEach((patternOccurence) => {
+			const occurencResult: DBGraphPatternMatchResult = {
+				nodes: {},
+				edges: {},
+			};
+			queryVars.forEach((queryVar) => {
+				const graphItem = patternOccurence.get(queryVar);
+				if (graphItem instanceof Node) {
+					occurencResult.nodes[queryVar] =
+						this.mapSingleNodeRecordToResult(graphItem);
+				} else if (graphItem instanceof Relationship) {
+					occurencResult.edges[queryVar] =
+						this.mapSingleEdgeRecordToResult(graphItem);
+				}
+			});
+
+			result.push(occurencResult);
+		});
+		return result;
+	}
+
 	private mapNodeRecordsToNodesResult(
 		nodeRecords: Neo4jNode[]
 	): DBGraphNodeResult[] {
-		const nodes = nodeRecords.map((node) => {
-			const nodeData: DBGraphNodeResult = {
-				key: node.properties?._grs_internalId,
-				attributes: {
-					...node.properties,
-				},
-			};
-			// Remove all keys that were only for internal use
-			delete nodeData.attributes?._grs_internalId;
-
-			return nodeData;
-		});
+		const nodes = nodeRecords.map((node) =>
+			this.mapSingleNodeRecordToResult(node)
+		);
 
 		return nodes;
+	}
+
+	private mapSingleNodeRecordToResult(node: Neo4jNode) {
+		const nodeData: DBGraphNodeResult = {
+			key: node.properties?._grs_internalId,
+			attributes: {
+				...node.properties,
+			},
+		};
+		// Remove all keys that were only for internal use
+		delete nodeData.attributes?._grs_internalId;
+
+		return nodeData;
 	}
 
 	private mapEdgeRecordsToEdgesResult(
 		edgeRecords: Neo4jRelationship[]
 	): DBGraphEdgeResult[] {
-		const edges = edgeRecords.map((edge) => {
-			const edgeData: DBGraphEdgeResult = {
-				key: edge.properties._grs_internalId,
-				source: edge.properties._grs_source,
-				target: edge.properties._grs_target,
-				attributes: {
-					...edge.properties,
-				},
-			};
-			// Remove all keys that were only for internal use
-			delete edgeData.attributes?._grs_internalId;
-			delete edgeData.attributes?._grs_source;
-			delete edgeData.attributes?._grs_target;
-
-			return edgeData;
-		});
+		const edges = edgeRecords.map((edge) =>
+			this.mapSingleEdgeRecordToResult(edge)
+		);
 
 		return edges;
+	}
+
+	private mapSingleEdgeRecordToResult(edge: Neo4jRelationship) {
+		const edgeData: DBGraphEdgeResult = {
+			key: edge.properties._grs_internalId,
+			source: edge.properties._grs_source,
+			target: edge.properties._grs_target,
+			attributes: {
+				...edge.properties,
+			},
+		};
+		// Remove all keys that were only for internal use
+		delete edgeData.attributes?._grs_internalId;
+		delete edgeData.attributes?._grs_source;
+		delete edgeData.attributes?._grs_target;
+
+		return edgeData;
 	}
 
 	private async ensureConstraints() {

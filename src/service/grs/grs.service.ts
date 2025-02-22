@@ -9,10 +9,10 @@ import {
 	GrsGraphNodeMetadata,
 } from './types';
 
-interface GrsRewriteRule {
-	lhs: Graph<GrsGraphNodeMetadata, GrsGraphEdgeMetadata, GrsGraphMetadata>;
-	rhs: Graph<GrsGraphNodeMetadata, GrsGraphEdgeMetadata, GrsGraphMetadata>;
-}
+// interface GrsRewriteRule {
+// 	lhs: Graph<GrsGraphNodeMetadata, GrsGraphEdgeMetadata, GrsGraphMetadata>;
+// 	rhs: Graph<GrsGraphNodeMetadata, GrsGraphEdgeMetadata, GrsGraphMetadata>;
+// }
 
 export class GrsService {
 	constructor(private readonly graphService: IDBGraphService) {}
@@ -21,14 +21,30 @@ export class GrsService {
 		hostgraphData: GraphSchema,
 		rules: GraphRewritingRuleSchema[]
 	): Promise<GraphSchema> {
+		this.graphService.graphType = hostgraphData.options.type;
 		await this.importHostgraph(hostgraphData);
 
-		let ruleSet;
-		if (rules) {
-			ruleSet = this.parseRules(rules);
+		for (const rule of rules) {
+			const lhs = rule.lhs;
+
+			await this.graphService.findPatternMatch(
+				lhs.nodes,
+				lhs.edges,
+				lhs.options.type
+			);
+
+			console.log(lhs);
 		}
 
-		console.log('handle rules', ruleSet);
+		// let ruleSet;
+		// if (rules) {
+		// 	ruleSet = this.parseRules(rules);
+		// }
+
+		// ruleSet?.forEach((rule) => {
+		// 	console.log('Nodes', rule.lhs.nodes);
+		// 	this.graphService.findPatternMatch(rule.lhs);
+		// });
 
 		return this.exportHostgraph(hostgraphData);
 	}
@@ -54,23 +70,23 @@ export class GrsService {
 		return this.exportHostgraph(hostgraphData);
 	}
 
-	public parseRules(
-		rules: GraphRewritingRuleSchema[]
-	): Map<string, GrsRewriteRule> {
-		const parser = new GraphologyParserService();
-		const ruleMap = new Map();
-		for (const rule of rules) {
-			const lhs = parser.parseGraph(rule.lhs);
-			const rhs = parser.parseGraph(rule.rhs);
+	// public parseRules(
+	// 	rules: GraphRewritingRuleSchema[]
+	// ): Map<string, GrsRewriteRule> {
+	// 	const parser = new GraphologyParserService();
+	// 	const ruleMap = new Map();
+	// 	for (const rule of rules) {
+	// 		const lhs = parser.parseGraph(rule.lhs);
+	// 		const rhs = parser.parseGraph(rule.rhs);
 
-			ruleMap.set(rule.key, {
-				lhs,
-				rhs,
-			});
-		}
+	// 		ruleMap.set(rule.key, {
+	// 			lhs,
+	// 			rhs,
+	// 		});
+	// 	}
 
-		return ruleMap;
-	}
+	// 	return ruleMap;
+	// }
 
 	private async loadGraphIntoDB(
 		graph: Graph<GrsGraphNodeMetadata, GrsGraphEdgeMetadata, GrsGraphMetadata>

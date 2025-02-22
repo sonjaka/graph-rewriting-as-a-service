@@ -26,19 +26,30 @@ export interface DBGraphEdgeMetadata {
 	[key: string]: unknown;
 }
 
-export interface DBGraphNodeResult {
+export interface DBGraphNode {
 	key: DBGraphNodeInternalId;
 	attributes: DBGraphNodeMetadata;
 }
 
-export interface DBGraphEdgeResult {
+export interface DBGraphEdge {
 	key: DBGraphEdgeInternalId;
 	attributes: DBGraphEdgeMetadata;
 	source: DBGraphNodeInternalId;
 	target: DBGraphNodeInternalId;
 }
 
+export type DBGraphNodeResult = DBGraphNode;
+export type DBGraphEdgeResult = DBGraphEdge;
+
+export type DBGraphType = 'directed' | 'undirected';
+
+export interface DBGraphPatternMatchResult {
+	nodes: Record<string, DBGraphNodeResult>;
+	edges: Record<string, DBGraphEdgeResult>;
+}
+
 export interface IDBGraphService {
+	graphType: DBGraphType;
 	createNode(
 		metadata: DBGraphNodeMetadata,
 		internalId?: DBGraphNodeInternalId
@@ -67,4 +78,9 @@ export interface IDBGraphService {
 	): Promise<DBGraphEdgeResult | undefined>;
 	deleteEdge(internalId: DBGraphEdgeInternalId): Promise<DBGraphEdgeResult>;
 	getAllEdges(): Promise<DBGraphEdgeResult[]>;
+	findPatternMatch(
+		nodes: DBGraphNode[],
+		edges: DBGraphEdge[],
+		type: DBGraphType
+	): Promise<DBGraphPatternMatchResult[] | []>;
 }

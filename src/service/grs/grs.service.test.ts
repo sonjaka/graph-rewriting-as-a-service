@@ -62,7 +62,7 @@ describe('Test graphology parser service', () => {
 		});
 	});
 
-	test('Test rules are correctly parsed into graphs', () => {
+	test.todo('Test rules are correctly parsed into graphs', () => {
 		const grsService = new GrsService(mockGraphService);
 
 		const rulesData = sampleRules as GraphRewritingRuleSchema[];

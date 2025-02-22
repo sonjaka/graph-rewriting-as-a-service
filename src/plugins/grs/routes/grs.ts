@@ -31,7 +31,7 @@ const grsHandler = async (
 	const dbGraphService = request.dbGraphService;
 
 	const hostgraphData = request.body.hostgraph;
-	const rules = request.body.rules;
+	const rules = request.body.rules || [];
 
 	if (!dbGraphService) {
 		throw new Error('Graph Service not set');
