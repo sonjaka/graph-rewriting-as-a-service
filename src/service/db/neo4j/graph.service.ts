@@ -4,6 +4,7 @@ import {
 	Node,
 	Integer,
 	Relationship,
+	QueryResult,
 } from 'neo4j-driver';
 import {
 	DBGraphEdgeInternalId,
@@ -36,6 +37,11 @@ interface Neo4jNodeResult {
 interface Neo4jRelationshipResult {
 	r: Neo4jRelationship;
 }
+
+type Neo4jPatternMatchResult = Record<
+	string,
+	Neo4jRelationship | Neo4jNodeResult
+>;
 
 type Neo4jCreateNodeResult = Neo4jNodeResult;
 type Neo4jUpdateNodeResult = Neo4jNodeResult;
@@ -270,7 +276,7 @@ export class Neo4jGraphService implements IDBGraphService {
 	public async findPatternMatch(
 		nodes: DBGraphNode[],
 		edges: DBGraphEdge[],
-		type: DBGraphType
+		type: DBGraphType = 'undirected'
 	): Promise<DBGraphPatternMatchResult[] | []> {
 		let query = 'MATCH ';
 		const queryVars: string[] = [];
@@ -300,7 +306,7 @@ export class Neo4jGraphService implements IDBGraphService {
 			edgesQueries.push(
 				computeEdgeQueryString(
 					edge.key,
-					edge.attributes.type ?? this.defaultRelationshipLabel,
+					this.defaultRelationshipLabel,
 					edge.attributes,
 					edge.source,
 					edge.target,
@@ -314,13 +320,20 @@ export class Neo4jGraphService implements IDBGraphService {
 		query += ` RETURN ${queryVars.join(', ')}`;
 
 		const res = await this.session.executeRead((tx: ManagedTransaction) =>
-			tx.run(query)
+			tx.run<Neo4jPatternMatchResult>(query)
 		);
 
+		const result = this.mapPatternMatchToResult(res, queryVars);
+
+		return result;
+	}
+
+	public mapPatternMatchToResult(
+		queryResult: QueryResult<Neo4jPatternMatchResult>,
+		queryVars: string[]
+	): DBGraphPatternMatchResult[] {
+		const records = queryResult.records;
 		const result: DBGraphPatternMatchResult[] = [];
-
-		const records = res.records;
-
 		records.forEach((patternOccurence) => {
 			const occurencResult: DBGraphPatternMatchResult = {
 				nodes: {},
@@ -339,7 +352,6 @@ export class Neo4jGraphService implements IDBGraphService {
 
 			result.push(occurencResult);
 		});
-
 		return result;
 	}
 
