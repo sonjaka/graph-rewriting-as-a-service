@@ -51,7 +51,9 @@ export function computeEdgeQueryString(
 ) {
 	matchVariable = sanitizeIdentifier(matchVariable);
 
-	return `(${source})-${type ? `[\`${matchVariable}\`:${type}]` : ''}-${directed ? '>' : ''}(${target})`;
+	const metadata = computeAttributesString(attributes);
+
+	return `(${source})-${type ? `[\`${matchVariable}\`:${type}${metadata.length ? ` ${metadata}` : ''}]` : `[\`${matchVariable}\`]`}-${directed ? '>' : ''}(${target})`;
 }
 
 export function createNodeCypher(
