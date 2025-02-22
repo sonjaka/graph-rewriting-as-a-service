@@ -23,6 +23,7 @@ import {
 } from '../types';
 import {
 	computeEdgeQueryString,
+	computeInjectivityClause,
 	computeNodeQueryString,
 	createNodeCypher,
 } from './utils/cypher';
@@ -276,9 +277,11 @@ export class Neo4jGraphService implements IDBGraphService {
 	public async findPatternMatch(
 		nodes: DBGraphNode[],
 		edges: DBGraphEdge[],
-		type: DBGraphType = 'undirected'
+		type: DBGraphType = 'undirected',
+		onlyInjective = false
 	): Promise<DBGraphPatternMatchResult[] | []> {
 		let query = 'MATCH ';
+		let hasWhere = false;
 		const queryVars: string[] = [];
 
 		const nodesQueries: string[] = [];
@@ -316,6 +319,22 @@ export class Neo4jGraphService implements IDBGraphService {
 		});
 		if (nodesQueries.length && edgesQueries.length) query += ', ';
 		query += edgesQueries.join(', ');
+
+		if (onlyInjective) {
+			const nodeInjectivity = computeInjectivityClause(
+				nodes.map((node) => node.key),
+				hasWhere
+			);
+			query += nodeInjectivity.cypher;
+			hasWhere = nodeInjectivity.hasWhere;
+
+			const edgeInjectivity = computeInjectivityClause(
+				edges.map((edge) => edge.key),
+				hasWhere
+			);
+			query += edgeInjectivity.cypher;
+			hasWhere = edgeInjectivity.hasWhere;
+		}
 
 		query += ` RETURN ${queryVars.join(', ')}`;
 

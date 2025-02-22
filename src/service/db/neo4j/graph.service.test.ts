@@ -450,7 +450,7 @@ describe('Unit tests for graph service with mocked neo4j functions', () => {
 	});
 
 	// Tests for pattern matching
-	describe('Test pattern matching', () => {
+	describe('Test pattern matching cypher query strings', () => {
 		test('Match single node', async () => {
 			// test case pattern
 			const nodes = [
@@ -491,6 +491,48 @@ describe('Unit tests for graph service with mocked neo4j functions', () => {
 			expect(neo4jSpy).toHaveBeenCalled();
 			expect(mockTx.run).toHaveBeenCalledWith(
 				'MATCH (`A`:`GRS_Node`:`Node` {test:"hello world"}), (`B`:`GRS_Node`:`Node` {test:"hello world", numberAttribute:"1"}) RETURN A, B'
+			);
+		});
+
+		test('Match nodes with injectivity constraint set', async () => {
+			// test case pattern
+			const nodes = [
+				{
+					key: 'A',
+					attributes: {},
+				},
+				{
+					key: 'B',
+					attributes: {
+						test: 'hello world',
+					},
+				},
+				{
+					key: 'C',
+					attributes: {},
+				},
+			];
+
+			const edges = [
+				{
+					key: 'aToB',
+					source: 'A',
+					target: 'B',
+					attributes: {},
+				},
+				{
+					key: 'aToC',
+					source: 'A',
+					target: 'C',
+					attributes: {},
+				},
+			];
+
+			const neo4jSpy = vi.spyOn(mockSession, 'executeRead');
+			await graphService.findPatternMatch(nodes, edges, 'undirected', true);
+			expect(neo4jSpy).toHaveBeenCalled();
+			expect(mockTx.run).toHaveBeenCalledWith(
+				'MATCH (`A`:`GRS_Node`:`Node`), (`B`:`GRS_Node`:`Node` {test:"hello world"}), (`C`:`GRS_Node`:`Node`), (A)-[`aToB`:GRS_Relationship]-(B), (A)-[`aToC`:GRS_Relationship]-(C) WHERE `A` <> `B` AND `A` <> `C` AND `B` <> `C` AND `aToB` <> `aToC` RETURN A, B, C, aToB, aToC'
 			);
 		});
 
