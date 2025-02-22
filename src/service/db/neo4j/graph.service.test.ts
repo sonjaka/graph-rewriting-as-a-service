@@ -413,6 +413,11 @@ describe('Integration tests for graph service with testcontainers', () => {
 	test.todo('Test node not found');
 	test.todo("Test node can't be deleted due to remaining edges");
 	test.todo('Test edge not found');
+	test.todo('Test pattern matching for single node');
+	test.todo('Test pattern matching for single edge');
+	test.todo('Test pattern matching for two connected nodes');
+	test.todo('Test pattern matching for simple pattern');
+	test.todo('Test pattern matching for complex pattern');
 });
 
 describe('Unit tests for graph service with mocked neo4j functions', () => {
