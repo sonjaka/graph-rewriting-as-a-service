@@ -9,10 +9,10 @@ import {
 	GrsGraphNodeMetadata,
 } from './types';
 
-interface GrsRewriteRule {
-	lhs: Graph<GrsGraphNodeMetadata, GrsGraphEdgeMetadata, GrsGraphMetadata>;
-	rhs: Graph<GrsGraphNodeMetadata, GrsGraphEdgeMetadata, GrsGraphMetadata>;
-}
+// interface GrsRewriteRule {
+// 	lhs: Graph<GrsGraphNodeMetadata, GrsGraphEdgeMetadata, GrsGraphMetadata>;
+// 	rhs: Graph<GrsGraphNodeMetadata, GrsGraphEdgeMetadata, GrsGraphMetadata>;
+// }
 
 export class GrsService {
 	constructor(private readonly graphService: IDBGraphService) {}

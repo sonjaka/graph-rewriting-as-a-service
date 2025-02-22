@@ -1,4 +1,4 @@
-import { vi, expect, test, describe } from 'vitest';
+import { expect, test, describe } from 'vitest';
 import { createNodeCypher } from './cypher';
 
 describe('Test cypher utils', () => {

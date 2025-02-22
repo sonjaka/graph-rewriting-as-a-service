@@ -431,11 +431,13 @@ describe('Unit tests for graph service with mocked neo4j functions', () => {
 		} as unknown as ManagedTransaction;
 
 		mockSession = {
-			executeRead: vi.fn((callback: (tx: ManagedTransaction) => Promise<any>) =>
-				callback(mockTx)
+			executeRead: vi.fn(
+				(callback: (tx: ManagedTransaction) => Promise<never>) =>
+					callback(mockTx)
 			),
 			executeWrite: vi.fn(
-				(callback: (tx: ManagedTransaction) => Promise<any>) => callback(mockTx)
+				(callback: (tx: ManagedTransaction) => Promise<never>) =>
+					callback(mockTx)
 			),
 		} as unknown as Session;
 
