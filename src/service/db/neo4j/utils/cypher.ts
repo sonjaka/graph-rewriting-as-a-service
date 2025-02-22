@@ -56,6 +56,41 @@ export function computeEdgeQueryString(
 	return `(${source})-${type ? `[\`${matchVariable}\`:${type}${metadata.length ? ` ${metadata}` : ''}]` : `[\`${matchVariable}\`]`}-${directed ? '>' : ''}(${target})`;
 }
 
+function computeInjectivityString(matchVariables: string[]) {
+	let cypher = '';
+
+	for (let i = 0; i < matchVariables.length; i++) {
+		const a = sanitizeIdentifier(matchVariables[i]);
+		for (let j = i + 1; j < matchVariables.length; j++) {
+			const b = sanitizeIdentifier(matchVariables[j]);
+			if (i > 0 || j > 1) {
+				cypher += ' AND';
+			}
+			cypher += ` \`${a}\` <> \`${b}\``;
+		}
+	}
+
+	return cypher;
+}
+
+export function computeInjectivityClause(
+	matchVariables: string[],
+	hasWhere: boolean
+) {
+	let cypher = '';
+	const injectivity = computeInjectivityString(matchVariables);
+	if (injectivity) {
+		if (!hasWhere) {
+			cypher += ' WHERE';
+			hasWhere = true;
+		} else {
+			cypher += ' AND';
+		}
+		cypher += injectivity;
+	}
+	return { cypher, hasWhere };
+}
+
 export function createNodeCypher(
 	matchVariable: string,
 	labels: string[],
