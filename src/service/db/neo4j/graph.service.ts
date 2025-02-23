@@ -323,8 +323,6 @@ export class Neo4jGraphService implements IDBGraphService {
 
 		query += ` RETURN ${queryVars.join(', ')}`;
 
-		console.log(query);
-
 		const res = await this.session.executeRead((tx: ManagedTransaction) =>
 			tx.run<Neo4jPatternMatchResult>(query)
 		);
