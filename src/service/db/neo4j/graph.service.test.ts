@@ -413,9 +413,315 @@ describe('Integration tests for graph service with testcontainers', () => {
 	test.todo('Test node not found');
 	test.todo("Test node can't be deleted due to remaining edges");
 	test.todo('Test edge not found');
-	test.todo('Test pattern matching for single node');
-	test.todo('Test pattern matching for single edge');
-	test.todo('Test pattern matching for two connected nodes');
+
+	test('Test pattern matching for single node', async () => {
+		// Set up test database with two nodes
+		const nodeProps = {
+			attributes: [
+				{ key: 'testnodeA' },
+				{ key: 'testnodeB' },
+				{ key: 'testnodeC' },
+			],
+		};
+		await session.run(
+			`UNWIND $attributes AS config \
+			CREATE (n:GRS_Node {_grs_internalId: config.key})`,
+			nodeProps
+		);
+
+		const patternNodes = [
+			{
+				key: 'A',
+				attributes: {},
+			},
+		];
+
+		// Should match each individual node
+		const expectedResultSet = [
+			{
+				edges: {},
+				nodes: {
+					A: {
+						attributes: {},
+						key: 'testnodeA',
+					},
+				},
+			},
+			{
+				edges: {},
+				nodes: {
+					A: {
+						attributes: {},
+						key: 'testnodeB',
+					},
+				},
+			},
+			{
+				edges: {},
+				nodes: {
+					A: {
+						attributes: {},
+						key: 'testnodeC',
+					},
+				},
+			},
+		];
+
+		const graphService = new Neo4jGraphService(session);
+		const neo4jSpy = vi.spyOn(session, 'executeRead');
+		const result = await graphService.findPatternMatch(patternNodes, []);
+		expect(neo4jSpy).toHaveBeenCalled();
+		expect(neo4jSpy).toHaveBeenCalledTimes(1);
+		expectedResultSet.forEach((expectedResultNode) => {
+			expect(result).toContainEqual(expectedResultNode);
+		});
+	}, 10000);
+
+	test('Test pattern matching for single node with attributes', async () => {
+		// Set up test database with two nodes
+		const nodeProps = {
+			attributes: [
+				{ _grs_internalId: 'testnodeA', hello: 'world' },
+				{ _grs_internalId: 'testnodeB', test: 'test2' },
+				{ _grs_internalId: 'testnodeC' },
+			],
+		};
+		await session.run(
+			`UNWIND $attributes AS config \
+			CREATE (n:GRS_Node) \
+			SET n = config`,
+			nodeProps
+		);
+
+		const patternNodes = [
+			{
+				key: 'A',
+				attributes: {
+					test: 'test2',
+				},
+			},
+		];
+
+		// Should only match node with key "A" as it has the correct attributes
+		const expectedResultSets = [
+			{
+				edges: {},
+				nodes: {
+					A: {
+						attributes: {
+							test: 'test2',
+						},
+						key: 'testnodeB',
+					},
+				},
+			},
+		];
+
+		const graphService = new Neo4jGraphService(session);
+		const neo4jSpy = vi.spyOn(session, 'executeRead');
+		const result = await graphService.findPatternMatch(patternNodes, []);
+		expect(neo4jSpy).toHaveBeenCalled();
+		expect(neo4jSpy).toHaveBeenCalledTimes(1);
+		expectedResultSets.forEach((expectedResultNode) => {
+			expect(result).toContainEqual(expectedResultNode);
+		});
+	}, 10000);
+
+	test('Test pattern matching for single edge', async () => {
+		// Set up test database with two nodes
+		const nodeProps = {
+			attributes: [
+				{ _grs_internalId: 'testnodeA', hello: 'world' },
+				{ _grs_internalId: 'testnodeB', test: 'test2' },
+				{ _grs_internalId: 'testnodeC' },
+			],
+		};
+		await session.run(
+			`UNWIND $attributes AS config \
+				CREATE (n:GRS_Node) \
+				SET n = config`,
+			nodeProps
+		);
+
+		const edgesProps = {
+			config: [
+				{ source: 'testnodeA', target: 'testnodeB', key: 'testedge1' },
+				{ source: 'testnodeA', target: 'testnodeC', key: 'testedge2' },
+			],
+		};
+
+		await session.run(
+			`
+			UNWIND $config AS config \
+			MATCH (a),(b) \
+			WHERE a._grs_internalId = config.source \
+			AND b._grs_internalId = config.target \
+			CREATE (a)-[r:\`GRS_Relationship\` {_grs_internalId: config.key, _grs_source: config.source, _grs_target: config.target}]->(b) RETURN r`,
+			edgesProps
+		);
+
+		const patternEdges = [
+			{
+				key: 'edge',
+				source: 'A',
+				target: 'B',
+				attributes: {},
+			},
+		];
+
+		// Should only match edge
+		const expectedResultSets = [
+			{
+				edges: {
+					edge: {
+						attributes: {},
+						key: 'testedge1',
+						source: 'testnodeA',
+						target: 'testnodeB',
+					},
+				},
+				nodes: {},
+			},
+			{
+				edges: {
+					edge: {
+						attributes: {},
+						key: 'testedge2',
+						source: 'testnodeA',
+						target: 'testnodeC',
+					},
+				},
+				nodes: {},
+			},
+		];
+
+		const graphService = new Neo4jGraphService(session);
+		const neo4jSpy = vi.spyOn(session, 'executeRead');
+		const result = await graphService.findPatternMatch([], patternEdges);
+		expect(neo4jSpy).toHaveBeenCalled();
+		expect(neo4jSpy).toHaveBeenCalledTimes(1);
+		expectedResultSets.forEach((expectedResultNode) => {
+			expect(result).toContainEqual(expectedResultNode);
+		});
+	}, 10000);
+
+	test('Test pattern matching for two connected nodes', async () => {
+		// Set up test database with two nodes
+		const nodeProps = {
+			attributes: [
+				{ _grs_internalId: 'testnodeA', hello: 'world' },
+				{ _grs_internalId: 'testnodeB', test: 'test2' },
+				{ _grs_internalId: 'testnodeC' },
+			],
+		};
+		await session.run(
+			`UNWIND $attributes AS config \
+				CREATE (n:GRS_Node) \
+				SET n = config`,
+			nodeProps
+		);
+
+		const edgesProps = {
+			config: [
+				{ source: 'testnodeA', target: 'testnodeB', key: 'testedge1' },
+				{ source: 'testnodeA', target: 'testnodeC', key: 'testedge2' },
+			],
+		};
+
+		await session.run(
+			`
+			UNWIND $config AS config \
+			MATCH (a),(b) \
+			WHERE a._grs_internalId = config.source \
+			AND b._grs_internalId = config.target \
+			CREATE (a)-[r:\`GRS_Relationship\` {_grs_internalId: config.key, _grs_source: config.source, _grs_target: config.target}]->(b) RETURN r`,
+			edgesProps
+		);
+
+		const patternNodes = [
+			{
+				key: 'A',
+				attributes: {},
+			},
+			{
+				key: 'B',
+				attributes: {},
+			},
+		];
+
+		const patternEdges = [
+			{
+				key: 'edge',
+				source: 'A',
+				target: 'B',
+				attributes: {},
+			},
+		];
+
+		// Should have two resultsets with A-B and A-C
+		const expectedResultSets = [
+			{
+				edges: {
+					edge: {
+						attributes: {},
+						key: 'testedge1',
+						source: 'testnodeA',
+						target: 'testnodeB',
+					},
+				},
+				nodes: {
+					A: {
+						key: 'testnodeA',
+						attributes: {
+							hello: 'world',
+						},
+					},
+					B: {
+						key: 'testnodeB',
+						attributes: {
+							test: 'test2',
+						},
+					},
+				},
+			},
+			{
+				edges: {
+					edge: {
+						attributes: {},
+						key: 'testedge2',
+						source: 'testnodeA',
+						target: 'testnodeC',
+					},
+				},
+				nodes: {
+					A: {
+						key: 'testnodeA',
+						attributes: {
+							hello: 'world',
+						},
+					},
+					B: {
+						key: 'testnodeC',
+						attributes: {},
+					},
+				},
+			},
+		];
+
+		const graphService = new Neo4jGraphService(session);
+		const neo4jSpy = vi.spyOn(session, 'executeRead');
+		const result = await graphService.findPatternMatch(
+			patternNodes,
+			patternEdges,
+			'directed'
+		);
+		expect(neo4jSpy).toHaveBeenCalled();
+		expect(neo4jSpy).toHaveBeenCalledTimes(1);
+		expectedResultSets.forEach((expectedResultNode) => {
+			expect(result).toContainEqual(expectedResultNode);
+		});
+	}, 10000);
+
 	test.todo('Test pattern matching for simple pattern');
 	test.todo('Test pattern matching for complex pattern');
 });
@@ -464,7 +770,7 @@ describe('Unit tests for graph service with mocked neo4j functions', () => {
 			await graphService.findPatternMatch(nodes, []);
 			expect(neo4jSpy).toHaveBeenCalled();
 			expect(mockTx.run).toHaveBeenCalledWith(
-				'MATCH (`A`:`GRS_Node`:`Node`) RETURN A'
+				'MATCH (`A`:`GRS_Node`) RETURN A'
 			);
 		});
 
@@ -490,7 +796,7 @@ describe('Unit tests for graph service with mocked neo4j functions', () => {
 			await graphService.findPatternMatch(nodes, []);
 			expect(neo4jSpy).toHaveBeenCalled();
 			expect(mockTx.run).toHaveBeenCalledWith(
-				'MATCH (`A`:`GRS_Node`:`Node` {test:"hello world"}), (`B`:`GRS_Node`:`Node` {test:"hello world", numberAttribute:"1"}) RETURN A, B'
+				'MATCH (`A`:`GRS_Node` {test:"hello world"}), (`B`:`GRS_Node` {test:"hello world", numberAttribute:"1"}) RETURN A, B'
 			);
 		});
 
@@ -532,7 +838,7 @@ describe('Unit tests for graph service with mocked neo4j functions', () => {
 			await graphService.findPatternMatch(nodes, edges, 'undirected', true);
 			expect(neo4jSpy).toHaveBeenCalled();
 			expect(mockTx.run).toHaveBeenCalledWith(
-				'MATCH (`A`:`GRS_Node`:`Node`), (`B`:`GRS_Node`:`Node` {test:"hello world"}), (`C`:`GRS_Node`:`Node`), (A)-[`aToB`:GRS_Relationship]-(B), (A)-[`aToC`:GRS_Relationship]-(C) WHERE `A` <> `B` AND `A` <> `C` AND `B` <> `C` AND `aToB` <> `aToC` RETURN A, B, C, aToB, aToC'
+				'MATCH (`A`:`GRS_Node`), (`B`:`GRS_Node` {test:"hello world"}), (`C`:`GRS_Node`), (A)-[`aToB`:GRS_Relationship]-(B), (A)-[`aToC`:GRS_Relationship]-(C) WHERE `A` <> `B` AND `A` <> `C` AND `B` <> `C` AND `aToB` <> `aToC` RETURN A, B, C, aToB, aToC'
 			);
 		});
 
@@ -553,7 +859,7 @@ describe('Unit tests for graph service with mocked neo4j functions', () => {
 			await graphService.findPatternMatch(nodes, []);
 			expect(neo4jSpy).toHaveBeenCalled();
 			expect(mockTx.run).toHaveBeenCalledWith(
-				'MATCH (`A`:`GRS_Node`:`Node`), (`B`:`GRS_Node`:`Node`) RETURN A, B'
+				'MATCH (`A`:`GRS_Node`), (`B`:`GRS_Node`) RETURN A, B'
 			);
 		});
 
@@ -605,7 +911,7 @@ describe('Unit tests for graph service with mocked neo4j functions', () => {
 			await graphService.findPatternMatch(nodes, edges);
 			expect(neo4jSpy).toHaveBeenCalled();
 			expect(mockTx.run).toHaveBeenCalledWith(
-				'MATCH (`A`:`GRS_Node`:`Node`), (`B`:`GRS_Node`:`Node`), (A)-[`aToB`:GRS_Relationship]-(B) RETURN A, B, aToB'
+				'MATCH (`A`:`GRS_Node`), (`B`:`GRS_Node`), (A)-[`aToB`:GRS_Relationship]-(B) RETURN A, B, aToB'
 			);
 		});
 
@@ -635,7 +941,7 @@ describe('Unit tests for graph service with mocked neo4j functions', () => {
 			await graphService.findPatternMatch(nodes, edges, 'directed');
 			expect(neo4jSpy).toHaveBeenCalled();
 			expect(mockTx.run).toHaveBeenCalledWith(
-				'MATCH (`A`:`GRS_Node`:`Node`), (`B`:`GRS_Node`:`Node`), (A)-[`aToB`:GRS_Relationship]->(B) RETURN A, B, aToB'
+				'MATCH (`A`:`GRS_Node`), (`B`:`GRS_Node`), (A)-[`aToB`:GRS_Relationship]->(B) RETURN A, B, aToB'
 			);
 		});
 
@@ -679,7 +985,7 @@ describe('Unit tests for graph service with mocked neo4j functions', () => {
 			await graphService.findPatternMatch(nodes, edges, 'directed');
 			expect(neo4jSpy).toHaveBeenCalled();
 			expect(mockTx.run).toHaveBeenCalledWith(
-				'MATCH (`A`:`GRS_Node`:`Node`), (`B`:`GRS_Node`:`BType` {type:"BType"}), (`C`:`GRS_Node`:`Node`), (A)-[`aToB`:GRS_Relationship {type:"edge connector"}]->(B), (B)-[`bToC`:GRS_Relationship]->(C) RETURN A, B, C, aToB, bToC'
+				'MATCH (`A`:`GRS_Node`), (`B`:`GRS_Node`:`BType` {type:"BType"}), (`C`:`GRS_Node`), (A)-[`aToB`:GRS_Relationship {type:"edge connector"}]->(B), (B)-[`bToC`:GRS_Relationship]->(C) RETURN A, B, C, aToB, bToC'
 			);
 		});
 	});

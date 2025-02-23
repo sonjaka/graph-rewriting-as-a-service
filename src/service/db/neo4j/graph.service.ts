@@ -67,18 +67,10 @@ export class Neo4jGraphService implements IDBGraphService {
 			metadata['_grs_internalId'] = internalId;
 		}
 
-		// A default node type of "Node" will be set if no type metadata is set
-		let nodeType = 'Node';
-		if (metadata.type) {
-			nodeType = metadata.type;
-		}
+		const nodeLabels = this.constructNodeLabelsFromAttributes(metadata);
 
 		const $nodeVar = 'n';
-		const { cypher, params } = createNodeCypher(
-			$nodeVar,
-			[this.defaultNodeLabel, nodeType],
-			metadata
-		);
+		const { cypher, params } = createNodeCypher($nodeVar, nodeLabels, metadata);
 		const res = await this.session.executeWrite((tx: ManagedTransaction) =>
 			tx.run<Neo4jCreateNodeResult>(cypher, params)
 		);
@@ -98,10 +90,7 @@ export class Neo4jGraphService implements IDBGraphService {
 			metadata['_grs_internalId'] = internalId;
 		}
 
-		let nodeType = 'Node';
-		if (metadata.type) {
-			nodeType = metadata.type;
-		}
+		const nodeLabels = this.constructNodeLabelsFromAttributes(metadata);
 
 		let cypher = '';
 		if (oldTypes.length) {
@@ -109,7 +98,7 @@ export class Neo4jGraphService implements IDBGraphService {
 
 			cypher = `MATCH (n:\`${oldNodeType}\` { _grs_internalId: $internalId }) \
 		        REMOVE n:\`${oldNodeType}\` \
-		        SET n:\`${nodeType}\`, n = $metadata \
+		        SET n:\`${nodeLabels}\`, n = $metadata \
 		        RETURN n`;
 		} else {
 			cypher = `MATCH (n { _grs_internalId: $internalId }) \
@@ -288,16 +277,12 @@ export class Neo4jGraphService implements IDBGraphService {
 		nodes.forEach((node) => {
 			queryVars.push(node.key);
 
-			let nodeType = 'Node';
-			if (node.attributes.type) {
-				nodeType = node.attributes.type;
-			}
+			const nodeLabels = this.constructNodeLabelsFromAttributes(
+				node.attributes
+			);
+
 			nodesQueries.push(
-				computeNodeQueryString(
-					node.key,
-					[this.defaultNodeLabel, nodeType],
-					node.attributes
-				)
+				computeNodeQueryString(node.key, nodeLabels, node.attributes)
 			);
 		});
 		query += nodesQueries.join(', ');
@@ -454,5 +439,14 @@ export class Neo4jGraphService implements IDBGraphService {
 				);
 			}
 		}
+	}
+
+	private constructNodeLabelsFromAttributes(attributes: DBGraphNodeMetadata) {
+		const nodeTypes = [this.defaultNodeLabel];
+		if (attributes.type) {
+			nodeTypes.push(attributes.type);
+		}
+
+		return nodeTypes;
 	}
 }
