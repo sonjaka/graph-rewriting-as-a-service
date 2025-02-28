@@ -825,6 +825,7 @@ describe('Integration tests for graph service with testcontainers', () => {
 
 	test.todo('Test pattern matching for simple pattern');
 	test.todo('Test pattern matching for complex pattern');
+	test.todo('Test pattern matching for nacs');
 });
 
 describe('Unit tests for graph service with mocked neo4j functions', () => {
