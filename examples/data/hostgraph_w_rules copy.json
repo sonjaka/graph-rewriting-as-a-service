@@ -1,0 +1,165 @@
+{
+	"hostgraph": {
+		"options": {
+			"type": "directed"
+		},
+		"attributes": {},
+		"nodes": [
+			{
+				"key": "A",
+				"attributes": {
+					"label": "A"
+				}
+			},
+			{
+				"key": "B",
+				"attributes": {
+					"label": "B"
+				}
+			},
+			{
+				"key": "C",
+				"attributes": {
+					"label": "C"
+				}
+			}
+		],
+		"edges": [
+			{
+				"key": "aToB",
+				"source": "A",
+				"target": "B",
+				"attributes": {}
+			},
+			{
+				"key": "bToC",
+				"source": "B",
+				"target": "C",
+				"attributes": {}
+			},
+			{
+				"key": "aToC",
+				"source": "A",
+				"target": "C",
+				"attributes": {}
+			}
+		]
+	},
+	"rules": [
+		{
+			"key": "add_triangle",
+			"lhs": {
+				"options": {
+					"type": "directed"
+				},
+				"attributes": {},
+				"nodes": [
+					{
+						"key": "A",
+						"attributes": {}
+					},
+					{
+						"key": "B",
+						"attributes": {}
+					},
+					{
+						"key": "C",
+						"attributes": {}
+					}
+				],
+				"edges": [
+					{
+						"key": "aToB",
+						"source": "A",
+						"target": "B",
+						"attributes": {}
+					},
+					{
+						"key": "aToC",
+						"source": "A",
+						"target": "C",
+						"attributes": {}
+					}
+				],
+				"nacs": {
+					"nodes": [],
+					"edges": []
+				}
+			},
+			"rhs": {
+				"options": {
+					"type": "directed"
+				},
+				"attributes": {},
+				"nodes": [
+					{
+						"key": "A",
+						"attributes": {
+							"label": "A"
+						}
+					},
+					{
+						"key": "B",
+						"attributes": {
+							"label": "B"
+						}
+					},
+					{
+						"key": "C",
+						"attributes": {
+							"label": "C"
+						}
+					},
+					{
+						"key": "B'",
+						"attributes": {
+							"label": "B'"
+						}
+					},
+					{
+						"key": "C'",
+						"attributes": {
+							"label": "C'"
+						}
+					}
+				],
+				"edges": [
+					{
+						"key": "aToB",
+						"source": "A",
+						"target": "B",
+						"attributes": {}
+					},
+					{
+						"key": "bToC",
+						"source": "B",
+						"target": "C",
+						"attributes": {}
+					},
+					{
+						"key": "cToA",
+						"source": "C",
+						"target": "A",
+						"attributes": {}
+					},
+					{
+						"key": "aToB'",
+						"source": "A",
+						"target": "B'",
+						"attributes": {
+							"type": "copy"
+						}
+					},
+					{
+						"key": "aToC",
+						"source": "A",
+						"target": "C'",
+						"attributes": {
+							"type": "copy"
+						}
+					}
+				]
+			}
+		}
+	]
+}
