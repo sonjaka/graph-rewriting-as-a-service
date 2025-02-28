@@ -1,18 +1,31 @@
 import Graph from 'graphology';
 import { GraphSchema } from '../../types/grs.schema';
 import { GraphRewritingRuleSchema } from '../../types/rewrite-rule.schema';
-import { IDBGraphService } from '../db/types';
+import { DBGraphPatternMatchResult, IDBGraphService } from '../db/types';
 import { GraphologyParserService } from './graphology.parser.service';
 import {
 	GrsGraphEdgeMetadata,
 	GrsGraphMetadata,
 	GrsGraphNodeMetadata,
 } from './types';
+import { GraphNodeSchema } from '../../types/node.schema';
+import { GraphEdgeSchema } from '../../types/edge.schema';
 
 // interface GrsRewriteRule {
 // 	lhs: Graph<GrsGraphNodeMetadata, GrsGraphEdgeMetadata, GrsGraphMetadata>;
 // 	rhs: Graph<GrsGraphNodeMetadata, GrsGraphEdgeMetadata, GrsGraphMetadata>;
 // }
+
+type NodeMatchMap = Map<GraphNodeSchema, GraphNodeSchema | undefined>;
+type EdgeMatchMap = Map<GraphEdgeSchema, GraphEdgeSchema | undefined>;
+interface GraphDiffResult {
+	updatedNodes: NodeMatchMap;
+	addedNodes: GraphNodeSchema[];
+	removedNodes: GraphNodeSchema[];
+	updatedEdges: EdgeMatchMap;
+	addedEdges: GraphEdgeSchema[];
+	removedEdges: GraphEdgeSchema[];
+}
 
 export class GrsService {
 	constructor(private readonly graphService: IDBGraphService) {}
@@ -25,15 +38,20 @@ export class GrsService {
 		await this.importHostgraph(hostgraphData);
 
 		for (const rule of rules) {
-			const lhs = rule.lhs;
+			const { lhs, rhs } = rule;
 
-			await this.graphService.findPatternMatch(
+			const matches = await this.graphService.findPatternMatch(
 				lhs.nodes,
 				lhs.edges,
 				lhs.options.type
 			);
 
-			console.log(lhs);
+			for (const match of matches) {
+				const overlapAndDifference =
+					this.computeOverlapAndDifferenceOfLhsAndRhs(lhs, rhs);
+
+				const result = await this.replaceMatch(match, overlapAndDifference);
+			}
 		}
 
 		// let ruleSet;
@@ -117,5 +135,88 @@ export class GrsService {
 		const options = hostgraph.options;
 
 		return { options, attributes, nodes, edges };
+	}
+
+	/**
+	 * Main Algorithm performing the actual search & replace of the pattern match
+	 * 1. Finds difference between LHS and RHS systems to determine which nodes/edges need to be updated/removed/added
+	 * 2. Removes all nodes/edges that are in LHS, but NOT part of the RHS
+	 * 3. Updates all nodes/edges that are in LHS and part of the RHS
+	 * 4. Adds all nodes/edges that are part of the RHS but not the LHS
+	 *
+	 * @param occurence The match found in the database for the given lhs pattern
+	 * @param lhs
+	 * @param rhs
+	 */
+	private async replaceMatch(
+		occurence: DBGraphPatternMatchResult,
+		adjustments: GraphDiffResult
+	) {
+
+		return;
+	}
+
+	private computeOverlapAndDifferenceOfLhsAndRhs(
+		lhs: GraphSchema,
+		rhs: GraphSchema
+	): GraphDiffResult {
+		const updatedNodes: NodeMatchMap = new Map();
+		const removedNodes: GraphNodeSchema[] = [];
+		const addedNodes: GraphNodeSchema[] = [];
+
+		const updatedEdges: EdgeMatchMap = new Map();
+		const removedEdges: GraphEdgeSchema[] = [];
+		const addedEdges: GraphEdgeSchema[] = [];
+
+		// All nodes in search graph that are also in replacement are "updated"
+		// All nodes in search graph that are not in replacement are "deleted"
+		for (const lhsNode of lhs.nodes) {
+			const rhsNode = rhs.nodes.find((rhsNode) => rhsNode.key === lhsNode.key);
+
+			if (rhsNode) {
+				updatedNodes.set(lhsNode, rhsNode);
+			} else {
+				removedNodes.push(lhsNode);
+			}
+		}
+
+		// All nodes that are in replacement but not in search graph are "added".
+		// All search graph nodes should already be part of updated/removed, so if it
+		// can't be found there, it has to be a new/added node
+		for (const rhsNode of rhs.nodes) {
+			if (!updatedNodes.has(rhsNode)) {
+				addedNodes.push(rhsNode);
+			}
+		}
+
+		// All edges in search graph that are also in replacement are "updated"
+		// All edges in search graph that are not in replacement are "deleted"
+		for (const lhsEdge of lhs.edges) {
+			const rhsEdge = rhs.edges.find((rhsEdge) => rhsEdge.key === lhsEdge.key);
+
+			if (rhsEdge) {
+				updatedEdges.set(lhsEdge, rhsEdge);
+			} else {
+				removedEdges.push(lhsEdge);
+			}
+		}
+
+		// All nodes that are in replacement but not in search graph are "added".
+		// All search graph nodes should already be part of updated/removed, so if it
+		// can't be found there, it has to be a new/added node
+		for (const rhsEdge of rhs.edges) {
+			if (!updatedEdges.has(rhsEdge)) {
+				addedEdges.push(rhsEdge);
+			}
+		}
+
+		return {
+			updatedNodes,
+			updatedEdges,
+			removedNodes,
+			removedEdges,
+			addedNodes,
+			addedEdges,
+		};
 	}
 }
