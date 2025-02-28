@@ -1,3 +1,5 @@
+import { DBGraphNACs } from '../../types';
+
 function sanitizeStringLiteral(string: string) {
 	string.trim();
 	string.replace(/['|\u0027]/g, "\u005c' ");
@@ -88,6 +90,53 @@ export function computeInjectivityClause(
 		}
 		cypher += injectivity;
 	}
+	return { cypher, hasWhere };
+}
+
+// Returns each rule in the format
+// MATCH (n)
+// WITH * call {
+//     WITH * MATCH (x)
+//     WITH * MATCH (x)-[:related_to]->(n)
+//     return COUNT(*) as _nac
+// }
+// WITH * WHERE _nac=0
+// RETURN n
+export function computeNacClause(nacs: DBGraphNACs[], hasWhere: boolean) {
+	let cypher = '';
+	nacs.forEach((nac, index) => {
+		const nacNodes = nac.nodes;
+		const nacEdges = nac.edges;
+
+		// TODO: Check if the "WITH" is needed here
+		cypher += ' WITH * call {';
+
+		nacNodes?.forEach((node) => {
+			cypher += ` WITH * MATCH `;
+			cypher += computeNodeQueryString(node.key, ['GRS_Node'], node.attributes);
+			cypher += ` `;
+		});
+
+		nacEdges?.forEach((edge) => {
+			cypher += `WITH * MATCH `;
+			// TODO: add directed edges
+			cypher += computeEdgeQueryString(
+				edge.key,
+				'GRS_Relationship',
+				edge.attributes,
+				edge.source,
+				edge.target
+			);
+
+			cypher += ` `;
+		});
+
+		cypher += ` RETURN COUNT(*) as nac_matches${index} }`;
+
+		cypher += ` WITH * WHERE nac_matches${index}=0 `;
+		// hasWhere = true;
+	});
+
 	return { cypher, hasWhere };
 }
 

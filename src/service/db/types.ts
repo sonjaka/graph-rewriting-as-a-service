@@ -38,6 +38,11 @@ export interface DBGraphEdge {
 	target: DBGraphNodeInternalId;
 }
 
+export interface DBGraphNACs {
+	nodes: DBGraphNode[] | [];
+	edges: DBGraphEdge[] | [];
+}
+
 export type DBGraphNodeResult = DBGraphNode;
 export type DBGraphEdgeResult = DBGraphEdge;
 
