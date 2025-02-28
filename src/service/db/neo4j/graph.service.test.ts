@@ -965,173 +965,170 @@ describe('Integration tests for graph service with testcontainers', () => {
 			});
 		});
 
-		test.todo(
-			'NEO4J-99: Test pattern matching for nacs: excluding node with multiple outgoing edges',
-			async () => {
-				// Set up test database with two nodes
-				const nodeProps = {
-					attributes: [
-						{ _grs_internalId: 'testnodeA', hello: 'world' },
-						{ _grs_internalId: 'testnodeB', test: 'wert' },
-						{ _grs_internalId: 'testnodeC', hello: 'world' },
-						{ _grs_internalId: 'testnodeD', attribute: 'value' },
-						{ _grs_internalId: 'testnodeE' },
-						{ _grs_internalId: 'testnodeF' },
-					],
-				};
-				await session.run(
-					`UNWIND $attributes AS config \
+		test('Test pattern matching for nacs: excluding node with multiple outgoing edges', async () => {
+			// Set up test database with two nodes
+			const nodeProps = {
+				attributes: [
+					{ _grs_internalId: 'testnodeA', hello: 'world' },
+					{ _grs_internalId: 'testnodeB', test: 'wert' },
+					{ _grs_internalId: 'testnodeC', hello: 'world' },
+					{ _grs_internalId: 'testnodeD', attribute: 'value' },
+					{ _grs_internalId: 'testnodeE' },
+					{ _grs_internalId: 'testnodeF' },
+				],
+			};
+			await session.run(
+				`UNWIND $attributes AS config \
 				CREATE (n:GRS_Node) \
 				SET n = config`,
-					nodeProps
-				);
+				nodeProps
+			);
 
-				const edgesProps = {
-					config: [
-						{ source: 'testnodeA', target: 'testnodeB', key: 'aToB' },
-						{ source: 'testnodeA', target: 'testnodeC', key: 'aToC' },
-						{ source: 'testnodeC', target: 'testnodeD', key: 'cToD' },
-						{ source: 'testnodeD', target: 'testnodeE', key: 'dToE' },
-						{ source: 'testnodeE', target: 'testnodeC', key: 'eToC' },
-						{ source: 'testnodeA', target: 'testnodeF', key: 'aToF' },
-					],
-				};
+			const edgesProps = {
+				config: [
+					{ source: 'testnodeA', target: 'testnodeB', key: 'aToB' },
+					{ source: 'testnodeA', target: 'testnodeC', key: 'aToC' },
+					{ source: 'testnodeC', target: 'testnodeD', key: 'cToD' },
+					{ source: 'testnodeD', target: 'testnodeE', key: 'dToE' },
+					{ source: 'testnodeE', target: 'testnodeC', key: 'eToC' },
+					{ source: 'testnodeA', target: 'testnodeF', key: 'aToF' },
+				],
+			};
 
-				await session.run(
-					`UNWIND $config AS config \
+			await session.run(
+				`UNWIND $config AS config \
 				MATCH (a),(b) \
 				WHERE a._grs_internalId = config.source \
 				AND b._grs_internalId = config.target \
 				CREATE (a)-[r:\`GRS_Relationship\` {_grs_internalId: config.key, _grs_source: config.source, _grs_target: config.target}]->(b) RETURN r`,
-					edgesProps
-				);
+				edgesProps
+			);
 
-				const patternNodes = [
-					{
-						key: 'A',
-						attributes: {},
-					},
-					{
-						key: 'B',
-						attributes: {},
-					},
-				];
+			const patternNodes = [
+				{
+					key: 'A',
+					attributes: {},
+				},
+				{
+					key: 'B',
+					attributes: {},
+				},
+			];
 
-				const patternEdges = [
-					{
-						key: 'edge',
-						source: 'A',
-						target: 'B',
-						attributes: {},
-					},
-				];
+			const patternEdges = [
+				{
+					key: 'edge',
+					source: 'A',
+					target: 'B',
+					attributes: {},
+				},
+			];
 
-				const nacs = [
-					{
-						nodes: [
-							{
-								key: 'A',
-								attributes: {},
-							},
-							{
-								key: 'B',
-								attributes: {},
-							},
-							{
-								key: 'C',
-								attributes: {},
-							},
-							// {
-							// 	key: 'D',
-							// 	attributes: {},
-							// },
-						],
-						edges: [
-							{
-								attributes: {},
-								key: 'atob',
-								source: 'A',
-								target: 'B',
-							},
-							{
-								attributes: {},
-								key: 'atob',
-								source: 'A',
-								target: 'C',
-							},
-							// {
-							// 	attributes: {},
-							// 	key: 'atob',
-							// 	source: 'A',
-							// 	target: 'D',
-							// },
-						],
-					},
-				];
-
-				// Should have two resultsets with A-B and A-C
-				const expectedResultSets = [
-					{
-						edges: {
-							edge: {
-								attributes: {},
-								key: 'dToE',
-								source: 'testnodeD',
-							},
+			const nacs = [
+				{
+					nodes: [
+						{
+							key: 'A',
+							attributes: {},
 						},
-						nodes: {
-							A: {
-								key: 'testnodeD',
-								attributes: {
-									attribute: 'value',
-								},
-							},
-							B: {
-								key: 'testnodeE',
-								attributes: {},
-							},
+						{
+							key: 'B',
+							attributes: {},
+						},
+						{
+							key: 'C',
+							attributes: {},
+						},
+						// {
+						// 	key: 'D',
+						// 	attributes: {},
+						// },
+					],
+					edges: [
+						{
+							attributes: {},
+							key: 'atob',
+							source: 'A',
+							target: 'B',
+						},
+						{
+							attributes: {},
+							key: 'atob',
+							source: 'A',
+							target: 'C',
+						},
+						// {
+						// 	attributes: {},
+						// 	key: 'atob',
+						// 	source: 'A',
+						// 	target: 'D',
+						// },
+					],
+				},
+			];
+
+			// Should have two resultsets with A-B and A-C
+			const expectedResultSets = [
+				{
+					edges: {
+						edge: {
+							attributes: {},
+							key: 'dToE',
+							source: 'testnodeD',
 						},
 					},
-					{
-						edges: {
-							edge: {
-								attributes: {},
-								key: 'eToC',
-								source: 'testnodeE',
-								target: 'testnodeC',
+					nodes: {
+						A: {
+							key: 'testnodeD',
+							attributes: {
+								attribute: 'value',
 							},
 						},
-						nodes: {
-							A: {
-								key: 'testnodeE',
-								attributes: {},
-							},
-							B: {
-								key: 'testnodeC',
-								attributes: {
-									hello: 'world',
-								},
+						B: {
+							key: 'testnodeE',
+							attributes: {},
+						},
+					},
+				},
+				{
+					edges: {
+						edge: {
+							attributes: {},
+							key: 'eToC',
+							source: 'testnodeE',
+							target: 'testnodeC',
+						},
+					},
+					nodes: {
+						A: {
+							key: 'testnodeE',
+							attributes: {},
+						},
+						B: {
+							key: 'testnodeC',
+							attributes: {
+								hello: 'world',
 							},
 						},
 					},
-				];
+				},
+			];
 
-				const graphService = new Neo4jGraphService(session);
-				const neo4jSpy = vi.spyOn(session, 'executeRead');
-				const result = await graphService.findPatternMatch(
-					patternNodes,
-					patternEdges,
-					'directed',
-					false,
-					nacs
-				);
-				expect(neo4jSpy).toHaveBeenCalled();
-				expect(neo4jSpy).toHaveBeenCalledTimes(1);
-				expectedResultSets.forEach((expectedResultNode) => {
-					expect(result).toContainEqual(expectedResultNode);
-				});
-			}
-		);
+			const graphService = new Neo4jGraphService(session);
+			const neo4jSpy = vi.spyOn(session, 'executeRead');
+			const result = await graphService.findPatternMatch(
+				patternNodes,
+				patternEdges,
+				'directed',
+				false,
+				nacs
+			);
+			expect(neo4jSpy).toHaveBeenCalled();
+			expect(neo4jSpy).toHaveBeenCalledTimes(1);
+			expectedResultSets.forEach((expectedResultNode) => {
+				expect(result).toContainEqual(expectedResultNode);
+			});
+		});
 	});
 });
 
