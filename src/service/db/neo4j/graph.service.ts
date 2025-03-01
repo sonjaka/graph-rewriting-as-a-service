@@ -98,7 +98,7 @@ export class Neo4jGraphService implements IDBGraphService {
 
 			cypher = `MATCH (n:\`${oldNodeType}\` { _grs_internalId: $internalId }) \
 		        REMOVE n:\`${oldNodeType}\` \
-		        SET n:\`${nodeLabels}\`, n = $metadata \
+		        SET n:${nodeLabels.map((label) => '`' + label + '`').join(':')}, n = $metadata \
 		        RETURN n`;
 		} else {
 			cypher = `MATCH (n { _grs_internalId: $internalId }) \

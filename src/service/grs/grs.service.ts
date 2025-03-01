@@ -10,14 +10,15 @@ import {
 } from './types';
 import { GraphNodeSchema } from '../../types/node.schema';
 import { GraphEdgeSchema } from '../../types/edge.schema';
+import { createEdgeUuid, createNodeUuid } from '../../utils/uuid';
 
 // interface GrsRewriteRule {
 // 	lhs: Graph<GrsGraphNodeMetadata, GrsGraphEdgeMetadata, GrsGraphMetadata>;
 // 	rhs: Graph<GrsGraphNodeMetadata, GrsGraphEdgeMetadata, GrsGraphMetadata>;
 // }
 
-type NodeMatchMap = Map<GraphNodeSchema, GraphNodeSchema | undefined>;
-type EdgeMatchMap = Map<GraphEdgeSchema, GraphEdgeSchema | undefined>;
+type NodeMatchMap = Map<string, GraphNodeSchema | undefined>;
+type EdgeMatchMap = Map<string, GraphEdgeSchema | undefined>;
 interface GraphDiffResult {
 	updatedNodes: NodeMatchMap;
 	addedNodes: GraphNodeSchema[];
@@ -152,6 +153,80 @@ export class GrsService {
 		occurence: DBGraphPatternMatchResult,
 		adjustments: GraphDiffResult
 	) {
+		const preservedNodes: Record<string, string> = {};
+
+		// Remove all nodes and edges that are not in the replacement graph
+		const removedNodeIds = adjustments.removedNodes.map((node) => {
+			return occurence.nodes[node.key].key;
+		});
+		await this.graphService.deleteNodes(removedNodeIds);
+
+		const removedEdgesIds = adjustments.removedEdges.map((edge) => {
+			return occurence.edges[edge.key].key;
+		});
+		await this.graphService.deleteEdges(removedEdgesIds);
+
+		// Update all nodes and edges that are part of both search pattern and replacement graph
+		for (const [key, rhsNode] of adjustments.updatedNodes) {
+			if (rhsNode) {
+				const oldNode = occurence.nodes[key];
+				const internalId = oldNode.key;
+
+				await this.graphService.updateNode(
+					rhsNode.attributes,
+					internalId,
+					oldNode.attributes?.type ? [oldNode.attributes?.type] : []
+				);
+
+				preservedNodes[key] = internalId;
+			}
+		}
+
+		// Add all new nodes & edges
+		for (const rhsNode of adjustments.addedNodes) {
+			const internalId = createNodeUuid();
+
+			await this.graphService.createNode(rhsNode.attributes, internalId);
+
+			preservedNodes[rhsNode.key] = internalId;
+		}
+		for (const rhsEdge of adjustments.addedEdges) {
+			const internalId = createEdgeUuid();
+
+			const sourceInternalId = preservedNodes[rhsEdge.source];
+			const targetInternalId = preservedNodes[rhsEdge.target];
+
+			await this.graphService.createEdge(
+				sourceInternalId,
+				targetInternalId,
+				internalId,
+				rhsEdge.attributes
+			);
+		}
+		// for (let [key] of addedEdges) {
+		// 	if (!replacementGraph.hasEdge(key)) {
+		// 		console.log('Error!');
+		// 		continue;
+		// 	}
+
+		// 	const edgeAttributes = replacementGraph.getEdgeAttributes(key);
+
+		// 	const source = replacementGraph.source(key);
+		// 	const target = replacementGraph.target(key);
+
+		// 	const sourceId = preservedNodes[source];
+		// 	const targetId = preservedNodes[target];
+
+		// 	if (edgeAttributes) {
+		// 		const res = await createEdgeAsync(
+		// 			session,
+		// 			sourceId,
+		// 			targetId,
+		// 			edgeAttributes ?? {},
+		// 			edgeAttributes?.relation ?? 'test'
+		// 		);
+		// 	}
+		// }
 
 		return;
 	}
@@ -174,7 +249,7 @@ export class GrsService {
 			const rhsNode = rhs.nodes.find((rhsNode) => rhsNode.key === lhsNode.key);
 
 			if (rhsNode) {
-				updatedNodes.set(lhsNode, rhsNode);
+				updatedNodes.set(lhsNode.key, rhsNode);
 			} else {
 				removedNodes.push(lhsNode);
 			}
@@ -184,28 +259,36 @@ export class GrsService {
 		// All search graph nodes should already be part of updated/removed, so if it
 		// can't be found there, it has to be a new/added node
 		for (const rhsNode of rhs.nodes) {
-			if (!updatedNodes.has(rhsNode)) {
+			if (!updatedNodes.has(rhsNode.key)) {
 				addedNodes.push(rhsNode);
 			}
 		}
 
 		// All edges in search graph that are also in replacement are "updated"
+		// --> An edge is only identical, if both key, source and target match!
+		// --> Nodes cannot be updated and will be deleted and recreated
+		// TODO: Figure out what to do about attributes that are not explicitly specified
 		// All edges in search graph that are not in replacement are "deleted"
 		for (const lhsEdge of lhs.edges) {
-			const rhsEdge = rhs.edges.find((rhsEdge) => rhsEdge.key === lhsEdge.key);
+			const rhsEdge = rhs.edges.find(
+				(rhsEdge) =>
+					rhsEdge.key === lhsEdge.key &&
+					rhsEdge.source === lhsEdge.source &&
+					lhsEdge.target === rhsEdge.target
+			);
 
 			if (rhsEdge) {
-				updatedEdges.set(lhsEdge, rhsEdge);
+				updatedEdges.set(lhsEdge.key, rhsEdge);
 			} else {
 				removedEdges.push(lhsEdge);
 			}
 		}
 
-		// All nodes that are in replacement but not in search graph are "added".
-		// All search graph nodes should already be part of updated/removed, so if it
-		// can't be found there, it has to be a new/added node
+		// All edges that are in replacement but not in search graph are "added".
+		// All search graph edges should already be part of updated/removed, so if it
+		// can't be found there, it has to be a new/added edge
 		for (const rhsEdge of rhs.edges) {
-			if (!updatedEdges.has(rhsEdge)) {
+			if (!updatedEdges.has(rhsEdge.key)) {
 				addedEdges.push(rhsEdge);
 			}
 		}
