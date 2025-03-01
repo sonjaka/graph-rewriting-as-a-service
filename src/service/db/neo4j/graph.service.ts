@@ -299,7 +299,7 @@ export class Neo4jGraphService implements IDBGraphService {
 		type: DBGraphType = 'undirected',
 		onlyInjective = false
 	): Promise<DBGraphPatternMatchResult[] | []> {
-		let query = 'MATCH ';
+		let query = '';
 		let hasWhere = false;
 		const queryVars: string[] = [];
 
@@ -351,10 +351,16 @@ export class Neo4jGraphService implements IDBGraphService {
 			hasWhere = edgeInjectivity.hasWhere;
 		}
 
-		query += ` RETURN ${queryVars.join(', ')}`;
+		// If empty pattern set, return an empty result set
+		if (!query.length && !queryVars.length) {
+			return [{ nodes: {}, edges: {} }];
+		}
+
+		// Else build cypher and query database
+		const cypher = `MATCH ${query} RETURN ${queryVars.join(', ')}`;
 
 		const res = await this.session.executeRead((tx: ManagedTransaction) =>
-			tx.run<Neo4jPatternMatchResult>(query)
+			tx.run<Neo4jPatternMatchResult>(cypher)
 		);
 
 		const result = this.mapPatternMatchToResult(res, queryVars);

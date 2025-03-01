@@ -47,11 +47,22 @@ export class GrsService {
 				lhs.options.type
 			);
 
-			for (const match of matches) {
-				const overlapAndDifference =
-					this.computeOverlapAndDifferenceOfLhsAndRhs(lhs, rhs);
+			const overlapAndDifference = this.computeOverlapAndDifferenceOfLhsAndRhs(
+				lhs,
+				rhs
+			);
 
-				const result = await this.replaceMatch(match, overlapAndDifference);
+			if (matches.length) {
+				for (const match of matches) {
+					const result = await this.replaceMatch(match, overlapAndDifference);
+				}
+			} else {
+				// Handle edge case for empty pattern
+				// Additions are still possible!
+				const result = await this.replaceMatch(
+					{ nodes: {}, edges: {} },
+					overlapAndDifference
+				);
 			}
 		}
 
