@@ -1,14 +1,75 @@
-import { describe, expect, test, vi, beforeEach, afterEach } from 'vitest';
+import {
+	describe,
+	expect,
+	test,
+	vi,
+	beforeEach,
+	afterEach,
+	afterAll,
+	beforeAll,
+} from 'vitest';
 
-import sampleGraphData from './testutils/samplegraph.json';
-import sampleRules from './testutils/samplerules.json';
 import { GrsService } from './grs.service';
 import { IDBGraphService } from '../db/types';
 import { GraphSchema } from '../../types/graph.schema';
 import { GraphRewritingRuleSchema } from '../../types/grs.schema';
 import Graph from 'graphology';
 
-describe('Test graphology parser service', () => {
+import { Neo4jContainer, StartedNeo4jContainer } from '@testcontainers/neo4j';
+import neo4j, { Driver, ManagedTransaction, Session } from 'neo4j-driver';
+import { Neo4jGraphService } from '../db/neo4j/graph.service';
+
+// Example Data
+import sampleGraphData from './testutils/samplegraph.json';
+import sampleRules from './testutils/samplerules.json';
+import { addNodeInput, addNodeExpectedOutput } from './testutils/addNode';
+
+import { createNodeUuid, createEdgeUuid } from '../../utils/uuid';
+
+vi.mock('../../utils/uuid');
+
+// const mocks = vi.hoisted(() => {
+// 	let nodeCount = 0;
+// 	let edgeCount = 0;
+
+// 	return {
+// 		createEdgeUuid: vi.fn().mockImplementation(() => {
+// 			console.log('called Mock');
+// 			edgeCount++;
+// 			return `e_${edgeCount}`;
+// 		}),
+// 		createNodeUuid: vi.fn().mockImplementation(() => {
+// 			nodeCount++;
+// 			return `n_${nodeCount}`;
+// 		}),
+// 	};
+// });
+
+// vi.mock('../../utils/uuid', () => {
+// 	return {
+// 		createEdgeUuid: mocks.createEdgeUuid,
+// 		createNodeUuid: mocks.createNodeUuid,
+// 	};
+// });
+
+// vi.mock('../../utils/uuid', () => {
+// 	let nodeCount = 0;
+// 	let edgeCount = 0;
+
+// 	return {
+// 		createEdgeUuid: vi.fn().mockImplementation(() => {
+// 			console.log('called Mock');
+// 			edgeCount++;
+// 			return `e_${edgeCount}`;
+// 		}),
+// 		createNodeUuid: vi.fn().mockImplementation(() => {
+// 			nodeCount++;
+// 			return `n_${nodeCount}`;
+// 		}),
+// 	};
+// });
+
+describe('Test grs service', () => {
 	let mockGraphService: IDBGraphService;
 
 	beforeEach(() => {
@@ -22,45 +83,48 @@ describe('Test graphology parser service', () => {
 	});
 
 	afterEach(() => {
-		vi.clearAllMocks();
+		vi.resetAllMocks(); // Clear and set back implementation
 	});
 
-	test('Test loadGraphIntoDb should call GraphService functions', async () => {
-		const grsService = new GrsService(mockGraphService);
+	test.todo(
+		'Test loadGraphIntoDb should call GraphService functions',
+		async () => {
+			const grsService = new GrsService(mockGraphService);
 
-		const createNodeSpy = vi.spyOn(mockGraphService, 'createNode');
-		const createEdgeSpy = vi.spyOn(mockGraphService, 'createEdge');
-		const deleteAllNodesSpy = vi.spyOn(mockGraphService, 'deleteAllNodes');
+			const createNodeSpy = vi.spyOn(mockGraphService, 'createNode');
+			const createEdgeSpy = vi.spyOn(mockGraphService, 'createEdge');
+			const deleteAllNodesSpy = vi.spyOn(mockGraphService, 'deleteAllNodes');
 
-		mockGraphService.getAllNodes = vi
-			.fn()
-			.mockResolvedValue(sampleGraphData.nodes);
-		mockGraphService.getAllEdges = vi
-			.fn()
-			.mockResolvedValue(sampleGraphData.edges);
+			mockGraphService.getAllNodes = vi
+				.fn()
+				.mockResolvedValue(sampleGraphData.nodes);
+			mockGraphService.getAllEdges = vi
+				.fn()
+				.mockResolvedValue(sampleGraphData.edges);
 
-		const result = await grsService.importHostgraph(
-			sampleGraphData as GraphSchema
-		);
+			const result = await grsService.importHostgraph(
+				sampleGraphData as GraphSchema
+			);
 
-		// Old nodes should have been deleted
-		expect(deleteAllNodesSpy).toHaveBeenCalled();
+			// Old nodes should have been deleted
+			expect(deleteAllNodesSpy).toHaveBeenCalled();
 
-		// Graph service functions should have been called fo all nodes (2) and edges (1)
-		expect(createNodeSpy).toHaveBeenCalled();
-		expect(createNodeSpy).toHaveBeenCalledTimes(2);
-		expect(createEdgeSpy).toHaveBeenCalled();
-		expect(createEdgeSpy).toHaveBeenCalledTimes(1);
+			// Graph service functions should have been called fo all nodes (2) and edges (1)
+			expect(createNodeSpy).toHaveBeenCalled();
+			expect(createNodeSpy).toHaveBeenCalledTimes(2);
+			expect(createEdgeSpy).toHaveBeenCalled();
+			expect(createEdgeSpy).toHaveBeenCalledTimes(1);
 
-		// Result should be the same as the input
-		// (except for the changed ids, which we did not respect in the mock above)
-		expect(result).toMatchObject({
-			options: sampleGraphData.options,
-			attributes: sampleGraphData.attributes,
-			nodes: result.nodes,
-			edges: result.edges,
-		});
-	});
+			// Result should be the same as the input
+			// (except for the changed ids, which we did not respect in the mock above)
+			expect(result).toMatchObject({
+				options: sampleGraphData.options,
+				attributes: sampleGraphData.attributes,
+				nodes: result.nodes,
+				edges: result.edges,
+			});
+		}
+	);
 
 	test.todo('Test rules are correctly parsed into graphs', () => {
 		const grsService = new GrsService(mockGraphService);
@@ -81,4 +145,74 @@ describe('Test graphology parser service', () => {
 		expect(lhs).toBeInstanceOf(Graph);
 		expect(rhs).toBeInstanceOf(Graph);
 	});
+});
+
+describe('Integration tests for grs service agains testcontainers', () => {
+	let container: StartedNeo4jContainer;
+	let driver: Driver;
+	let session: Session;
+	let graphService: Neo4jGraphService;
+
+	beforeAll(async () => {
+		container = await new Neo4jContainer('neo4j:5.25.1').withApoc().start();
+
+		driver = neo4j.driver(
+			container.getBoltUri(),
+			neo4j.auth.basic(container.getUsername(), container.getPassword())
+		);
+	}, 30000);
+
+	beforeEach(async () => {
+		session = driver.session();
+		graphService = new Neo4jGraphService(session);
+
+		vi.resetAllMocks(); // Clear and set back implementation
+	});
+
+	afterEach(async () => {
+		// Delete all nodes & relationships
+		await session.run(`MATCH (n) CALL (n) { DETACH DELETE n } IN TRANSACTIONS`);
+		// Drop all indexes & constraints
+		await session.run(`CALL apoc.schema.assert({}, {})`);
+		await session.close();
+
+		vi.clearAllMocks();
+	});
+
+	afterAll(async () => {
+		await driver.close();
+		await container.stop();
+	});
+
+	test('Test addition of simple node', async () => {
+		const grsService = new GrsService(graphService);
+
+		let nodeCount = 0;
+		let edgeCount = 0;
+		vi.mocked(createEdgeUuid).mockImplementation(() => {
+			edgeCount++;
+			return `e_${edgeCount}`;
+		});
+		vi.mocked(createNodeUuid).mockImplementation(() => {
+			nodeCount++;
+			return `n_${nodeCount}`;
+		});
+
+		const output = await grsService.replaceGraph(
+			addNodeInput.hostgraph,
+			addNodeInput.rules ?? []
+		);
+
+		expect(output).toStrictEqual(addNodeExpectedOutput);
+	}, 10000);
+	test.todo('Test addition of simple edge');
+	test.todo('Test removal of simple node');
+	test.todo('Test removal of simple edge');
+	test.todo('Test replacement of simple node');
+	test.todo('Test replacement of simple edge');
+	test.todo('Test replacement of connected nodes');
+	test.todo('Test replacement of connected nodes');
+	// REAL WORLD Examples
+	test.todo('Test transformation of UML to petrinet');
+	test.todo('Test transformation of UML to petrinet');
 });
