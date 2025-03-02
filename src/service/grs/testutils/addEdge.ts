@@ -33,13 +33,28 @@ export const input: GraphRewritingRequestSchema = {
 	},
 	rules: [
 		{
-			key: 'add_node',
+			key: 'add_edge',
 			lhs: {
 				options: {
 					type: 'directed',
 				},
 				attributes: {},
-				nodes: [],
+				nodes: [
+					{
+						key: 'A',
+						attributes: {
+							label: 'A',
+							type: 'Event',
+						},
+					},
+					{
+						key: 'B',
+						attributes: {
+							label: 'B',
+							type: 'Function',
+						},
+					},
+				],
 				edges: [],
 			},
 			rhs: {
@@ -49,14 +64,28 @@ export const input: GraphRewritingRequestSchema = {
 				attributes: {},
 				nodes: [
 					{
-						key: 'C',
+						key: 'A',
 						attributes: {
-							label: 'C',
+							label: 'A',
+							type: 'Event',
+						},
+					},
+					{
+						key: 'B',
+						attributes: {
+							label: 'B',
 							type: 'Function',
 						},
 					},
 				],
-				edges: [],
+				edges: [
+					{
+						key: 'bToA',
+						source: 'B',
+						target: 'A',
+						attributes: {},
+					},
+				],
 			},
 		},
 	],
@@ -82,19 +111,18 @@ export const expectedOutput = {
 				type: 'Function',
 			},
 		},
-		{
-			key: 'n_3',
-			attributes: {
-				label: 'C',
-				type: 'Function',
-			},
-		},
 	],
 	edges: [
 		{
 			key: 'e_1',
 			source: 'n_1',
 			target: 'n_2',
+			attributes: {},
+		},
+		{
+			key: 'e_2',
+			source: 'n_2',
+			target: 'n_1',
 			attributes: {},
 		},
 	],

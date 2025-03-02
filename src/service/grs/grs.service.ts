@@ -35,11 +35,9 @@ export class GrsService {
 		hostgraphData: GraphSchema,
 		rules: GraphRewritingRuleSchema[]
 	): Promise<GraphSchema> {
-		console.log('import');
 		this.graphService.graphType = hostgraphData.options.type;
 		await this.importHostgraph(hostgraphData);
 
-		console.log('start matching');
 		for (const rule of rules) {
 			const { lhs, rhs } = rule;
 
@@ -55,7 +53,6 @@ export class GrsService {
 			);
 
 			if (matches.length) {
-				console.log('replace');
 				for (const match of matches) {
 					const result = await this.replaceMatch(match, overlapAndDifference);
 				}

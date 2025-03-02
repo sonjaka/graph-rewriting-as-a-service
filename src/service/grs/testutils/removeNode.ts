@@ -21,6 +21,13 @@ export const input: GraphRewritingRequestSchema = {
 					type: 'Function',
 				},
 			},
+			{
+				key: 'C',
+				attributes: {
+					label: 'C',
+					type: 'Event',
+				},
+			},
 		],
 		edges: [
 			{
@@ -33,13 +40,21 @@ export const input: GraphRewritingRequestSchema = {
 	},
 	rules: [
 		{
-			key: 'add_node',
+			key: 'remove_node',
 			lhs: {
 				options: {
 					type: 'directed',
 				},
 				attributes: {},
-				nodes: [],
+				nodes: [
+					{
+						key: 'Node',
+						attributes: {
+							label: 'C',
+							type: 'Event',
+						},
+					},
+				],
 				edges: [],
 			},
 			rhs: {
@@ -47,15 +62,7 @@ export const input: GraphRewritingRequestSchema = {
 					type: 'directed',
 				},
 				attributes: {},
-				nodes: [
-					{
-						key: 'C',
-						attributes: {
-							label: 'C',
-							type: 'Function',
-						},
-					},
-				],
+				nodes: [],
 				edges: [],
 			},
 		},
@@ -79,13 +86,6 @@ export const expectedOutput = {
 			key: 'n_2',
 			attributes: {
 				label: 'B',
-				type: 'Function',
-			},
-		},
-		{
-			key: 'n_3',
-			attributes: {
-				label: 'C',
 				type: 'Function',
 			},
 		},
