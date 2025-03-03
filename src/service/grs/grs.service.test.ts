@@ -38,51 +38,18 @@ import {
 	input as removeEdgeInput,
 	expectedOutput as removeEdgeExpectedOutput,
 } from './testutils/removeEdge';
+import {
+	input as updateNodeInput,
+	expectedOutput as updateNodeExpectedOutput,
+} from './testutils/updateNode';
+import {
+	input as updateEdgeInput,
+	expectedOutput as updateEdgeExpectedOutput,
+} from './testutils/updateEdge';
 
 import { createNodeUuid, createEdgeUuid } from '../../utils/uuid';
 
 vi.mock('../../utils/uuid');
-
-// const mocks = vi.hoisted(() => {
-// 	let nodeCount = 0;
-// 	let edgeCount = 0;
-
-// 	return {
-// 		createEdgeUuid: vi.fn().mockImplementation(() => {
-// 			console.log('called Mock');
-// 			edgeCount++;
-// 			return `e_${edgeCount}`;
-// 		}),
-// 		createNodeUuid: vi.fn().mockImplementation(() => {
-// 			nodeCount++;
-// 			return `n_${nodeCount}`;
-// 		}),
-// 	};
-// });
-
-// vi.mock('../../utils/uuid', () => {
-// 	return {
-// 		createEdgeUuid: mocks.createEdgeUuid,
-// 		createNodeUuid: mocks.createNodeUuid,
-// 	};
-// });
-
-// vi.mock('../../utils/uuid', () => {
-// 	let nodeCount = 0;
-// 	let edgeCount = 0;
-
-// 	return {
-// 		createEdgeUuid: vi.fn().mockImplementation(() => {
-// 			console.log('called Mock');
-// 			edgeCount++;
-// 			return `e_${edgeCount}`;
-// 		}),
-// 		createNodeUuid: vi.fn().mockImplementation(() => {
-// 			nodeCount++;
-// 			return `n_${nodeCount}`;
-// 		}),
-// 	};
-// });
 
 describe('Test grs service', () => {
 	let mockGraphService: IDBGraphService;
@@ -287,8 +254,50 @@ describe('Integration tests for grs service agains testcontainers', () => {
 		expect(output).toEqual(expect.objectContaining(removeEdgeExpectedOutput));
 		// expect(output).toStrictEqual(removeNodeExpectedOutput);
 	}, 10000);
-	test.todo('Test replacement of simple node');
-	test.todo('Test replacement of simple edge');
+	test('Test update of simple node', async () => {
+		const grsService = new GrsService(graphService);
+
+		let nodeCount = 0;
+		let edgeCount = 0;
+		vi.mocked(createEdgeUuid).mockImplementation(() => {
+			edgeCount++;
+			return `e_${edgeCount}`;
+		});
+		vi.mocked(createNodeUuid).mockImplementation(() => {
+			nodeCount++;
+			return `n_${nodeCount}`;
+		});
+
+		const output = await grsService.replaceGraph(
+			updateNodeInput.hostgraph,
+			updateNodeInput.rules ?? []
+		);
+
+		expect(output).toEqual(expect.objectContaining(updateNodeExpectedOutput));
+		// expect(output).toStrictEqual(removeNodeExpectedOutput);
+	}, 10000);
+	test('Test update of simple edge', async () => {
+		const grsService = new GrsService(graphService);
+
+		let nodeCount = 0;
+		let edgeCount = 0;
+		vi.mocked(createEdgeUuid).mockImplementation(() => {
+			edgeCount++;
+			return `e_${edgeCount}`;
+		});
+		vi.mocked(createNodeUuid).mockImplementation(() => {
+			nodeCount++;
+			return `n_${nodeCount}`;
+		});
+
+		const output = await grsService.replaceGraph(
+			updateEdgeInput.hostgraph,
+			updateEdgeInput.rules ?? []
+		);
+
+		expect(output).toEqual(expect.objectContaining(updateEdgeExpectedOutput));
+		// expect(output).toStrictEqual(removeNodeExpectedOutput);
+	}, 10000);
 	test.todo('Test replacement of connected nodes');
 	test.todo('Test replacement of connected nodes');
 	// REAL WORLD Examples
