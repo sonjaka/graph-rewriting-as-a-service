@@ -90,8 +90,12 @@ describe('Integration tests for graph service with testcontainers', () => {
 			expect(result).toEqual(expectedResult[index]);
 			expect(neo4jSpy).toHaveBeenCalled();
 			// should have been called once for each node
-			// plus twice for the constraints
-			expect(neo4jSpy).toHaveBeenCalledTimes(index + 3);
+			// plus twice for the constraints on the first run
+			if (index === 0) {
+				expect(neo4jSpy).toHaveBeenCalledTimes(3);
+			} else {
+				expect(neo4jSpy).toHaveBeenCalledTimes(1);
+			}
 		}
 
 		// Check that database contains the correct data
@@ -509,6 +513,7 @@ describe('Integration tests for graph service with testcontainers', () => {
 	test.todo("Test node can't be deleted due to remaining edges");
 	test.todo('Test edge not found');
 	test.todo('Test node updated');
+	test.todo('Test edge updated');
 
 	test('Test pattern matching for single node', async () => {
 		// Set up test database with two nodes
