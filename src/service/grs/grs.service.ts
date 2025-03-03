@@ -54,15 +54,12 @@ export class GrsService {
 
 			if (matches.length) {
 				for (const match of matches) {
-					const result = await this.replaceMatch(match, overlapAndDifference);
+					await this.replaceMatch(match, overlapAndDifference);
 				}
 			} else {
 				// Handle edge case for empty pattern
 				// Additions are still possible!
-				const result = await this.replaceMatch(
-					{ nodes: {}, edges: {} },
-					overlapAndDifference
-				);
+				await this.replaceMatch({ nodes: {}, edges: {} }, overlapAndDifference);
 			}
 		}
 

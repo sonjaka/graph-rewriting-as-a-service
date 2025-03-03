@@ -16,7 +16,7 @@ import { GraphRewritingRuleSchema } from '../../types/grs.schema';
 import Graph from 'graphology';
 
 import { Neo4jContainer, StartedNeo4jContainer } from '@testcontainers/neo4j';
-import neo4j, { Driver, ManagedTransaction, Session } from 'neo4j-driver';
+import neo4j, { Driver, Session } from 'neo4j-driver';
 import { Neo4jGraphService } from '../db/neo4j/graph.service';
 
 // Example Data
@@ -110,20 +110,15 @@ describe('Test grs service', () => {
 
 	test.todo('Test rules are correctly parsed into graphs', () => {
 		const grsService = new GrsService(mockGraphService);
-
 		const rulesData = sampleRules as GraphRewritingRuleSchema[];
-
+		// @ts-expect-error parse rules is currently not used / commented out
 		const rules = grsService.parseRules(rulesData);
-
 		expect(rules.has('add_triangle')).toBe(true);
 		expect(rules.get('add_triangle')).toHaveProperty('lhs');
 		expect(rules.get('add_triangle')).toHaveProperty('rhs');
-
 		const singleRule = rules.get('add_triangle');
-
 		const lhs = singleRule?.lhs;
 		const rhs = singleRule?.rhs;
-
 		expect(lhs).toBeInstanceOf(Graph);
 		expect(rhs).toBeInstanceOf(Graph);
 	});
