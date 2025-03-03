@@ -232,6 +232,24 @@ export class Neo4jGraphService implements IDBGraphService {
 		return edges[0];
 	}
 
+	public async updateEdge(
+		internalIdSource: DBGraphNodeInternalId,
+		internalIdTarget: DBGraphNodeInternalId,
+		internalId: DBGraphNodeInternalId,
+		metadata: DBGraphEdgeMetadata
+	) {
+		await this.deleteEdge(internalId);
+
+		const edge = await this.createEdge(
+			internalIdSource,
+			internalIdTarget,
+			internalId,
+			metadata
+		);
+
+		return edge;
+	}
+
 	public async getEdge(internalId: DBGraphEdgeInternalId) {
 		const cypher = `MATCH ()-[r]-() \
             WHERE r._grs_internalId = $internalId \

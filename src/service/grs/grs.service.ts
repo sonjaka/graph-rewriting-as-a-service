@@ -192,6 +192,24 @@ export class GrsService {
 				preservedNodes[key] = internalId;
 			}
 		}
+		for (const [key, rhsEdge] of adjustments.updatedEdges) {
+			if (rhsEdge) {
+				const oldEdge = occurence.edges[key];
+				const internalId = oldEdge.key;
+
+				const sourceInternalId = preservedNodes[rhsEdge.source];
+				const targetInternalId = preservedNodes[rhsEdge.target];
+
+				await this.graphService.updateEdge(
+					sourceInternalId,
+					targetInternalId,
+					internalId,
+					rhsEdge.attributes ?? []
+				);
+
+				preservedNodes[key] = internalId;
+			}
+		}
 
 		// Add all new nodes & edges
 		for (const rhsNode of adjustments.addedNodes) {

@@ -76,6 +76,12 @@ export interface IDBGraphService {
 		internalId: DBGraphEdgeInternalId,
 		metadata: DBGraphEdgeMetadata
 	): Promise<DBGraphEdgeResult>;
+	updateEdge(
+		internalIdSource: DBGraphNodeInternalId,
+		internalIdTarget: DBGraphNodeInternalId,
+		internalId: DBGraphEdgeInternalId,
+		metadata: DBGraphEdgeMetadata
+	): Promise<DBGraphEdgeResult>;
 	getEdge(
 		internalId: DBGraphEdgeInternalId
 	): Promise<DBGraphEdgeResult | undefined>;
