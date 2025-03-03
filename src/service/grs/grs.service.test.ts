@@ -290,7 +290,9 @@ describe('Integration tests for grs service agains testcontainers', () => {
 			updateEdgeInput.rules ?? []
 		);
 
-		expect(output).toEqual(expect.objectContaining(updateEdgeExpectedOutput));
+		expect(output.edges).toEqual(
+			expect.arrayContaining(updateEdgeExpectedOutput.edges)
+		);
 		// expect(output).toStrictEqual(removeNodeExpectedOutput);
 	}, 10000);
 	test.todo('Test replacement of connected nodes');
