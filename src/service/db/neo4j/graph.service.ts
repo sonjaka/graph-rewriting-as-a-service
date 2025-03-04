@@ -98,7 +98,7 @@ export class Neo4jGraphService implements IDBGraphService {
 
 			cypher = `MATCH (n:\`${oldNodeType}\` { _grs_internalId: $internalId }) \
 		        REMOVE n:\`${oldNodeType}\` \
-		        SET n:\`${nodeLabels}\`, n = $metadata \
+		        SET n:${nodeLabels.map((label) => '`' + label + '`').join(':')}, n = $metadata \
 		        RETURN n`;
 		} else {
 			cypher = `MATCH (n { _grs_internalId: $internalId }) \
@@ -162,6 +162,20 @@ export class Neo4jGraphService implements IDBGraphService {
 		return nodes[0];
 	}
 
+	public async deleteNodes(internalIds: DBGraphNodeInternalId[]) {
+		const cypher = `MATCH (n) \
+            WHERE n._grs_internalId in $internalIds \
+            DETACH DELETE n`;
+
+		const res = await this.session.executeWrite((tx: ManagedTransaction) =>
+			tx.run(cypher, { internalIds })
+		);
+		const nodeRecords = res.records.map((record) => record.get('n'));
+		const nodes = this.mapNodeRecordsToNodesResult(nodeRecords);
+
+		return nodes;
+	}
+
 	public async deleteAllNodes() {
 		const cypher =
 			'MATCH (n) CALL (n) \
@@ -218,6 +232,24 @@ export class Neo4jGraphService implements IDBGraphService {
 		return edges[0];
 	}
 
+	public async updateEdge(
+		internalIdSource: DBGraphNodeInternalId,
+		internalIdTarget: DBGraphNodeInternalId,
+		internalId: DBGraphNodeInternalId,
+		metadata: DBGraphEdgeMetadata
+	) {
+		await this.deleteEdge(internalId);
+
+		const edge = await this.createEdge(
+			internalIdSource,
+			internalIdTarget,
+			internalId,
+			metadata
+		);
+
+		return edge;
+	}
+
 	public async getEdge(internalId: DBGraphEdgeInternalId) {
 		const cypher = `MATCH ()-[r]-() \
             WHERE r._grs_internalId = $internalId \
@@ -249,6 +281,22 @@ export class Neo4jGraphService implements IDBGraphService {
 		return edges[0];
 	}
 
+	public async deleteEdges(internalIds: DBGraphEdgeInternalId[]) {
+		const cypher = `MATCH ()-[r]-()
+			WHERE r._grs_internalId in $internalIds \
+			DELETE r`;
+
+		const res = await this.session.executeWrite((tx: ManagedTransaction) =>
+			tx.run<Neo4jRelationshipResult>(cypher, {
+				internalIds,
+			})
+		);
+		const edgeRecords = res.records.map((record) => record.get('r'));
+		const edges = this.mapEdgeRecordsToEdgesResult(edgeRecords);
+
+		return edges;
+	}
+
 	public async getAllEdges() {
 		const cypher = `MATCH ()-[r]-() \
 			RETURN DISTINCT r`;
@@ -269,7 +317,7 @@ export class Neo4jGraphService implements IDBGraphService {
 		type: DBGraphType = 'undirected',
 		onlyInjective = false
 	): Promise<DBGraphPatternMatchResult[] | []> {
-		let query = 'MATCH ';
+		let query = '';
 		let hasWhere = false;
 		const queryVars: string[] = [];
 
@@ -321,10 +369,16 @@ export class Neo4jGraphService implements IDBGraphService {
 			hasWhere = edgeInjectivity.hasWhere;
 		}
 
-		query += ` RETURN ${queryVars.join(', ')}`;
+		// If empty pattern set, return an empty result set
+		if (!query.length && !queryVars.length) {
+			return [{ nodes: {}, edges: {} }];
+		}
+
+		// Else build cypher and query database
+		const cypher = `MATCH ${query} RETURN ${queryVars.join(', ')}`;
 
 		const res = await this.session.executeRead((tx: ManagedTransaction) =>
-			tx.run<Neo4jPatternMatchResult>(query)
+			tx.run<Neo4jPatternMatchResult>(cypher)
 		);
 
 		const result = this.mapPatternMatchToResult(res, queryVars);

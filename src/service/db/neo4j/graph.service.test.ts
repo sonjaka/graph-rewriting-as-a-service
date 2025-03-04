@@ -90,8 +90,12 @@ describe('Integration tests for graph service with testcontainers', () => {
 			expect(result).toEqual(expectedResult[index]);
 			expect(neo4jSpy).toHaveBeenCalled();
 			// should have been called once for each node
-			// plus twice for the constraints
-			expect(neo4jSpy).toHaveBeenCalledTimes(index + 3);
+			// plus twice for the constraints on the first run
+			if (index === 0) {
+				expect(neo4jSpy).toHaveBeenCalledTimes(3);
+			} else {
+				expect(neo4jSpy).toHaveBeenCalledTimes(1);
+			}
 		}
 
 		// Check that database contains the correct data
@@ -209,7 +213,7 @@ describe('Integration tests for graph service with testcontainers', () => {
 		expect(neo4jSpy).toHaveBeenCalledTimes(1);
 	}, 10000);
 
-	test('Test deleteNodes', async () => {
+	test('Test deleteNode', async () => {
 		// Add testdata to database
 		const props = {
 			attributes: [
@@ -242,6 +246,52 @@ describe('Integration tests for graph service with testcontainers', () => {
 				properties: expect.objectContaining({
 					label: 'A',
 					_grs_internalId: 'testnodeA',
+				}),
+			})
+		);
+	});
+
+	test('Test deleteNodes', async () => {
+		// Add testdata to database
+		const props = {
+			attributes: [
+				{ label: 'A', key: 'testnodeA' },
+				{ label: 'B', key: 'testnodeB' },
+				{ label: 'C', key: 'testnodeC' },
+			],
+		};
+		await session.run(
+			`UNWIND $attributes AS config \
+			CREATE (n:Node {label: config.label, _grs_internalId: config.key})`,
+			props
+		);
+
+		const graphService = new Neo4jGraphService(session);
+		const neo4jSpy = vi.spyOn(session, 'executeWrite');
+		const result = await graphService.deleteNodes(['testnodeA', 'testnodeB']);
+		// Check result
+		expect(result).toStrictEqual([]);
+		expect(neo4jSpy).toHaveBeenCalled();
+		expect(neo4jSpy).toHaveBeenCalledTimes(1);
+
+		// Check that database contains the correct data
+		const finalState = await getApocJsonAllExport(session);
+		const finalNodesCount = finalState.records[0].get('nodes');
+		const finalData = finalState.records[0].get('data');
+		expect(finalNodesCount.toNumber()).toEqual(1);
+		expect(finalData).not.toContainEqual(
+			expect.objectContaining({
+				properties: expect.objectContaining({
+					label: 'A',
+					_grs_internalId: 'testnodeA',
+				}),
+			})
+		);
+		expect(finalData).not.toContainEqual(
+			expect.objectContaining({
+				properties: expect.objectContaining({
+					label: 'B',
+					_grs_internalId: 'testnodeB',
 				}),
 			})
 		);
@@ -409,10 +459,61 @@ describe('Integration tests for graph service with testcontainers', () => {
 		// Todo: check if the specific edge doesn't still exist
 	});
 
+	test('Test deleteEdges', async () => {
+		const props = {
+			attributes: [
+				{ label: 'A', key: 'testnodeA' },
+				{ label: 'B', key: 'testnodeB' },
+				{ label: 'C', key: 'testnodeC' },
+			],
+		};
+		await session.run(
+			`UNWIND $attributes AS config \
+			CREATE (n:GRS_NODE {label: config.label, _grs_internalId: config.key})`,
+			props
+		);
+		const edgesProps = {
+			config: [
+				{ source: 'testnodeA', target: 'testnodeB', key: 'testedge1' },
+				{ source: 'testnodeA', target: 'testnodeC', key: 'testedge2' },
+				{ source: 'testnodeB', target: 'testnodeC', key: 'testedge3' },
+			],
+		};
+
+		await session.run(
+			`
+			UNWIND $config AS config \
+			MATCH (a),(b) \
+			WHERE a._grs_internalId = config.source \
+			AND b._grs_internalId = config.target \
+			CREATE (a)-[r:\`GRS_Relationship\` {_grs_internalId: config.key, _grs_source: config.source, _grs_target: config.target}]->(b) RETURN r`,
+			edgesProps
+		);
+
+		const graphService = new Neo4jGraphService(session);
+		const neo4jSpy = vi.spyOn(session, 'executeWrite');
+		const result = await graphService.deleteEdges(['testedge1', 'testedge2']);
+		// Check result
+		expect(result).toStrictEqual([]);
+		expect(neo4jSpy).toHaveBeenCalled();
+		expect(neo4jSpy).toHaveBeenCalledTimes(1);
+
+		// Check that database contains the correct data
+		const finalState = await getApocJsonAllExport(session);
+		const finalNodesCount = finalState.records[0].get('nodes');
+		const finalEdgesCount = finalState.records[0].get('relationships');
+		expect(finalEdgesCount.toNumber()).toEqual(1);
+		expect(finalNodesCount.toNumber()).toEqual(3);
+
+		// Todo: check if the specific edge doesn't still exist
+	});
+
 	// TOOD: Add tests for edge cases
 	test.todo('Test node not found');
 	test.todo("Test node can't be deleted due to remaining edges");
 	test.todo('Test edge not found');
+	test.todo('Test node updated');
+	test.todo('Test edge updated');
 
 	test('Test pattern matching for single node', async () => {
 		// Set up test database with two nodes

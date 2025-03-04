@@ -65,9 +65,18 @@ export interface IDBGraphService {
 	deleteNode(
 		internalId: DBGraphNodeInternalId
 	): Promise<DBGraphNodeResult | undefined>;
+	deleteNodes(
+		internalIds: DBGraphNodeInternalId[]
+	): Promise<DBGraphNodeResult[] | undefined>;
 	getAllNodes(): Promise<DBGraphNodeResult[]>;
 	deleteAllNodes(): Promise<DBGraphNodeResult[]>;
 	createEdge(
+		internalIdSource: DBGraphNodeInternalId,
+		internalIdTarget: DBGraphNodeInternalId,
+		internalId: DBGraphEdgeInternalId,
+		metadata: DBGraphEdgeMetadata
+	): Promise<DBGraphEdgeResult>;
+	updateEdge(
 		internalIdSource: DBGraphNodeInternalId,
 		internalIdTarget: DBGraphNodeInternalId,
 		internalId: DBGraphEdgeInternalId,
@@ -77,6 +86,9 @@ export interface IDBGraphService {
 		internalId: DBGraphEdgeInternalId
 	): Promise<DBGraphEdgeResult | undefined>;
 	deleteEdge(internalId: DBGraphEdgeInternalId): Promise<DBGraphEdgeResult>;
+	deleteEdges(
+		internalIds: DBGraphEdgeInternalId[]
+	): Promise<DBGraphEdgeResult[]>;
 	getAllEdges(): Promise<DBGraphEdgeResult[]>;
 	findPatternMatch(
 		nodes: DBGraphNode[],
