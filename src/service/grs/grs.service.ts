@@ -11,6 +11,7 @@ import {
 import { GraphNodeSchema } from '../../types/node.schema';
 import { GraphEdgeSchema } from '../../types/edge.schema';
 import { createEdgeUuid, createNodeUuid } from '../../utils/uuid';
+import { InstantiatorService } from '../instantiation/instantiator.service';
 
 // interface GrsRewriteRule {
 // 	lhs: Graph<GrsGraphNodeMetadata, GrsGraphEdgeMetadata, GrsGraphMetadata>;
@@ -29,7 +30,11 @@ interface GraphDiffResult {
 }
 
 export class GrsService {
-	constructor(private readonly graphService: IDBGraphService) {}
+	private instantiatorService;
+
+	constructor(private readonly graphService: IDBGraphService) {
+		this.instantiatorService = new InstantiatorService();
+	}
 
 	public async replaceGraph(
 		hostgraphData: GraphSchema,
@@ -46,6 +51,8 @@ export class GrsService {
 				lhs.edges,
 				lhs.options.type
 			);
+
+			this.instantiateAttributes(rhs);
 
 			const overlapAndDifference = this.computeOverlapAndDifferenceOfLhsAndRhs(
 				lhs,
@@ -147,15 +154,13 @@ export class GrsService {
 	}
 
 	/**
-	 * Main Algorithm performing the actual search & replace of the pattern match
-	 * 1. Finds difference between LHS and RHS systems to determine which nodes/edges need to be updated/removed/added
-	 * 2. Removes all nodes/edges that are in LHS, but NOT part of the RHS
-	 * 3. Updates all nodes/edges that are in LHS and part of the RHS
-	 * 4. Adds all nodes/edges that are part of the RHS but not the LHS
+	 * Main Algorithm performing the actual replacing of the pattern match
+	 * 1. Removes all nodes/edges that are in LHS, but NOT part of the RHS
+	 * 2. Updates all nodes/edges that are in LHS and part of the RHS
+	 * 3. Adds all nodes/edges that are part of the RHS but not the LHS
 	 *
 	 * @param occurence The match found in the database for the given lhs pattern
-	 * @param lhs
-	 * @param rhs
+	 * @param adjustment The difference (added, updated, removed) between the LHS and RHS (gluing interface)
 	 */
 	private async replaceMatch(
 		occurence: DBGraphPatternMatchResult,
@@ -229,30 +234,6 @@ export class GrsService {
 				rhsEdge.attributes
 			);
 		}
-		// for (let [key] of addedEdges) {
-		// 	if (!replacementGraph.hasEdge(key)) {
-		// 		console.log('Error!');
-		// 		continue;
-		// 	}
-
-		// 	const edgeAttributes = replacementGraph.getEdgeAttributes(key);
-
-		// 	const source = replacementGraph.source(key);
-		// 	const target = replacementGraph.target(key);
-
-		// 	const sourceId = preservedNodes[source];
-		// 	const targetId = preservedNodes[target];
-
-		// 	if (edgeAttributes) {
-		// 		const res = await createEdgeAsync(
-		// 			session,
-		// 			sourceId,
-		// 			targetId,
-		// 			edgeAttributes ?? {},
-		// 			edgeAttributes?.relation ?? 'test'
-		// 		);
-		// 	}
-		// }
 
 		return;
 	}
@@ -327,5 +308,20 @@ export class GrsService {
 			addedNodes,
 			addedEdges,
 		};
+	}
+
+	private instantiateAttributes(graph: GraphSchema): GraphSchema {
+		graph.nodes.map((node) => {
+			for (const [key, attribute] of Object.entries(node.attributes)) {
+				if (typeof attribute === 'object') {
+					node.attributes[key] = this.instantiatorService.instantiate(
+						attribute.type,
+						attribute.args
+					);
+				}
+			}
+		});
+
+		return graph;
 	}
 }
