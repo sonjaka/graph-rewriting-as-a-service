@@ -6,6 +6,7 @@ import GraphEdgeSchema from '../../schemas/edge.schema.json';
 import GraphSchema from '../../schemas/graph.schema.json';
 import GraphRewritingRule from '../../schemas/rewrite-rule.schema.json';
 import GrsSchema from '../../schemas/grs.schema.json';
+import GraphInstantiatedAttribute from '../../schemas/instantiated-attribute.schema.json';
 
 import grsRoutes from '../grs/routes/grs';
 
@@ -19,6 +20,7 @@ const grsPlugin: FastifyPluginAsync = async (fastify: FastifyInstance) => {
 	fastify.addSchema(GraphSchema);
 	fastify.addSchema(GraphRewritingRule);
 	fastify.addSchema(GrsSchema);
+	fastify.addSchema(GraphInstantiatedAttribute);
 };
 
 export default fastifyPlugin(grsPlugin, {
