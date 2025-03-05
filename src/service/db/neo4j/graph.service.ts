@@ -20,12 +20,14 @@ import {
 	DBGraphNode,
 	DBGraphEdge,
 	DBGraphPatternMatchResult,
+	DBGraphNACs,
 } from '../types';
 import {
 	computeEdgeQueryString,
 	computeInjectivityClause,
 	computeNodeQueryString,
 	createNodeCypher,
+	computeNacClause,
 } from './utils/cypher';
 
 type Neo4jNode = Node<Integer, DBGraphNodeProperties>;
@@ -315,7 +317,8 @@ export class Neo4jGraphService implements IDBGraphService {
 		nodes: DBGraphNode[],
 		edges: DBGraphEdge[],
 		type: DBGraphType = 'undirected',
-		onlyInjective = false
+		onlyInjective = false,
+		nacs: DBGraphNACs[] = []
 	): Promise<DBGraphPatternMatchResult[] | []> {
 		let query = '';
 		let hasWhere = false;
@@ -352,6 +355,12 @@ export class Neo4jGraphService implements IDBGraphService {
 		});
 		if (nodesQueries.length && edgesQueries.length) query += ', ';
 		query += edgesQueries.join(', ');
+
+		if (nacs) {
+			const nacResult = computeNacClause(nacs, hasWhere);
+			query += nacResult.cypher;
+			hasWhere = nacResult.hasWhere;
+		}
 
 		if (onlyInjective) {
 			const nodeInjectivity = computeInjectivityClause(
