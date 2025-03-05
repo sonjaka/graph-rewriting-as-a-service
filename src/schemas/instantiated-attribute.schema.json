@@ -1,0 +1,18 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "instantiated-attribute.schema.json",
+	"title": "Graph Instantiated Attribute Schema",
+	"type": "object",
+	"additionalProperties": false,
+	"properties": {
+		"type": {
+			"type": "string"
+		},
+		"args": {
+			"type": "object",
+			"properties": {},
+			"additionalProperties": true
+		}
+	},
+	"required": ["type", "args"]
+}

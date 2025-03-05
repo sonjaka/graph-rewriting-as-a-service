@@ -26,16 +26,44 @@ export interface GraphSchema {
   edges: GraphEdgeSchema[];
 }
 export interface GraphNodeSchema {
+  /**
+   * The node's ID, also used as node in an edges source/target etc.
+   */
   key: string;
+  /**
+   * The node's attributes.
+   */
   attributes: {
     type?: string;
+    /**
+     * This interface was referenced by `undefined`'s JSON-Schema definition
+     * via the `patternProperty` "^(?!type$).*".
+     */
+    [k: string]: number | string | boolean | GraphInstantiatedAttributeSchema;
+  };
+}
+export interface GraphInstantiatedAttributeSchema {
+  type: string;
+  args: {
     [k: string]: unknown;
   };
 }
 export interface GraphEdgeSchema {
+  /**
+   * The edge's ID
+   */
   key: string;
+  /**
+   * The key of the node at the edge's source
+   */
   source: string;
+  /**
+   * The key of the node at the edge's target
+   */
   target: string;
+  /**
+   * The edges attributes & values
+   */
   attributes: {
     type?: string;
     [k: string]: unknown;
