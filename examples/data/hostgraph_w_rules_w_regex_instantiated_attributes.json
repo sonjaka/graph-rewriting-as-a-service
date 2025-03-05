@@ -1,0 +1,130 @@
+{
+	"hostgraph": {
+		"options": {
+			"type": "directed"
+		},
+		"attributes": {},
+		"nodes": [
+			{
+				"key": "A",
+				"attributes": {
+					"label": "A"
+				}
+			},
+			{
+				"key": "B",
+				"attributes": {
+					"label": "B"
+				}
+			},
+			{
+				"key": "C",
+				"attributes": {
+					"label": "C"
+				}
+			}
+		],
+		"edges": [
+			{
+				"key": "aToB",
+				"source": "A",
+				"target": "B",
+				"attributes": {}
+			},
+			{
+				"key": "bToC",
+				"source": "B",
+				"target": "C",
+				"attributes": {}
+			},
+			{
+				"key": "cToA",
+				"source": "C",
+				"target": "A",
+				"attributes": {}
+			}
+		]
+	},
+	"rules": [
+		{
+			"key": "add_triangle",
+			"lhs": {
+				"options": {
+					"type": "directed"
+				},
+				"attributes": {},
+				"nodes": [
+					{
+						"key": "B",
+						"attributes": {}
+					}
+				],
+				"edges": []
+			},
+			"rhs": {
+				"options": {
+					"type": "directed"
+				},
+				"attributes": {},
+				"nodes": [
+					{
+						"key": "A",
+						"attributes": {
+							"label": {
+								"type": "randexp",
+								"args": {
+									"pattern": "[A-Z][a-z]{2,10}",
+									"options": {}
+								}
+							}
+						}
+					},
+					{
+						"key": "B",
+						"attributes": {
+							"label": {
+								"type": "randexp",
+								"args": {
+									"pattern": "[A-Z][a-z]{2,10}",
+									"options": {}
+								}
+							}
+						}
+					},
+					{
+						"key": "C",
+						"attributes": {
+							"label": {
+								"type": "randexp",
+								"args": {
+									"pattern": "[A-Z][a-z]{2,10}",
+									"options": {}
+								}
+							}
+						}
+					}
+				],
+				"edges": [
+					{
+						"key": "aToB",
+						"source": "A",
+						"target": "B",
+						"attributes": {}
+					},
+					{
+						"key": "bToC",
+						"source": "B",
+						"target": "C",
+						"attributes": {}
+					},
+					{
+						"key": "cToA",
+						"source": "C",
+						"target": "A",
+						"attributes": {}
+					}
+				]
+			}
+		}
+	]
+}
