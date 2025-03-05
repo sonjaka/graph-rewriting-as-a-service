@@ -44,6 +44,7 @@
 		"graphology-types": "^0.24.8",
 		"neo4j-driver": "^5.27.0",
 		"pino-pretty": "^13.0.0",
+		"randexp": "^0.5.3",
 		"uuid": "^11.0.5"
 	}
 }
