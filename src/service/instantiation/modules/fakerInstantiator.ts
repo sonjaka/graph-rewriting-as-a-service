@@ -11,6 +11,15 @@ type FakerMethod<T extends FakerModule> = keyof Faker[T];
 // 	method: FakerMethod<T>;
 // }
 
+export enum FakerErrors {
+	'ModuleNotProvided' = 'Faker value instantiation: "module" parameter needs to be provided.',
+	'MethodNotProvided' = 'Faker value instantiation: "method" parameter needs to be provided.',
+	'ModuleNotFound' = 'Faker value instantiation: module not found',
+	'MethodNotFound' = 'Faker value instantiation: method not found',
+	'MethodNotAFunction' = 'Faker value instantiation: method is not a function',
+	'FakerError' = 'Faker value instantiation: method is not a function',
+}
+
 interface FakerInstantiatorOptions extends IValueInstantiatorOptions {
 	module: FakerModule;
 	method: string;
@@ -33,12 +42,20 @@ export class FakerInstantiator
 			options: Record<string, unknown>;
 		};
 
+		if (!module) {
+			throw new Error(FakerErrors.ModuleNotProvided);
+		}
+
+		if (!method) {
+			throw new Error(FakerErrors.MethodNotProvided);
+		}
+
 		if (!faker[module]) {
-			throw new Error(`Faker module "${module}" not found.`);
+			throw new Error(FakerErrors.ModuleNotFound + `: "${module}" `);
 		}
 
 		if (!faker[module][method]) {
-			throw new Error(`Faker method "${module}.${method}" not found.`);
+			throw new Error(FakerErrors.MethodNotFound + `: "${module}.${method}" `);
 		}
 
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -47,19 +64,15 @@ export class FakerInstantiator
 		const fakerFunction = faker[module][method] as FakerFunction;
 
 		if (typeof fakerFunction !== 'function') {
-			throw new Error(`Faker method "${module}.${method}" is not a function.`);
-		}
-
-		try {
-			if (options) {
-				return fakerFunction(options);
-			}
-
-			return fakerFunction();
-		} catch {
 			throw new Error(
-				`Faker module or function not found: ${module}.${method}`
+				FakerErrors.MethodNotAFunction + `: "${module}.${method}" `
 			);
 		}
+
+		if (options) {
+			return fakerFunction(options);
+		}
+
+		return fakerFunction();
 	}
 }
