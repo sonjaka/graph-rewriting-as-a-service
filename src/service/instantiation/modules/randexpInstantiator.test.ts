@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, test, vi } from 'vitest';
+import { beforeAll, describe, expect, test } from 'vitest';
 import { RandexpErrors, RandExpInstantiator } from './randexpInstantiator';
 import { faker } from '@faker-js/faker';
 
