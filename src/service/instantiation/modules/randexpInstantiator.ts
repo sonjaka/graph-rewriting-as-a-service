@@ -3,7 +3,11 @@ import { IValueInstantiator, IValueInstantiatorOptions } from '../types';
 
 interface RandExpInstantiatorOptions extends IValueInstantiatorOptions {
 	pattern: string;
-	flags: 'i' | 'm';
+	flags?: 'i' | 'm';
+}
+
+export enum RandexpErrors {
+	'PatternNotProvided' = 'Randexp value instantiation: "pattern" parameter needs to be provided.',
 }
 
 export class RandExpInstantiator
@@ -16,8 +20,11 @@ export class RandExpInstantiator
 	}
 
 	public instantiate(args: RandExpInstantiatorOptions) {
-		const pattern = args.pattern;
-		const flags = args.flags;
+		const { pattern, flags } = args;
+
+		if (!pattern) {
+			throw new Error(RandexpErrors.PatternNotProvided);
+		}
 
 		if (flags) return new RandExp(pattern, flags).gen();
 
