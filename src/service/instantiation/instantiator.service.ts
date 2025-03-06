@@ -1,7 +1,7 @@
 import { IValueInstantiator } from './types';
 
-import { RandExpInstantiator } from './values/randexpInstantiator';
-import { FakerInstantiator } from './values/fakerInstantiator';
+import { RandExpInstantiator } from './modules/randexpInstantiator';
+import { FakerInstantiator } from './modules/fakerInstantiator';
 
 export class InstantiatorService {
 	static plugins = [RandExpInstantiator, FakerInstantiator];
