@@ -1,9 +1,10 @@
 import { IValueInstantiator } from './types';
 
 import { RandExpInstantiator } from './values/randexpInstantiator';
+import { FakerInstantiator } from './values/fakerInstantiator';
 
 export class InstantiatorService {
-	static plugins = [RandExpInstantiator];
+	static plugins = [RandExpInstantiator, FakerInstantiator];
 	private instantiators: Map<string, IValueInstantiator>;
 
 	constructor() {

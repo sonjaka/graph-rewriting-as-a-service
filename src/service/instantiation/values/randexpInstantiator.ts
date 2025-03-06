@@ -1,12 +1,14 @@
 import RandExp from 'randexp';
-import { IValueInstantiator } from '../types';
+import { IValueInstantiator, IValueInstantiatorOptions } from '../types';
 
-interface RandExpInstantiatorOptions {
+interface RandExpInstantiatorOptions extends IValueInstantiatorOptions {
 	pattern: string;
 	flags: 'i' | 'm';
 }
 
-export class RandExpInstantiator implements IValueInstantiator {
+export class RandExpInstantiator
+	implements IValueInstantiator<RandExpInstantiatorOptions>
+{
 	_instantiatorKey = 'randexp';
 
 	get instantiatorKey() {
@@ -15,6 +17,9 @@ export class RandExpInstantiator implements IValueInstantiator {
 
 	public instantiate(args: RandExpInstantiatorOptions) {
 		const pattern = args.pattern;
+		const flags = args.flags;
+
+		if (flags) return new RandExp(pattern, flags).gen();
 
 		return new RandExp(pattern).gen();
 	}

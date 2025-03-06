@@ -1,4 +1,6 @@
-export interface IValueInstantiator {
+export type IValueInstantiatorOptions = Record<string, unknown>;
+
+export interface IValueInstantiator<T = IValueInstantiatorOptions> {
 	instantiatorKey: string;
-	instantiate(args: unknown): string;
+	instantiate(args: T): string;
 }
