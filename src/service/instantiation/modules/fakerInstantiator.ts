@@ -17,7 +17,6 @@ export enum FakerErrors {
 	'ModuleNotFound' = 'Faker value instantiation: module not found',
 	'MethodNotFound' = 'Faker value instantiation: method not found',
 	'MethodNotAFunction' = 'Faker value instantiation: method is not a function',
-	'FakerError' = 'Faker value instantiation: method is not a function',
 }
 
 interface FakerInstantiatorOptions extends IValueInstantiatorOptions {
