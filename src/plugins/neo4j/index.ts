@@ -7,6 +7,11 @@ import healthRoutes from './routes/health';
 import nodeRoutes from './routes/nodes';
 import edgeRoutes from './routes/edges';
 
+import GraphNodeSchema from '../../schemas/node.schema.json';
+import GraphEdgeSchema from '../../schemas/edge.schema.json';
+import GraphSchema from '../../schemas/graph.schema.json';
+import GraphInstantiatedAttribute from '../../schemas/instantiated-attribute.schema.json';
+
 import { Neo4jGraphService } from '../../service/db/neo4j/graph.service';
 
 declare module 'fastify' {
@@ -83,6 +88,12 @@ const neo4jConnector: FastifyPluginAsync = async (fastify: FastifyInstance) => {
 			done();
 		});
 	}
+
+	fastify.log.info('Fastify Neo4j Plugin: Adding relevant schemas');
+	fastify.addSchema(GraphNodeSchema);
+	fastify.addSchema(GraphEdgeSchema);
+	fastify.addSchema(GraphSchema);
+	fastify.addSchema(GraphInstantiatedAttribute);
 
 	fastify.log.info('Fastify Neo4j Plugin: Adding Neo4j routes');
 

@@ -95,10 +95,14 @@
 						"key": "C",
 						"attributes": {
 							"label": {
-								"type": "randexp",
+								"type": "faker",
 								"args": {
-									"pattern": "[A-Z][a-z]{2,10}",
-									"options": {}
+									"module": "string",
+									"method": "alphanumeric",
+									"options": {
+										"length": { "min": 5, "max": 10 },
+										"casing": "upper"
+									}
 								}
 							}
 						}
