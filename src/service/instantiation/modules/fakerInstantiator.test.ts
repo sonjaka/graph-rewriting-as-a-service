@@ -2,11 +2,6 @@ import { beforeAll, describe, expect, test, vi } from 'vitest';
 import { FakerInstantiator, FakerErrors } from './fakerInstantiator';
 import { faker } from '@faker-js/faker';
 
-// vi.mock('@faker-js/faker').mockImplementation(() => {
-//     faker.seed(42);
-//     return faker
-// });
-
 describe('Test faker instantiator', () => {
 	beforeAll(() => {
 		faker.seed(12);
