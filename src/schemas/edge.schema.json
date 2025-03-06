@@ -6,19 +6,33 @@
 	"additionalProperties": false,
 	"properties": {
 		"key": {
+			"description": "The edge's ID",
 			"type": "string"
 		},
 		"source": {
+			"description": "The key of the node at the edge's source",
 			"type": "string"
 		},
 		"target": {
+			"description": "The key of the node at the edge's target",
 			"type": "string"
 		},
 		"attributes": {
+			"description": "The edges attributes & values",
 			"type": "object",
 			"properties": {
 				"type": {
 					"type": "string"
+				}
+			},
+			"patternProperties": {
+				"^(?!type$).*": {
+					"oneOf": [
+						{ "type": "number" },
+						{ "type": "string" },
+						{ "type": "boolean" },
+						{ "$ref": "instantiated-attribute.schema.json" }
+					]
 				}
 			},
 			"additionalProperties": true

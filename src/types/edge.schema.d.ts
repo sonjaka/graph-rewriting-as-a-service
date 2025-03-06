@@ -6,11 +6,29 @@
  */
 
 export interface GraphEdgeSchema {
+  /**
+   * The edge's ID
+   */
   key: string;
+  /**
+   * The key of the node at the edge's source
+   */
   source: string;
+  /**
+   * The key of the node at the edge's target
+   */
   target: string;
+  /**
+   * The edges attributes & values
+   */
   attributes: {
     type?: string;
+    [k: string]: unknown;
+  };
+}
+export interface GraphInstantiatedAttributeSchema {
+  type: string;
+  args: {
     [k: string]: unknown;
   };
 }
