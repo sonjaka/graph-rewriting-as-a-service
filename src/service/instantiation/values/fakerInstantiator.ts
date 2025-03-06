@@ -14,6 +14,7 @@ type FakerMethod<T extends FakerModule> = keyof Faker[T];
 interface FakerInstantiatorOptions extends IValueInstantiatorOptions {
 	module: FakerModule;
 	method: string;
+	options?: Record<string, unknown>;
 }
 
 export class FakerInstantiator
@@ -26,9 +27,10 @@ export class FakerInstantiator
 	}
 
 	public instantiate(args: FakerInstantiatorOptions) {
-		const { module, method } = args as {
+		const { module, method, options } = args as {
 			module: FakerModule;
 			method: FakerMethod<typeof module>;
+			options: Record<string, unknown>;
 		};
 
 		if (!faker[module]) {
@@ -39,15 +41,20 @@ export class FakerInstantiator
 			throw new Error(`Faker method "${module}.${method}" not found.`);
 		}
 
-		if (!(typeof faker[module][method] !== 'function')) {
-			throw new Error(`Faker method "${module}.${method}" is not a function.`);
-		}
-
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		type FakerFunction = (...args: unknown[]) => any;
 
+		const fakerFunction = faker[module][method] as FakerFunction;
+
+		if (typeof fakerFunction !== 'function') {
+			throw new Error(`Faker method "${module}.${method}" is not a function.`);
+		}
+
 		try {
-			const fakerFunction = faker[module][method] as FakerFunction;
+			if (options) {
+				return fakerFunction(options);
+			}
+
 			return fakerFunction();
 		} catch {
 			throw new Error(
