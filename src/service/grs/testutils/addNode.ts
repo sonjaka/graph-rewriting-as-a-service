@@ -1,3 +1,4 @@
+import { GraphSchema } from '../../../types/graph.schema';
 import { GraphRewritingRequestSchema } from '../../../types/grs.schema';
 
 export const input: GraphRewritingRequestSchema = {
@@ -62,7 +63,7 @@ export const input: GraphRewritingRequestSchema = {
 	],
 };
 
-export const expectedOutput = {
+export const expectedOutput: GraphSchema = {
 	options: {
 		type: 'directed',
 	},
