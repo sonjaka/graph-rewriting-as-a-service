@@ -15,8 +15,12 @@ export interface RewritingRuleProcessingConfigSchema {
    */
   options: {
     /**
-     * Replace either 'all' or only the 'first' pattern match
+     * Replace either 'all', only the 'first' or between x and y pattern matches
      */
-    mode?: "all" | "first";
+    mode?: "all" | "first" | "intervall";
+    intervall?: {
+      min: number;
+      max: number;
+    };
   };
 }
