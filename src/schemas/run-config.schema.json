@@ -14,11 +14,34 @@
 			"type": "object",
 			"properties": {
 				"mode": {
-					"description": "Replace either 'all' or only the 'first' pattern match",
-					"enum": ["all", "first"]
+					"description": "Replace either 'all', only the 'first' or between x and y pattern matches",
+					"enum": ["all", "first", "intervall"]
+				},
+				"intervall": {
+					"type": "object",
+					"properties": {
+						"min": {
+							"type": "number"
+						},
+						"max": {
+							"type": "number"
+						}
+					},
+					"additionalProperties": false,
+					"required": ["min", "max"]
 				}
 			},
-			"additionalProperties": false
+			"additionalProperties": false,
+			"if": {
+				"properties": {
+					"mode": {
+						"enum": ["intervall"]
+					}
+				}
+			},
+			"then": {
+				"required": ["intervall"]
+			}
 		}
 	},
 	"required": ["rule", "options"]
