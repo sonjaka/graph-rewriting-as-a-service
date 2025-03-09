@@ -130,5 +130,13 @@
 				]
 			}
 		}
+	],
+	"run": [
+		{
+			"rule": "add_triangle",
+			"options": {
+				"mode": "all"
+			}
+		}
 	]
 }

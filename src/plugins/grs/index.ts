@@ -3,6 +3,7 @@ import { FastifyInstance, FastifyPluginAsync } from 'fastify';
 
 import GraphRewritingRule from '../../schemas/rewrite-rule.schema.json';
 import GrsSchema from '../../schemas/grs.schema.json';
+import RewritingRuleProcessingConfigSchema from '../../schemas/run-config.schema.json';
 
 import grsRoutes from '../grs/routes/grs';
 
@@ -11,6 +12,7 @@ const grsPlugin: FastifyPluginAsync = async (fastify: FastifyInstance) => {
 		fastify.register(grsRoutes);
 	}
 
+	fastify.addSchema(RewritingRuleProcessingConfigSchema);
 	fastify.addSchema(GraphRewritingRule);
 	fastify.addSchema(GrsSchema);
 };

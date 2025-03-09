@@ -8,6 +8,7 @@
 export interface GraphRewritingRequestSchema {
   hostgraph: GraphSchema;
   rules?: GraphRewritingRuleSchema[];
+  run?: RewritingRuleProcessingConfigSchema[];
 }
 export interface GraphSchema {
   attributes: {
@@ -72,4 +73,19 @@ export interface GraphRewritingRuleSchema {
   key: string;
   lhs: GraphSchema;
   rhs: GraphSchema;
+}
+export interface RewritingRuleProcessingConfigSchema {
+  /**
+   * The key of the graph rewriting rule to execute
+   */
+  rule: string;
+  /**
+   * The processing configuration for the rule
+   */
+  options: {
+    /**
+     * Replace either 'all' or only the 'first' pattern match
+     */
+    mode?: "all" | "first";
+  };
 }
