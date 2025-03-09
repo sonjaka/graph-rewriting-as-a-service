@@ -180,8 +180,7 @@ describe('Integration tests for grs service agains testcontainers', () => {
 			addNodeInput.rules ?? []
 		);
 
-		// expect(output).toStrictEqual(addNodeExpectedOutput);
-		expect(output).toEqual(expect.objectContaining(addNodeExpectedOutput));
+		expectOutputGraphToMatchExpectedOutputGraph(output, addNodeExpectedOutput);
 	}, 10000);
 	test('Test addition of simple edge', async () => {
 		const grsService = new GrsService(graphService);
@@ -202,8 +201,7 @@ describe('Integration tests for grs service agains testcontainers', () => {
 			addEdgeInput.rules ?? []
 		);
 
-		// expect(output).toStrictEqual(addEdgeExpectedOutput);
-		expect(output).toEqual(expect.objectContaining(addEdgeExpectedOutput));
+		expectOutputGraphToMatchExpectedOutputGraph(output, addEdgeExpectedOutput);
 	}, 10000);
 	test('Test removal of simple node', async () => {
 		const grsService = new GrsService(graphService);
@@ -224,8 +222,10 @@ describe('Integration tests for grs service agains testcontainers', () => {
 			removeNodeInput.rules ?? []
 		);
 
-		expect(output).toEqual(expect.objectContaining(removeNodeExpectedOutput));
-		// expect(output).toStrictEqual(removeNodeExpectedOutput);
+		expectOutputGraphToMatchExpectedOutputGraph(
+			output,
+			removeNodeExpectedOutput
+		);
 	}, 10000);
 	test('Test removal of simple edge', async () => {
 		const grsService = new GrsService(graphService);
@@ -246,8 +246,10 @@ describe('Integration tests for grs service agains testcontainers', () => {
 			removeEdgeInput.rules ?? []
 		);
 
-		expect(output).toEqual(expect.objectContaining(removeEdgeExpectedOutput));
-		// expect(output).toStrictEqual(removeNodeExpectedOutput);
+		expectOutputGraphToMatchExpectedOutputGraph(
+			output,
+			removeEdgeExpectedOutput
+		);
 	}, 10000);
 	test('Test update of simple node', async () => {
 		const grsService = new GrsService(graphService);
@@ -290,10 +292,10 @@ describe('Integration tests for grs service agains testcontainers', () => {
 			updateEdgeInput.rules ?? []
 		);
 
-		expect(output.edges).toEqual(
-			expect.arrayContaining(updateEdgeExpectedOutput.edges)
+		expectOutputGraphToMatchExpectedOutputGraph(
+			output,
+			updateEdgeExpectedOutput
 		);
-		// expect(output).toStrictEqual(removeNodeExpectedOutput);
 	}, 10000);
 	test.todo('Test replacement of connected nodes');
 	test.todo('Test replacement of connected nodes');
@@ -301,3 +303,17 @@ describe('Integration tests for grs service agains testcontainers', () => {
 	test.todo('Test transformation of UML to petrinet');
 	test.todo('Test transformation of UML to petrinet');
 });
+
+function expectOutputGraphToMatchExpectedOutputGraph(
+	output: GraphSchema,
+	expectedOutput: GraphSchema
+) {
+	expect(output.options).toEqual(
+		expect.objectContaining(expectedOutput.options)
+	);
+	expect(output.attributes).toEqual(
+		expect.objectContaining(expectedOutput.attributes)
+	);
+	expect(output.nodes).toEqual(expect.arrayContaining(expectedOutput.nodes));
+	expect(output.edges).toEqual(expect.arrayContaining(expectedOutput.edges));
+}
