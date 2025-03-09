@@ -1,0 +1,48 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "run-config.schema.json",
+	"title": "Rewriting Rule Processing Config Schema",
+	"type": "object",
+	"additionalProperties": false,
+	"properties": {
+		"rule": {
+			"description": "The key of the graph rewriting rule to execute",
+			"type": "string"
+		},
+		"options": {
+			"description": "The processing configuration for the rule",
+			"type": "object",
+			"properties": {
+				"mode": {
+					"description": "Replace either 'all', only the 'first' or between x and y pattern matches",
+					"enum": ["all", "first", "intervall"]
+				},
+				"intervall": {
+					"type": "object",
+					"properties": {
+						"min": {
+							"type": "number"
+						},
+						"max": {
+							"type": "number"
+						}
+					},
+					"additionalProperties": false,
+					"required": ["min", "max"]
+				}
+			},
+			"additionalProperties": false,
+			"if": {
+				"properties": {
+					"mode": {
+						"enum": ["intervall"]
+					}
+				}
+			},
+			"then": {
+				"required": ["intervall"]
+			}
+		}
+	},
+	"required": ["rule", "options"]
+}
