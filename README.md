@@ -5,8 +5,6 @@
 This repository contains all files necessary to run the application in a local development environment.
 It does depend on Docker and Node.js being available on your system.
 
-It's recommended to use VS Code as your IDE, as this repository contains a few helpful tools that make for a better developing experience in VS Code.
-
 When cloning this repository and opening it through VSCode, it will ask you to install all recommended VSCode extensions.
 
 ## Getting started
@@ -33,4 +31,4 @@ These can be run from VS Code with the [httpYak VSCode Extension](https://market
 When the server is running, you can access SwaggerUI / OpenAPI via the following url:
 
 https://<api_host>:<api_port>/documentation
-This will expose all RESTful API Endpoints
+This will show API Endpoints
