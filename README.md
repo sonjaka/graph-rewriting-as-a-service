@@ -28,7 +28,6 @@ These can be run from VS Code with the [httpYak VSCode Extension](https://market
 
 ## SwaggerUI / OpenAPI
 
-When the server is running, you can access SwaggerUI / OpenAPI via the following url:
+When the server is running, you can access the SwaggerUI / OpenAPI documentation via the following url:
 
 https://<api_host>:<api_port>/documentation
-This will show API Endpoints
