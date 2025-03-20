@@ -1,9 +1,5 @@
 import JsonLogic from 'json-logic-js';
-import type {
-	AdditionalOperation,
-	AllReservedOperationsInterface,
-	RulesLogic,
-} from 'json-logic-js';
+import type { AdditionalOperation } from 'json-logic-js';
 import { IValueInstantiator, IValueInstantiatorOptions } from '../types';
 import { GraphNodeSchema } from '../../../types/node.schema';
 import { GraphEdgeSchema } from '../../../types/edge.schema';
@@ -29,7 +25,7 @@ export enum JsonLogicErrors {
 export class JsonLogicInstantiator
 	implements IValueInstantiator<JsonLogicInstantiatorOptions>
 {
-	_instantiatorKey = 'randexp';
+	_instantiatorKey = 'jsonLogic';
 
 	get instantiatorKey() {
 		return this._instantiatorKey;
@@ -81,6 +77,7 @@ export class JsonLogicInstantiator
 			try {
 				ruleConfig['result'] = JsonLogic.apply(ruleConfig.if, data);
 			} catch (err) {
+				console.log(err);
 				throw new Error(
 					`Error initialising jsonLogic rule: Evaluating jsonLogic rule failed.`
 				);
@@ -102,7 +99,7 @@ export class JsonLogicInstantiator
 					return this.resolveSearchGraphValues(item, matchesMap);
 				});
 
-				value[operator] = instantiatedValues;
+				(value as Record<string, unknown>)[operator] = instantiatedValues;
 			}
 		}
 
