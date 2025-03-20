@@ -52,7 +52,7 @@ export class GrsService {
 				lhs.options.type
 			);
 
-			this.instantiateAttributes(rhs);
+			this.instantiateAttributes(rhs, matches);
 
 			const overlapAndDifference = this.computeOverlapAndDifferenceOfLhsAndRhs(
 				lhs,
@@ -310,13 +310,27 @@ export class GrsService {
 		};
 	}
 
-	private instantiateAttributes(graph: GraphSchema): GraphSchema {
+	private instantiateAttributes(
+		graph: GraphSchema,
+		matches: DBGraphPatternMatchResult[]
+	): GraphSchema {
+		const matchesMap = new Map<string, GraphNodeSchema | GraphEdgeSchema>();
+		for (const match of matches) {
+			for (const [key, node] of Object.entries(match.nodes)) {
+				// TODO: Check typing
+				matchesMap.set(key, node as GraphNodeSchema);
+			}
+			for (const [key, edge] of Object.entries(match.edges)) {
+				matchesMap.set(key, edge as GraphEdgeSchema);
+			}
+		}
+
 		graph.nodes.map((node) => {
 			for (const [key, attribute] of Object.entries(node.attributes)) {
 				if (typeof attribute === 'object') {
 					node.attributes[key] = this.instantiatorService.instantiate(
 						attribute.type,
-						attribute.args
+						{ ...attribute.args, matchesMap }
 					);
 				}
 			}
