@@ -52,21 +52,24 @@ export class GrsService {
 				lhs.options.type
 			);
 
-			this.instantiateAttributes(rhs, matches);
-
-			const overlapAndDifference = this.computeOverlapAndDifferenceOfLhsAndRhs(
-				lhs,
-				rhs
-			);
-
 			if (matches.length) {
 				for (const match of matches) {
+					const rhsInstantiated = this.instantiateAttributes(rhs, match);
+
+					const overlapAndDifference =
+						this.computeOverlapAndDifferenceOfLhsAndRhs(lhs, rhsInstantiated);
+
 					await this.replaceMatch(match, overlapAndDifference);
 				}
 			} else {
 				// Handle edge case for empty pattern
 				// Additions are still possible!
-				await this.replaceMatch({ nodes: {}, edges: {} }, overlapAndDifference);
+				const match = { nodes: {}, edges: {} };
+				const rhsInstantiated = this.instantiateAttributes(rhs, match);
+
+				const overlapAndDifference =
+					this.computeOverlapAndDifferenceOfLhsAndRhs(lhs, rhsInstantiated);
+				await this.replaceMatch(match, overlapAndDifference);
 			}
 		}
 
@@ -312,20 +315,21 @@ export class GrsService {
 
 	private instantiateAttributes(
 		graph: GraphSchema,
-		matches: DBGraphPatternMatchResult[]
+		match: DBGraphPatternMatchResult
 	): GraphSchema {
+		// clone graph for assignment to make sure attribute is only instantiated for this match
+		const instantiatedGraph = structuredClone(graph);
+
 		const matchesMap = new Map<string, GraphNodeSchema | GraphEdgeSchema>();
-		for (const match of matches) {
-			for (const [key, node] of Object.entries(match.nodes)) {
-				// TODO: Check typing
-				matchesMap.set(key, node as GraphNodeSchema);
-			}
-			for (const [key, edge] of Object.entries(match.edges)) {
-				matchesMap.set(key, edge as GraphEdgeSchema);
-			}
+		for (const [key, node] of Object.entries(match.nodes)) {
+			// TODO: Check typing
+			matchesMap.set(key, node as GraphNodeSchema);
+		}
+		for (const [key, edge] of Object.entries(match.edges)) {
+			matchesMap.set(key, edge as GraphEdgeSchema);
 		}
 
-		graph.nodes.map((node) => {
+		instantiatedGraph.nodes.map((node) => {
 			for (const [key, attribute] of Object.entries(node.attributes)) {
 				if (typeof attribute === 'object') {
 					node.attributes[key] = this.instantiatorService.instantiate(
@@ -335,7 +339,17 @@ export class GrsService {
 				}
 			}
 		});
+		instantiatedGraph.edges.map((edge) => {
+			for (const [key, attribute] of Object.entries(edge.attributes)) {
+				if (typeof attribute === 'object') {
+					edge.attributes[key] = this.instantiatorService.instantiate(
+						attribute.type,
+						{ ...attribute.args, matchesMap }
+					);
+				}
+			}
+		});
 
-		return graph;
+		return instantiatedGraph;
 	}
 }

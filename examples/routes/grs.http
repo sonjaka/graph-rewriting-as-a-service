@@ -15,7 +15,10 @@ Content-Type: application/json
 < ../data/hostgraph_w_rules.json
 
 
-// Testcase for a rewrite rule with attribute values instanitated by regexr (regex: [A-Z][a-z]{2,20})
+// Testcase for a rewrite rule with attribute values instanitated by
+// - regexr (regex: (Hello|Howdy|Hi|Bonjour) (World|People|Computers))
+// - faker (alphanumeric)
+// - jsonLogic (postfix Node-Label with "-Node")
 POST http://localhost:8080/grs
 Content-Type: application/json
 
