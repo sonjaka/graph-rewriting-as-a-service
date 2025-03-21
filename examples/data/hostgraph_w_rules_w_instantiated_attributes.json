@@ -73,7 +73,7 @@
 							"label": {
 								"type": "randexp",
 								"args": {
-									"pattern": "[A-Z][a-z]{2,10}",
+									"pattern": "(Hello|Howdy|Hi|Bonjour) (World|People|Computers)",
 									"options": {}
 								}
 							}
@@ -83,10 +83,28 @@
 						"key": "B",
 						"attributes": {
 							"label": {
-								"type": "randexp",
+								"type": "jsonLogic",
 								"args": {
-									"pattern": "[A-Z][a-z]{2,10}",
-									"options": {}
+									"rules": [
+										{
+											"if": {
+												"==": ["$.B.label", "B"]
+											},
+											"then": "B-Node"
+										},
+										{
+											"if": {
+												"==": ["$.B.label", "A"]
+											},
+											"then": "A-Node"
+										},
+										{
+											"if": {
+												"==": ["$.B.label", "C"]
+											},
+											"then": "C-Node"
+										}
+									]
 								}
 							}
 						}
