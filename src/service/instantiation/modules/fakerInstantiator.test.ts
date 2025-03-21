@@ -7,6 +7,11 @@ describe('Test faker instantiator', () => {
 		faker.seed(12);
 	});
 
+	test('Should return the correct instantiator key', () => {
+		const instantiator = new FakerInstantiator();
+		expect(instantiator.instantiatorKey).toBe('faker');
+	});
+
 	test('Should return value for valid faker module and method', async () => {
 		const instantiator = new FakerInstantiator();
 
