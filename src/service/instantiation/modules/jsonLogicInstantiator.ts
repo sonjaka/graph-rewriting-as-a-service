@@ -23,6 +23,9 @@ export enum JsonLogicErrors {
 	'MatchesNotProvided' = 'JsonLogic value instantiation: "matchesMap" parameter needs to be provided.',
 	'EvaluationFailed' = 'JsonLogic value instantiation: Evaluating jsonLogic rule failed.',
 	'IncompleteRuleConfig' = 'JsonLogic value instantiation: Rule is missing if statement.',
+	'NodePropertyNotFound' = 'JsonLogic value instantiation: Node Property referenced in key not found in matched searchgraph node.',
+	'NodeNotFound' = 'JsonLogic value instantiation:  Node referenced in key not found in searchgraph.',
+	'NodeFormatIncorrect' = 'JsonLogic value instantiation: Node reference incorrect. Should follow the pattern "$.nodeKey.nodePatternName"',
 }
 
 export class JsonLogicInstantiator
@@ -125,17 +128,19 @@ export class JsonLogicInstantiator
 						return node.attributes[segments[2]];
 					} else {
 						throw new Error(
-							`Error initialising jsonLogic rule: Node Property ${segments[2]} referenced in key ${value} not found in matched searchgraph node.`
+							JsonLogicErrors.NodePropertyNotFound +
+								`, property: ${segments[2]}, key: ${value}`
 						);
 					}
 				} else {
 					throw new Error(
-						`Error initialising jsonLogic rule: Node ${segments[1]} referenced in key ${value} not found in searchgraph.`
+						JsonLogicErrors.NodePropertyNotFound +
+							`, node: ${segments[1]}, key: ${value}`
 					);
 				}
 			} else {
 				throw new Error(
-					`Error initialising jsonLogic rule: Referenced Key ${value} not found in searchgraph.`
+					JsonLogicErrors.NodeFormatIncorrect + `, key: ${value}`
 				);
 			}
 		}

@@ -94,4 +94,76 @@ describe('JsonLogicInstantiator', () => {
 			})
 		).toThrowError(JsonLogicErrors.IncompleteRuleConfig);
 	});
+
+	test('Should resolve search graph values correctly', () => {
+		const instantiator = new JsonLogicInstantiator();
+		const matchesMap = new Map<string, GraphNodeSchema | GraphEdgeSchema>();
+		matchesMap.set('node1', {
+			key: 'node1',
+			attributes: { attributeName: 'attributeValue' },
+		} as GraphNodeSchema);
+
+		const rules = [
+			{
+				if: { '==': ['$.node1.attributeName', 'attributeValue'] },
+				then: 'instantiatedAttributeValue',
+				data: {},
+			},
+		];
+
+		const result = instantiator.instantiate({
+			rules,
+			matchesMap,
+		});
+		expect(result).toBe('instantiatedAttributeValue');
+	});
+
+	test('Should throw an error if a referenced node attribute is not found in the matches map', () => {
+		const instantiator = new JsonLogicInstantiator();
+		const matchesMap = new Map<string, GraphNodeSchema | GraphEdgeSchema>();
+		matchesMap.set('node', {
+			key: 'node',
+			attributes: { attributeName: 'attributeValue' },
+		} as GraphNodeSchema);
+
+		const rules = [
+			{
+				if: { '===': ['$.node.nonexistentProperty', 'value'] },
+				then: 'success',
+				data: {},
+			},
+		];
+
+		expect(() =>
+			instantiator.instantiate({
+				rules,
+				matchesMap,
+			})
+		).toThrowError(
+			JsonLogicErrors.NodePropertyNotFound +
+				`, property: nonexistentProperty, key: $.node.nonexistentProperty`
+		);
+	});
+
+	test('Should throw an error if a referenced node is not found in the matches map', () => {
+		const instantiator = new JsonLogicInstantiator();
+		const matchesMap = new Map<string, GraphNodeSchema | GraphEdgeSchema>();
+
+		const rules = [
+			{
+				if: { '===': ['$.wrongFormat', 'value'] },
+				then: 'success',
+				data: {},
+			},
+		];
+
+		expect(() =>
+			instantiator.instantiate({
+				rules,
+				matchesMap,
+			})
+		).toThrowError(
+			'JsonLogic value instantiation: Node reference incorrect. Should follow the pattern "$.nodeKey.nodePatternName", key: $.wrongFormat'
+		);
+	});
 });
