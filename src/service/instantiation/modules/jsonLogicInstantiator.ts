@@ -20,6 +20,9 @@ interface JsonLogicInstantiatorOptions extends IValueInstantiatorOptions {
 
 export enum JsonLogicErrors {
 	'RulesNotProvided' = 'JsonLogic value instantiation: "rules" parameter needs to be provided.',
+	'MatchesNotProvided' = 'JsonLogic value instantiation: "matchesMap" parameter needs to be provided.',
+	'EvaluationFailed' = 'JsonLogic value instantiation: Evaluating jsonLogic rule failed.',
+	'IncompleteRuleConfig' = 'JsonLogic value instantiation: Rule is missing if statement.',
 }
 
 export class JsonLogicInstantiator
@@ -36,6 +39,10 @@ export class JsonLogicInstantiator
 
 		if (!rules) {
 			throw new Error(JsonLogicErrors.RulesNotProvided);
+		}
+
+		if (!matchesMap) {
+			throw new Error(JsonLogicErrors.MatchesNotProvided);
 		}
 
 		if (rules) {
@@ -78,12 +85,10 @@ export class JsonLogicInstantiator
 				ruleConfig['result'] = JsonLogic.apply(ruleConfig.if, data);
 			} catch (err) {
 				console.log(err);
-				throw new Error(
-					`Error initialising jsonLogic rule: Evaluating jsonLogic rule failed.`
-				);
+				throw new Error(JsonLogicErrors.EvaluationFailed);
 			}
 		} else {
-			throw new Error(`No jsonLogic rule configuration found.`);
+			throw new Error(JsonLogicErrors.IncompleteRuleConfig);
 		}
 
 		return ruleConfig;
