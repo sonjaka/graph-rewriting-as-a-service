@@ -87,6 +87,7 @@ export class JsonLogicInstantiator
 			try {
 				ruleConfig['result'] = JsonLogic.apply(ruleConfig.if, data);
 			} catch (err) {
+				// TODO: implement better logging
 				console.log(err);
 				throw new Error(JsonLogicErrors.EvaluationFailed);
 			}
@@ -103,11 +104,15 @@ export class JsonLogicInstantiator
 	) {
 		if (value && typeof value === 'object') {
 			for (const [operator, values] of Object.entries(value)) {
-				const instantiatedValues = values.map((item: unknown) => {
-					return this.resolveSearchGraphValues(item, matchesMap);
-				});
+				if (operator !== 'var') {
+					// if the operator is "var" this is a data reference which should not be instantiated
+					// else check if search graph value needs to be instantitated
+					const instantiatedValues = values.map((item: unknown) => {
+						return this.resolveSearchGraphValues(item, matchesMap);
+					});
 
-				(value as Record<string, unknown>)[operator] = instantiatedValues;
+					(value as Record<string, unknown>)[operator] = instantiatedValues;
+				}
 			}
 		}
 
@@ -134,7 +139,7 @@ export class JsonLogicInstantiator
 					}
 				} else {
 					throw new Error(
-						JsonLogicErrors.NodePropertyNotFound +
+						JsonLogicErrors.NodeNotFound +
 							`, node: ${segments[1]}, key: ${value}`
 					);
 				}
