@@ -85,26 +85,31 @@
 							"label": {
 								"type": "jsonLogic",
 								"args": {
-									"rules": [
-										{
-											"if": {
-												"==": ["$.B.label", "B"]
-											},
-											"then": "B-Node"
-										},
-										{
-											"if": {
-												"==": ["$.B.label", "A"]
-											},
-											"then": "A-Node"
-										},
-										{
-											"if": {
-												"==": ["$.B.label", "C"]
-											},
-											"then": "C-Node"
-										}
-									]
+									"rule": {
+										"map": [
+											{ "var": "list" },
+											{
+												"if": [
+													{ "==": [{ "%": [{ "var": "" }, 15] }, 0] },
+													"fizzbuzz",
+
+													{ "==": [{ "%": [{ "var": "" }, 3] }, 0] },
+													"fizz",
+
+													{ "==": [{ "%": [{ "var": "" }, 5] }, 0] },
+													"buzz",
+
+													{ "var": "" }
+												]
+											}
+										]
+									},
+									"data": {
+										"list": [
+											1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
+											18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30
+										]
+									}
 								}
 							}
 						}
@@ -120,6 +125,45 @@
 									"options": {
 										"length": { "min": 5, "max": 10 },
 										"casing": "upper"
+									}
+								}
+							}
+						}
+					},
+					{
+						"key": "D",
+						"attributes": {
+							"label": {
+								"type": "jsonLogic",
+								"args": {
+									"rule": {
+										"if": [
+											{
+												"==": [
+													"$.nodes.[?(@.key === 'B')].attributes.label",
+													"A"
+												]
+											},
+											"fizzbuzz",
+
+											{
+												"==": [
+													"$.nodes.[?(@.key === 'B')].attributes.label",
+													"B"
+												]
+											},
+											"fizz",
+
+											{
+												"==": [
+													"$.nodes.[?(@.key === 'B')].attributes.label",
+													"C"
+												]
+											},
+											"buzz",
+
+											{ "var": "" }
+										]
 									}
 								}
 							}
@@ -142,6 +186,12 @@
 					{
 						"key": "cToA",
 						"source": "C",
+						"target": "A",
+						"attributes": {}
+					},
+					{
+						"key": "dToA",
+						"source": "D",
 						"target": "A",
 						"attributes": {}
 					}

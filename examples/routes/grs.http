@@ -1,18 +1,18 @@
 # POST http://localhost:8080/hostgraph
 # Content-Type: application/json
 
-# < ../data/simple_graph.json
+# < ../data/grs/simple_graph.json
 
 POST http://localhost:8080/grs
 Content-Type: application/json
 
-< ../data/hostgraph_only.json
+< ../data/grs/hostgraph_only.json
 
 
 POST http://localhost:8080/grs
 Content-Type: application/json
 
-< ../data/hostgraph_w_rules.json
+< ../data/grs/hostgraph_w_rules.json
 
 
 // Testcase for a rewrite rule with attribute values instanitated by
@@ -22,4 +22,4 @@ Content-Type: application/json
 POST http://localhost:8080/grs
 Content-Type: application/json
 
-< ../data/hostgraph_w_rules_w_instantiated_attributes.json
+< ../data/grs/hostgraph_w_rules_w_instantiated_attributes.json
