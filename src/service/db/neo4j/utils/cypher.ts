@@ -155,7 +155,7 @@ export function computeNacClause(nacs: DBGraphNACs[], hasWhere: boolean) {
 		cypher += ` RETURN COUNT(*) as nac_matches${index} }`;
 
 		cypher += ` WITH * WHERE nac_matches${index}=0 `;
-		// hasWhere = true;
+		hasWhere = true;
 	});
 
 	return { cypher, hasWhere };

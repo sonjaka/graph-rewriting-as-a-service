@@ -320,7 +320,7 @@ export class Neo4jGraphService implements IDBGraphService {
 	 * @param {DBGraphNode[]} nodes A set of the nodes to match
 	 * @param {DBGraphEdge[]} edges A set of the edges to match
 	 * @param {DBGraphType} [type="undirected"] Flag to determine wether edges should be matched "directed" or "undirected"
-	 * @param {boolean} [homo=false] Flag to determine wether pattern should be matched homomorphic or isomorphic (injective)
+	 * @param {boolean} [homo=true] Flag to determine wether pattern should be matched homomorphic or isomorphic (injective). Defaults to homomorphic matching (allows self loops)
 	 * @param {DBGraphNACs[]} [nacs=[]] A set of negative applications conditions
 	 * @returns {Promise<DBGraphPatternMatchResult[] | []>}
 	 */
@@ -328,7 +328,7 @@ export class Neo4jGraphService implements IDBGraphService {
 		nodes: DBGraphNode[],
 		edges: DBGraphEdge[],
 		type: DBGraphType = 'undirected',
-		homo = false,
+		homo = true,
 		nacs: DBGraphNACs[] = []
 	): Promise<DBGraphPatternMatchResult[] | []> {
 		let query = '';
