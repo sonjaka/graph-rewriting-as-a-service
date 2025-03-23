@@ -15,6 +15,7 @@ import {
 } from './types';
 import { GraphNodeSchema } from '../../types/node.schema';
 import { GraphEdgeSchema } from '../../types/edge.schema';
+import { RewritingRuleProcessingConfigSchema } from '../../types/run-config.schema';
 import { createEdgeUuid, createNodeUuid } from '../../utils/uuid';
 import { InstantiatorService } from '../instantiation/instantiator.service';
 
@@ -47,13 +48,22 @@ export class GrsService {
 
 	public async replaceGraph(
 		hostgraphData: GraphSchema,
-		rules: GraphRewritingRuleSchema[]
+		rules: GraphRewritingRuleSchema[],
+		processingConfig: RewritingRuleProcessingConfigSchema[]
 	): Promise<ResultGraphSchema> {
 		this.graphService.graphType = hostgraphData.options.type;
 		await this.importHostgraph(hostgraphData);
 
-		for (const rule of rules) {
-			const { lhs, rhs } = rule;
+		console.log(processingConfig);
+
+		for (const processStep of processingConfig) {
+			const ruleConfig = rules.find((rule) => rule.key === processStep.rule);
+
+			if (!ruleConfig) {
+				throw Error(`Rule "${processStep.rule}" not found`);
+			}
+
+			const { lhs, rhs } = ruleConfig;
 
 			const matches = await this.graphService.findPatternMatch(
 				lhs.nodes,
@@ -61,8 +71,22 @@ export class GrsService {
 				lhs.options.type
 			);
 
+			// TODO: Check if match still applies after first replacements have already happened
 			if (matches.length) {
-				for (const match of matches) {
+				let max = matches.length;
+
+				if (processStep.options.mode === 'first') {
+					max = 1;
+				} else if (
+					processStep.options.mode === 'intervall' &&
+					processStep.options.intervall?.max
+				) {
+					max = processStep.options.intervall.max;
+				}
+
+				for (let i = 0; i < max; i++) {
+					const match = matches[i];
+
 					const rhsInstantiated = this.instantiateAttributes(rhs, match);
 
 					const overlapAndDifference =
@@ -73,6 +97,7 @@ export class GrsService {
 			} else {
 				// Handle edge case for empty pattern
 				// Additions are still possible!
+
 				const match = { nodes: {}, edges: {} };
 				const rhsInstantiated = this.instantiateAttributes(rhs, match);
 

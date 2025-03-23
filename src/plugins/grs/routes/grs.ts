@@ -32,6 +32,7 @@ const grsHandler = async (
 
 	const hostgraphData = request.body.hostgraph;
 	const rules = request.body.rules || [];
+	const run = request.body.run || [];
 
 	if (!dbGraphService) {
 		throw new Error('Graph Service not set');
@@ -40,7 +41,7 @@ const grsHandler = async (
 	if (dbGraphService) {
 		const grsService = new GrsService(dbGraphService);
 
-		const result = await grsService.replaceGraph(hostgraphData, rules);
+		const result = await grsService.replaceGraph(hostgraphData, rules, run);
 
 		return okReply(reply, result);
 	}
