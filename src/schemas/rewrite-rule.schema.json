@@ -8,6 +8,15 @@
 		"key": {
 			"type": "string"
 		},
+		"options": {
+			"type": "object",
+			"properties": {
+				"homomorphic": {
+					"type": "boolean"
+				}
+			},
+			"additionalProperties": false
+		},
 		"lhs": {
 			"$ref": "graph.schema.json"
 		},
