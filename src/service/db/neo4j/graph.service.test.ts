@@ -1244,7 +1244,7 @@ describe('Unit tests for graph service with mocked neo4j functions', () => {
 			];
 
 			const neo4jSpy = vi.spyOn(mockSession, 'executeRead');
-			await graphService.findPatternMatch(nodes, edges, 'undirected', true);
+			await graphService.findPatternMatch(nodes, edges, 'undirected', false);
 			expect(neo4jSpy).toHaveBeenCalled();
 			expect(mockTx.run).toHaveBeenCalledWith(
 				'MATCH (`A`:`GRS_Node`), (`B`:`GRS_Node` {test:"hello world"}), (`C`:`GRS_Node`), (A)-[`aToB`:GRS_Relationship]-(B), (A)-[`aToC`:GRS_Relationship]-(C) WHERE `A` <> `B` AND `A` <> `C` AND `B` <> `C` AND `aToB` <> `aToC` RETURN A, B, C, aToB, aToC'
@@ -1449,13 +1449,7 @@ describe('Unit tests for graph service with mocked neo4j functions', () => {
 			];
 
 			const neo4jSpy = vi.spyOn(mockSession, 'executeRead');
-			await graphService.findPatternMatch(
-				nodes,
-				edges,
-				'directed',
-				false,
-				nacs
-			);
+			await graphService.findPatternMatch(nodes, edges, 'directed', true, nacs);
 			expect(neo4jSpy).toHaveBeenCalled();
 			expect(mockTx.run).toHaveBeenCalledWith(
 				'MATCH (`A`:`GRS_Node`), (`B`:`GRS_Node`:`BType` {type:"BType"}), (`C`:`GRS_Node`), (A)-[`aToB`:GRS_Relationship {type:"edge connector"}]->(B), (B)-[`bToC`:GRS_Relationship]->(C) WITH * call { WITH * MATCH (`C`:`GRS_Node` {test:"value"})  RETURN COUNT(*) as nac_matches0 } WITH * WHERE nac_matches0=0  RETURN A, B, C, aToB, bToC'
