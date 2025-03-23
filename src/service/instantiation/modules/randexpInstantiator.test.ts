@@ -7,6 +7,11 @@ describe('Test randexp instantiator', () => {
 		faker.seed(12);
 	});
 
+	test('Should return the correct instantiator key', () => {
+		const instantiator = new RandExpInstantiator();
+		expect(instantiator.instantiatorKey).toBe('randexp');
+	});
+
 	test('Should return value for valid faker module and method', async () => {
 		const instantiator = new RandExpInstantiator();
 

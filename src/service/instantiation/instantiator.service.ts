@@ -2,9 +2,14 @@ import { IValueInstantiator } from './types';
 
 import { RandExpInstantiator } from './modules/randexpInstantiator';
 import { FakerInstantiator } from './modules/fakerInstantiator';
+import { JsonLogicInstantiator } from './modules/jsonLogicInstantiator';
 
 export class InstantiatorService {
-	static plugins = [RandExpInstantiator, FakerInstantiator];
+	static plugins = [
+		RandExpInstantiator,
+		FakerInstantiator,
+		JsonLogicInstantiator,
+	];
 	private instantiators: Map<string, IValueInstantiator>;
 
 	constructor() {

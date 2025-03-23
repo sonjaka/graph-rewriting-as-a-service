@@ -1,7 +1,12 @@
 import Graph from 'graphology';
 import { GraphSchema } from '../../types/grs.schema';
 import { GraphRewritingRuleSchema } from '../../types/rewrite-rule.schema';
-import { DBGraphPatternMatchResult, IDBGraphService } from '../db/types';
+import {
+	DBGraphEdgeMetadata,
+	DBGraphNodeMetadata,
+	DBGraphPatternMatchResult,
+	IDBGraphService,
+} from '../db/types';
 import { GraphologyParserService } from './graphology.parser.service';
 import {
 	GrsGraphEdgeMetadata,
@@ -13,10 +18,14 @@ import { GraphEdgeSchema } from '../../types/edge.schema';
 import { createEdgeUuid, createNodeUuid } from '../../utils/uuid';
 import { InstantiatorService } from '../instantiation/instantiator.service';
 
-// interface GrsRewriteRule {
-// 	lhs: Graph<GrsGraphNodeMetadata, GrsGraphEdgeMetadata, GrsGraphMetadata>;
-// 	rhs: Graph<GrsGraphNodeMetadata, GrsGraphEdgeMetadata, GrsGraphMetadata>;
-// }
+type ResultGraphSchema = Omit<GraphSchema, 'nodes' | 'edges'> & {
+	nodes: (Omit<GraphNodeSchema, 'attributes'> & {
+		attributes: DBGraphNodeMetadata;
+	})[];
+	edges: (Omit<GraphEdgeSchema, 'attributes'> & {
+		attributes: DBGraphEdgeMetadata;
+	})[];
+};
 
 type NodeMatchMap = Map<string, GraphNodeSchema | undefined>;
 type EdgeMatchMap = Map<string, GraphEdgeSchema | undefined>;
@@ -39,7 +48,7 @@ export class GrsService {
 	public async replaceGraph(
 		hostgraphData: GraphSchema,
 		rules: GraphRewritingRuleSchema[]
-	): Promise<GraphSchema> {
+	): Promise<ResultGraphSchema> {
 		this.graphService.graphType = hostgraphData.options.type;
 		await this.importHostgraph(hostgraphData);
 
@@ -52,40 +61,33 @@ export class GrsService {
 				lhs.options.type
 			);
 
-			this.instantiateAttributes(rhs);
-
-			const overlapAndDifference = this.computeOverlapAndDifferenceOfLhsAndRhs(
-				lhs,
-				rhs
-			);
-
 			if (matches.length) {
 				for (const match of matches) {
+					const rhsInstantiated = this.instantiateAttributes(rhs, match);
+
+					const overlapAndDifference =
+						this.computeOverlapAndDifferenceOfLhsAndRhs(lhs, rhsInstantiated);
+
 					await this.replaceMatch(match, overlapAndDifference);
 				}
 			} else {
 				// Handle edge case for empty pattern
 				// Additions are still possible!
-				await this.replaceMatch({ nodes: {}, edges: {} }, overlapAndDifference);
+				const match = { nodes: {}, edges: {} };
+				const rhsInstantiated = this.instantiateAttributes(rhs, match);
+
+				const overlapAndDifference =
+					this.computeOverlapAndDifferenceOfLhsAndRhs(lhs, rhsInstantiated);
+				await this.replaceMatch(match, overlapAndDifference);
 			}
 		}
-
-		// let ruleSet;
-		// if (rules) {
-		// 	ruleSet = this.parseRules(rules);
-		// }
-
-		// ruleSet?.forEach((rule) => {
-		// 	console.log('Nodes', rule.lhs.nodes);
-		// 	this.graphService.findPatternMatch(rule.lhs);
-		// });
 
 		return this.exportHostgraph(hostgraphData);
 	}
 
 	public async importHostgraph(
 		hostgraphData: GraphSchema
-	): Promise<GraphSchema> {
+	): Promise<ResultGraphSchema> {
 		// First delete all previous nodes and edges
 		await this.graphService.deleteAllNodes();
 
@@ -103,24 +105,6 @@ export class GrsService {
 
 		return this.exportHostgraph(hostgraphData);
 	}
-
-	// public parseRules(
-	// 	rules: GraphRewritingRuleSchema[]
-	// ): Map<string, GrsRewriteRule> {
-	// 	const parser = new GraphologyParserService();
-	// 	const ruleMap = new Map();
-	// 	for (const rule of rules) {
-	// 		const lhs = parser.parseGraph(rule.lhs);
-	// 		const rhs = parser.parseGraph(rule.rhs);
-
-	// 		ruleMap.set(rule.key, {
-	// 			lhs,
-	// 			rhs,
-	// 		});
-	// 	}
-
-	// 	return ruleMap;
-	// }
 
 	private async loadGraphIntoDB(
 		graph: Graph<GrsGraphNodeMetadata, GrsGraphEdgeMetadata, GrsGraphMetadata>
@@ -142,7 +126,9 @@ export class GrsService {
 		}
 	}
 
-	private async exportHostgraph(hostgraph: GraphSchema): Promise<GraphSchema> {
+	private async exportHostgraph(
+		hostgraph: GraphSchema
+	): Promise<ResultGraphSchema> {
 		const nodes = await this.graphService.getAllNodes();
 		const edges = await this.graphService.getAllEdges();
 
@@ -310,18 +296,55 @@ export class GrsService {
 		};
 	}
 
-	private instantiateAttributes(graph: GraphSchema): GraphSchema {
-		graph.nodes.map((node) => {
+	private instantiateAttributes(
+		graph: GraphSchema,
+		match: DBGraphPatternMatchResult
+	): GraphSchema {
+		// clone graph for assignment to make sure attribute is only instantiated for this match
+		const instantiatedGraph = structuredClone(graph);
+
+		// the match now has a nodes object with the searchgraph key as property key
+		// but for th jsonLogic matching we want the same structure as in the searchgraph
+		const formattedMatch: GraphSchema = {
+			attributes: graph.attributes,
+			options: graph.options,
+			nodes: [],
+			edges: [],
+		};
+
+		for (const [key, node] of Object.entries(match.nodes)) {
+			const formattedNode = { ...node };
+			formattedNode.key = key;
+			formattedMatch.nodes.push(formattedNode as GraphNodeSchema);
+		}
+
+		for (const [key, edge] of Object.entries(match.edges)) {
+			const formattedEdge = { ...edge };
+			formattedEdge.key = key;
+			formattedMatch.edges.push(formattedEdge as GraphEdgeSchema);
+		}
+
+		instantiatedGraph.nodes.map((node) => {
 			for (const [key, attribute] of Object.entries(node.attributes)) {
 				if (typeof attribute === 'object') {
 					node.attributes[key] = this.instantiatorService.instantiate(
 						attribute.type,
-						attribute.args
+						{ ...attribute.args, match: formattedMatch }
+					);
+				}
+			}
+		});
+		instantiatedGraph.edges.map((edge) => {
+			for (const [key, attribute] of Object.entries(edge.attributes)) {
+				if (typeof attribute === 'object') {
+					edge.attributes[key] = this.instantiatorService.instantiate(
+						attribute.type,
+						{ ...attribute.args, match: formattedMatch }
 					);
 				}
 			}
 		});
 
-		return graph;
+		return instantiatedGraph;
 	}
 }

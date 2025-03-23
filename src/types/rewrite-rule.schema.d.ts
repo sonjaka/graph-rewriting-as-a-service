@@ -62,10 +62,14 @@ export interface GraphEdgeSchema {
    */
   target: string;
   /**
-   * The edges attributes & values
+   * The edge's attributes.
    */
   attributes: {
     type?: string;
-    [k: string]: unknown;
+    /**
+     * This interface was referenced by `undefined`'s JSON-Schema definition
+     * via the `patternProperty` "^(?!type$).*".
+     */
+    [k: string]: number | string | boolean | GraphInstantiatedAttributeSchema;
   };
 }
