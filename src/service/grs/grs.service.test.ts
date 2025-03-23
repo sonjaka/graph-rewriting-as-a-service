@@ -9,7 +9,7 @@ import {
 	beforeAll,
 } from 'vitest';
 
-import { GrsService } from './grs.service';
+import { GrsService, ResultGraphSchema } from './grs.service';
 import { IDBGraphService } from '../db/types';
 import { GraphSchema } from '../../types/graph.schema';
 import { GraphRewritingRuleSchema } from '../../types/grs.schema';
@@ -270,8 +270,10 @@ describe('Integration tests for grs service agains testcontainers', () => {
 			updateNodeInput.rules ?? []
 		);
 
-		expect(output).toEqual(expect.objectContaining(updateNodeExpectedOutput));
-		// expect(output).toStrictEqual(removeNodeExpectedOutput);
+		expectOutputGraphToMatchExpectedOutputGraph(
+			output,
+			updateNodeExpectedOutput
+		);
 	}, 10000);
 	test('Test update of simple edge', async () => {
 		const grsService = new GrsService(graphService);
@@ -305,7 +307,7 @@ describe('Integration tests for grs service agains testcontainers', () => {
 });
 
 function expectOutputGraphToMatchExpectedOutputGraph(
-	output: GraphSchema,
+	output: ResultGraphSchema,
 	expectedOutput: GraphSchema
 ) {
 	expect(output.options).toEqual(

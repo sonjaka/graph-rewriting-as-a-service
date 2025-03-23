@@ -19,7 +19,7 @@ import { RewritingRuleProcessingConfigSchema } from '../../types/run-config.sche
 import { createEdgeUuid, createNodeUuid } from '../../utils/uuid';
 import { InstantiatorService } from '../instantiation/instantiator.service';
 
-type ResultGraphSchema = Omit<GraphSchema, 'nodes' | 'edges'> & {
+export type ResultGraphSchema = Omit<GraphSchema, 'nodes' | 'edges'> & {
 	nodes: (Omit<GraphNodeSchema, 'attributes'> & {
 		attributes: DBGraphNodeMetadata;
 	})[];
