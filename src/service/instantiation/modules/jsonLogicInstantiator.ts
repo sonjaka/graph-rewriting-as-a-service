@@ -7,7 +7,8 @@ import { GraphSchema } from '../../../types/graph.schema';
 
 type JsonLogicRule = RulesLogic<AdditionalOperation>;
 
-interface JsonLogicInstantiatorOptions extends IValueInstantiatorOptions {
+export interface JsonLogicInstantiatorOptions
+	extends IValueInstantiatorOptions {
 	rule: RulesLogic<AdditionalOperation>; // Array of rules to evaluate
 	data?: unknown; // Array of rules to evaluate
 	match: GraphSchema; // Map of matches for resolving placeholders
@@ -47,11 +48,7 @@ export class JsonLogicInstantiator
 			throw new Error(JsonLogicErrors.MatchNotProvided);
 		}
 
-		if (rule) {
-			return this.resolveJsonLogicRule(rule, match, data);
-		}
-
-		return '';
+		return this.resolveJsonLogicRule(rule, match, data);
 	}
 
 	private resolveJsonLogicRule(
@@ -80,6 +77,8 @@ export class JsonLogicInstantiator
 			const result = JsonLogic.apply(rule, data);
 			if (['string', 'boolean', 'number'].includes(typeof result)) {
 				return result;
+			} else if (result === null) {
+				return '';
 			} else {
 				return String(result);
 			}
@@ -107,19 +106,22 @@ export class JsonLogicInstantiator
 			}
 		}
 		if (value && typeof value === 'string' && value.startsWith('$.')) {
-			try {
-				const result = JSONPath({ path: value, json: graph, wrap: false });
+			let result = [];
 
-				if (result.length > 1) {
-					throw new Error(JsonPathErrors.PathAmbigous);
-				}
-				if (result[0] === undefined) {
-					throw new Error(JsonPathErrors.PathUndefined);
-				}
-				return result.shift();
-			} catch {
+			try {
+				result = JSONPath({ path: value, json: graph, wrap: false });
+			} catch (error) {
+				console.log(error);
 				throw new Error(JsonPathErrors.PathUnresolvable);
 			}
+
+			if (!result) {
+				throw new Error(JsonPathErrors.PathUnresolvable);
+			}
+			if (result.length > 1) {
+				throw new Error(JsonPathErrors.PathAmbigous);
+			}
+			return result.shift();
 		} else {
 			return value;
 		}

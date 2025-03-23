@@ -2,8 +2,11 @@ import { describe, test, expect } from 'vitest';
 import {
 	JsonLogicInstantiator,
 	JsonLogicErrors,
+	JsonLogicInstantiatorOptions,
+	JsonPathErrors,
 } from './jsonLogicInstantiator';
-import { GraphNodeSchema, GraphEdgeSchema } from '../../../types/node.schema';
+import { RulesLogic } from 'json-logic-js';
+import { GraphSchema } from '../../../types/grs.schema';
 
 describe('JsonLogicInstantiator', () => {
 	test('Should return the instantiator key', () => {
@@ -13,177 +16,255 @@ describe('JsonLogicInstantiator', () => {
 
 	test('Should return the "then" value of the first rule with a positive result', () => {
 		const instantiator = new JsonLogicInstantiator();
-		const matchesMap = new Map<string, GraphNodeSchema | GraphEdgeSchema>();
-		matchesMap.set('node1', {
-			key: 'node1',
-			attributes: { attributeName: 'a' },
-		} as GraphNodeSchema);
-		matchesMap.set('node2', {
-			key: 'node2',
-			attributes: { attributeName: 'a' },
-		} as GraphNodeSchema);
-
-		const rules = [
+		const matchNodes = [
 			{
-				if: { '==': ['$.node1.attributeName', 'b'] },
-				then: 'value1',
-				data: {},
+				key: 'node1',
+				attributes: { attributeName: 'a' },
 			},
 			{
-				if: { '==': ['$.node2.attributeName', 'a'] },
-				then: 'value2',
-				data: {},
+				key: 'node2',
+				attributes: { attributeName: 'a' },
 			},
 		];
-		const result = instantiator.instantiate({
-			rules,
-			matchesMap: matchesMap,
-		});
+
+		const match: Partial<GraphSchema> = {
+			nodes: matchNodes,
+			edges: [],
+		};
+
+		const rule = {
+			if: [
+				{
+					'==': [
+						'$.nodes.[?(@.key === "node1")].attributes.attributeName',
+						'b',
+					],
+				},
+				'value1',
+				{
+					'==': [
+						'$.nodes.[?(@.key === "node2")].attributes.attributeName',
+						'a',
+					],
+				},
+				'value2',
+			],
+		};
+
+		const args: JsonLogicInstantiatorOptions = {
+			rule: rule as RulesLogic,
+			match: match as GraphSchema,
+		};
+		const result = instantiator.instantiate(args);
 		expect(result).toBe('value2');
 	});
 
 	test('Should return an empty string if no rules have a positive result', () => {
 		const instantiator = new JsonLogicInstantiator();
-		const matchesMap = new Map<string, GraphNodeSchema | GraphEdgeSchema>();
-		matchesMap.set('node1', {
-			key: 'node1',
-			attributes: { attributeName: 'a' },
-		} as GraphNodeSchema);
-		matchesMap.set('node2', {
-			key: 'node2',
-			attributes: { attributeName: 'a' },
-		} as GraphNodeSchema);
-
-		const rules = [
+		const matchNodes = [
 			{
-				if: { '==': ['$.node1.attributeName', 'b'] },
-				then: 'value1',
-				data: {},
+				key: 'node1',
+				attributes: { attributeName: 'a' },
 			},
 			{
-				if: { '==': ['$.node2.attributeName', 'c'] },
-				then: 'value2',
-				data: {},
+				key: 'node2',
+				attributes: { attributeName: 'a' },
 			},
 		];
-		const result = instantiator.instantiate({
-			rules,
-			matchesMap: matchesMap,
-		});
+
+		const match: Partial<GraphSchema> = {
+			nodes: matchNodes,
+			edges: [],
+		};
+
+		const rule = {
+			if: [
+				{
+					'==': [
+						'$.nodes.[?(@.key === "node1")].attributes.attributeName',
+						'b',
+					],
+				},
+				'value1',
+				{
+					'==': [
+						'$.nodes.[?(@.key === "node2")].attributes.attributeName',
+						'c',
+					],
+				},
+				'value2',
+			],
+		};
+
+		const args: JsonLogicInstantiatorOptions = {
+			rule: rule as RulesLogic,
+			match: match as GraphSchema,
+		};
+		const result = instantiator.instantiate(args);
 		expect(result).toBe('');
 	});
 
 	test('Should resolve search graph values correctly', () => {
 		const instantiator = new JsonLogicInstantiator();
-		const matchesMap = new Map<string, GraphNodeSchema | GraphEdgeSchema>();
-		matchesMap.set('node1', {
-			key: 'node1',
-			attributes: { attributeName: 'attributeValue' },
-		} as GraphNodeSchema);
-
-		const rules = [
+		const matchNodes = [
 			{
-				if: { '==': ['$.node1.attributeName', 'attributeValue'] },
-				then: 'instantiatedAttributeValue',
-				data: {},
+				key: 'node1',
+				attributes: { attributeName: 'attributeValue' },
 			},
 		];
 
-		const result = instantiator.instantiate({
-			rules,
-			matchesMap,
-		});
+		const match: Partial<GraphSchema> = {
+			nodes: matchNodes,
+			edges: [],
+		};
+
+		const rule = {
+			if: [
+				{
+					'==': [
+						'$.nodes.[?(@.key === "node1")].attributes.attributeName',
+						'attributeValue',
+					],
+				},
+				'instantiatedAttributeValue',
+			],
+		};
+
+		const args: JsonLogicInstantiatorOptions = {
+			rule: rule as RulesLogic,
+			match: match as GraphSchema,
+		};
+		const result = instantiator.instantiate(args);
 		expect(result).toBe('instantiatedAttributeValue');
 	});
 
 	test('Should resolve nested search graph values correctly', () => {
 		const instantiator = new JsonLogicInstantiator();
-		const matchesMap = new Map<string, GraphNodeSchema | GraphEdgeSchema>();
-		matchesMap.set('node1', {
-			key: 'node1',
-			attributes: { label: 'a' },
-		} as GraphNodeSchema);
-		matchesMap.set('node2', {
-			key: 'node2',
-			attributes: { label: 'b' },
-		} as GraphNodeSchema);
-
-		// This one should return the "then" value as the condition is correct
-		let rules = [
+		const matchNodes = [
 			{
-				if: {
-					and: [
-						{ '==': ['$.node1.label', 'a'] },
-						{ '==': ['$.node2.label', 'b'] },
-					],
-				},
-				then: 'instantiatedAttributeValue',
-				data: {},
+				key: 'node1',
+				attributes: { attributeName: 'a' },
+			},
+			{
+				key: 'node2',
+				attributes: { attributeName: 'b' },
 			},
 		];
 
-		let result = instantiator.instantiate({
-			rules,
-			matchesMap,
-		});
-		expect(result).toBe('instantiatedAttributeValue');
+		const match: Partial<GraphSchema> = {
+			nodes: matchNodes,
+			edges: [],
+		};
+
+		let rule = {
+			if: [
+				{
+					and: [
+						{
+							'==': [
+								'$.nodes.[?(@.key === "node1")].attributes.attributeName',
+								'a',
+							],
+						},
+						{
+							'==': [
+								'$.nodes.[?(@.key === "node2")].attributes.attributeName',
+								'b',
+							],
+						},
+					],
+				},
+				'trueInstantiatedAttributeValue',
+				'falseInstantiatedAttributeValue',
+			],
+		};
+
+		let args: JsonLogicInstantiatorOptions = {
+			rule: rule as RulesLogic,
+			match: match as GraphSchema,
+		};
+		let result = instantiator.instantiate(args);
+		expect(result).toBe('trueInstantiatedAttributeValue');
 
 		// This one should return the empty string value as the condition is *not* correct
-		rules = [
-			{
-				if: {
+		rule = {
+			if: [
+				{
 					and: [
-						{ '==': ['$.node1.label', 'a'] },
-						{ '==': ['$.node2.label', 'c'] },
+						{
+							'==': [
+								'$.nodes.[?(@.key === "node1")].attributes.attributeName',
+								'a',
+							],
+						},
+						{
+							'==': [
+								'$.nodes.[?(@.key === "node2")].attributes.attributeName',
+								'a',
+							],
+						},
 					],
 				},
-				then: 'instantiatedAttributeValue',
-				data: {},
-			},
-		];
+				'trueInstantiatedAttributeValue',
+				'falseInstantiatedAttributeValue',
+			],
+		};
 
-		result = instantiator.instantiate({
-			rules,
-			matchesMap,
-		});
-		expect(result).toBe('');
+		args = {
+			rule: rule as RulesLogic,
+			match: match as GraphSchema,
+		};
+		result = instantiator.instantiate(args);
+		expect(result).toBe('falseInstantiatedAttributeValue');
 	});
 
 	test('Should resolve jsonLogic rules with data object', () => {
 		const instantiator = new JsonLogicInstantiator();
-		const matchesMap = new Map<string, GraphNodeSchema | GraphEdgeSchema>();
-		matchesMap.set('node1', {
-			key: 'node1',
-			attributes: { label: 'a' },
-		} as GraphNodeSchema);
-		matchesMap.set('node2', {
-			key: 'node2',
-			attributes: { label: 'b' },
-		} as GraphNodeSchema);
-
-		// This one should return the "then" value as the condition is correct
-		const rules = [
+		const matchNodes = [
 			{
-				if: {
+				key: 'node1',
+				attributes: { attributeName: 'a' },
+			},
+			{
+				key: 'node2',
+				attributes: { attributeName: 'b' },
+			},
+		];
+
+		const match: Partial<GraphSchema> = {
+			nodes: matchNodes,
+			edges: [],
+		};
+
+		const rule = {
+			if: [
+				{
 					and: [
-						{ '==': ['$.node1.label', 'a'] },
+						{
+							'==': [
+								'$.nodes.[?(@.key === "node1")].attributes.attributeName',
+								'a',
+							],
+						},
 						{ '==': [{ var: 'hello' }, 'world'] },
 						{ '==': [{ var: 'test.nested' }, 'successful'] },
 					],
 				},
-				then: 'instantiatedAttributeValue',
-				data: {
-					hello: 'world',
-					test: { nested: 'successful' },
-				},
-			},
-		];
+				'trueInstantiatedAttributeValue',
+				'falseInstantiatedAttributeValue',
+			],
+		};
 
-		const result = instantiator.instantiate({
-			rules,
-			matchesMap,
-		});
-		expect(result).toBe('instantiatedAttributeValue');
+		const args: JsonLogicInstantiatorOptions = {
+			rule: rule as RulesLogic,
+			match: match as GraphSchema,
+			data: {
+				hello: 'world',
+				test: { nested: 'successful' },
+			},
+		};
+		const result = instantiator.instantiate(args);
+		expect(result).toBe('trueInstantiatedAttributeValue');
 	});
 
 	test('Should throw error if rules are not provided', () => {
@@ -191,125 +272,169 @@ describe('JsonLogicInstantiator', () => {
 		expect(() =>
 			// @ts-expect-error: Parameters are not as typed
 			instantiator.instantiate({
-				matchesMap: new Map(),
+				match: {} as GraphSchema,
 			})
 		).toThrowError(JsonLogicErrors.RulesNotProvided);
 	});
 
-	test('Should throw error if matches are not provided', () => {
+	test('Should throw error if match is not provided', () => {
 		const instantiator = new JsonLogicInstantiator();
 		expect(() =>
 			// @ts-expect-error: Parameters are not as typed
 			instantiator.instantiate({
-				rules: [],
+				rule: {} as RulesLogic,
 			})
-		).toThrowError(JsonLogicErrors.MatchesNotProvided);
+		).toThrowError(JsonLogicErrors.MatchNotProvided);
 	});
 
-	test('Should throw error if no "if" condition is provided in a rule', () => {
-		const instantiator = new JsonLogicInstantiator();
-		const rules = [{ then: 'value', data: {} }];
-		expect(() =>
-			instantiator.instantiate({
-				// @ts-expect-error: Parameters are not as typed
-				rules,
-				matchesMap: new Map(),
-			})
-		).toThrowError(JsonLogicErrors.IncompleteRuleConfig);
-	});
+	// test('Should throw error if no "if" condition is provided in a rule', () => {
+	// 	const instantiator = new JsonLogicInstantiator();
+	// 	const rules = [{ then: 'value', data: {} }];
+	// 	expect(() =>
+	// 		instantiator.instantiate({
+	// 			// @ts-expect-error: Parameters are not as typed
+	// 			rules,
+	// 			matchesMap: new Map(),
+	// 		})
+	// 	).toThrowError(JsonLogicErrors.IncompleteRuleConfig);
+	// });
 
 	test('Should throw error if jsonLogic fails', () => {
 		const instantiator = new JsonLogicInstantiator();
-		const matchesMap = new Map<string, GraphNodeSchema | GraphEdgeSchema>();
-		matchesMap.set('node1', {
-			key: 'node1',
-			attributes: { attributeName: 'attributeValue' },
-		} as GraphNodeSchema);
-
-		const rules = [
+		const matchNodes = [
 			{
-				if: { y812knsef: ['$.node1.attributeName', 'attributeValue'] },
-				then: 'instantiatedAttributeValue',
-				data: {},
+				key: 'node1',
+				attributes: { attributeName: 'a' },
+			},
+			{
+				key: 'node2',
+				attributes: { attributeName: 'b' },
 			},
 		];
+		const match: Partial<GraphSchema> = {
+			nodes: matchNodes,
+			edges: [],
+		};
+
+		const rule = {
+			nonexistentOperator: [
+				{
+					'==': [
+						'$.nodes.[?(@.key === "node1")].attributes.attributeName',
+						'attributeValue',
+					],
+				},
+				'instantiatedAttributeValue',
+			],
+		};
 
 		expect(() =>
 			instantiator.instantiate({
-				rules,
-				matchesMap,
+				// @ts-expect-error: Parameters are not as typed
+				rule: rule as RulesLogic,
+				match: match as GraphSchema,
 			})
 		).toThrowError(JsonLogicErrors.EvaluationFailed);
 	});
 
 	test('Should throw error if a referenced node attribute is not found in the matches map', () => {
 		const instantiator = new JsonLogicInstantiator();
-		const matchesMap = new Map<string, GraphNodeSchema | GraphEdgeSchema>();
-		matchesMap.set('node', {
-			key: 'node',
-			attributes: { attributeName: 'attributeValue' },
-		} as GraphNodeSchema);
-
-		const rules = [
+		const matchNodes = [
 			{
-				if: { '===': ['$.node.nonexistentProperty', 'value'] },
-				then: 'success',
-				data: {},
+				key: 'node1',
+				attributes: { attributeName: 'a' },
+			},
+			{
+				key: 'node2',
+				attributes: { attributeName: 'b' },
 			},
 		];
+		const match: Partial<GraphSchema> = {
+			nodes: matchNodes,
+			edges: [],
+		};
+
+		const rule = {
+			if: [
+				{
+					'==': [
+						'$.nodes.[?(@.key === "test")].attributes.attributeName',
+						'attributeValue',
+					],
+				},
+				'instantiatedAttributeValue',
+			],
+		};
 
 		expect(() =>
 			instantiator.instantiate({
-				rules,
-				matchesMap,
+				rule: rule as RulesLogic,
+				match: match as GraphSchema,
 			})
-		).toThrowError(
-			JsonLogicErrors.NodePropertyNotFound +
-				`, property: nonexistentProperty, key: $.node.nonexistentProperty`
-		);
+		).toThrowError(JsonPathErrors.PathUnresolvable);
 	});
 
-	test('Should throw error if a referenced node is not found in the matches map', () => {
+	test('Should throw error if a referenced node is ambigous', () => {
 		const instantiator = new JsonLogicInstantiator();
-		const matchesMap = new Map<string, GraphNodeSchema | GraphEdgeSchema>();
-
-		const rules = [
+		const matchNodes = [
 			{
-				if: { '===': ['$.nonexistentNode.attribute', 'value'] },
-				then: 'success',
-				data: {},
+				key: 'node1',
+				attributes: { attributeName: 'a' },
+			},
+			{
+				key: 'node2',
+				attributes: { attributeName: 'b' },
 			},
 		];
+		const match: Partial<GraphSchema> = {
+			nodes: matchNodes,
+			edges: [],
+		};
+
+		const rule = {
+			if: [
+				{
+					'==': ['$.nodes..attributes.attributeName', 'attributeValue'],
+				},
+				'instantiatedAttributeValue',
+			],
+		};
 
 		expect(() =>
 			instantiator.instantiate({
-				rules,
-				matchesMap,
+				rule: rule as RulesLogic,
+				match: match as GraphSchema,
 			})
-		).toThrowError(
-			'JsonLogic value instantiation:  Node referenced in key not found in searchgraph., node: nonexistentNode, key: $.nonexistentNode.attribute'
-		);
+		).toThrowError(JsonPathErrors.PathAmbigous);
 	});
 
 	test('Should throw error if referenced node is not formatted correctly', () => {
 		const instantiator = new JsonLogicInstantiator();
-		const matchesMap = new Map<string, GraphNodeSchema | GraphEdgeSchema>();
-
-		const rules = [
+		const matchNodes = [
 			{
-				if: { '===': ['$.wrongFormat', 'value'] },
-				then: 'success',
-				data: {},
+				key: 'node1',
+				attributes: { attributeName: 'a' },
 			},
 		];
+		const match: Partial<GraphSchema> = {
+			nodes: matchNodes,
+			edges: [],
+		};
+
+		const rule = {
+			if: [
+				{
+					'==': ['$.node.attributes.attributeName', 'attributeValue'],
+				},
+				'instantiatedAttributeValue',
+			],
+		};
 
 		expect(() =>
 			instantiator.instantiate({
-				rules,
-				matchesMap,
+				rule: rule as RulesLogic,
+				match: match as GraphSchema,
 			})
-		).toThrowError(
-			'JsonLogic value instantiation: Node reference incorrect. Should follow the pattern "$.nodeKey.nodePatternName", key: $.wrongFormat'
-		);
+		).toThrowError(JsonPathErrors.PathUnresolvable);
 	});
 });
