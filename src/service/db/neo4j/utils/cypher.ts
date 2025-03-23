@@ -58,6 +58,12 @@ export function computeEdgeQueryString(
 	return `(${source})-${type ? `[\`${matchVariable}\`:${type}${metadata.length ? ` ${metadata}` : ''}]` : `[\`${matchVariable}\`]`}-${directed ? '>' : ''}(${target})`;
 }
 
+/**
+ * This function computes a cypher string that ensures the inequality
+ * of each matchVariables in the matchVariables set
+ *
+ * @param {string[]} matchVariables The keys that the graph elements are matched to
+ */
 function computeInjectivityString(matchVariables: string[]) {
 	let cypher = '';
 
@@ -75,6 +81,13 @@ function computeInjectivityString(matchVariables: string[]) {
 	return cypher;
 }
 
+/**
+ * This function computes the cypher to ensure injective (isomorphic) matching -
+ * i.e. two pattern elements can not be bound to the same host graph element
+ *
+ * @param {string[]} matchVariables The keys that the graph elements are matched to
+ * @param hasWhere
+ */
 export function computeInjectivityClause(
 	matchVariables: string[],
 	hasWhere: boolean
@@ -93,15 +106,23 @@ export function computeInjectivityClause(
 	return { cypher, hasWhere };
 }
 
-// Returns each rule in the format
-// MATCH (n)
-// WITH * call {
-//     WITH * MATCH (x)
-//     WITH * MATCH (x)-[:related_to]->(n)
-//     return COUNT(*) as _nac
-// }
-// WITH * WHERE _nac=0
-// RETURN n
+/**
+ * This function generates a negative search pattern by checking wether the given
+ * negative application conditions may extend the found search results.
+ * If so, the matches are dropped.
+ *
+ * To implement this, it genererates a cypher query of the form:
+ *
+ * MATCH (n)
+ * WITH * call {
+ *     WITH * MATCH (x)
+ *     WITH * MATCH (x)-[:related_to]->(n)
+ *     return COUNT(*) as _nac
+ * }
+ * WITH * WHERE _nac=0
+ * RETURN n
+ *
+ */
 export function computeNacClause(nacs: DBGraphNACs[], hasWhere: boolean) {
 	let cypher = '';
 	nacs.forEach((nac, index) => {

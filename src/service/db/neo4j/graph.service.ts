@@ -313,11 +313,22 @@ export class Neo4jGraphService implements IDBGraphService {
 		return edges;
 	}
 
+	/**
+	 * This function first generates a cypher query for matching the given pattern and then
+	 * queries the database with it. It returns the found matches as an array of graph pattern matches.
+	 *
+	 * @param {DBGraphNode[]} nodes A set of the nodes to match
+	 * @param {DBGraphEdge[]} edges A set of the edges to match
+	 * @param {DBGraphType} [type="undirected"] Flag to determine wether edges should be matched "directed" or "undirected"
+	 * @param {boolean} [homo=false] Flag to determine wether pattern should be matched homomorphic or isomorphic (injective)
+	 * @param {DBGraphNACs[]} [nacs=[]] A set of negative applications conditions
+	 * @returns {Promise<DBGraphPatternMatchResult[] | []>}
+	 */
 	public async findPatternMatch(
 		nodes: DBGraphNode[],
 		edges: DBGraphEdge[],
 		type: DBGraphType = 'undirected',
-		onlyInjective = false,
+		homo = false,
 		nacs: DBGraphNACs[] = []
 	): Promise<DBGraphPatternMatchResult[] | []> {
 		let query = '';
@@ -362,7 +373,7 @@ export class Neo4jGraphService implements IDBGraphService {
 			hasWhere = nacResult.hasWhere;
 		}
 
-		if (onlyInjective) {
+		if (!homo) {
 			const nodeInjectivity = computeInjectivityClause(
 				nodes.map((node) => node.key),
 				hasWhere
