@@ -45,6 +45,7 @@
 		"graphology": "^0.26.0",
 		"graphology-types": "^0.24.8",
 		"json-logic-js": "^2.0.5",
+		"jsonpath-plus": "^10.3.0",
 		"neo4j-driver": "^5.27.0",
 		"pino-pretty": "^13.0.0",
 		"randexp": "^0.5.3",
