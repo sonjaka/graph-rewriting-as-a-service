@@ -55,12 +55,12 @@ export class GrsService {
 		await this.importHostgraph(hostgraphData);
 
 		if (processingConfig.length) {
-		for (const processStep of processingConfig) {
-			const ruleConfig = rules.find((rule) => rule.key === processStep.rule);
+			for (const processStep of processingConfig) {
+				const ruleConfig = rules.find((rule) => rule.key === processStep.rule);
 
-			if (!ruleConfig) {
-				throw Error(`Rule "${processStep.rule}" not found`);
-			}
+				if (!ruleConfig) {
+					throw Error(`Rule "${processStep.rule}" not found`);
+				}
 
 				await this.executeRule(ruleConfig, processStep);
 			}
@@ -78,16 +78,18 @@ export class GrsService {
 		ruleConfig: GraphRewritingRuleSchema,
 		sequenceConfig?: RewritingRuleProcessingConfigSchema
 	) {
-			const { lhs, rhs } = ruleConfig;
+		const { lhs, rhs } = ruleConfig;
 
-			const matches = await this.graphService.findPatternMatch(
-				lhs.nodes,
-				lhs.edges,
-				lhs.options.type
-			);
+		const matches = await this.graphService.findPatternMatch(
+			lhs.nodes,
+			lhs.edges,
+			lhs.options.type
+		);
 
-			// TODO: Check if match still applies after first replacements have already happened
-			if (matches.length) {
+		// TODO: Check if match still applies after first replacements have already happened
+		// --> either we fix this, or we remove option for multiple replacements
+		// --> user can still replace all occurences by sending the request multiple times
+		if (matches.length) {
 			let max = 1;
 
 			if (sequenceConfig) {
@@ -99,32 +101,37 @@ export class GrsService {
 				) {
 					max = sequenceConfig.options.intervall.max;
 				}
-				}
-
-				for (let i = 0; i < max; i++) {
-					const match = matches[i];
-
-					const rhsInstantiated = this.instantiateAttributes(rhs, match);
-
-					const overlapAndDifference =
-						this.computeOverlapAndDifferenceOfLhsAndRhs(lhs, rhsInstantiated);
-
-					await this.replaceMatch(match, overlapAndDifference);
-				}
-			} else {
-				// Handle edge case for empty pattern
-				// Additions are still possible!
-
-				const match = { nodes: {}, edges: {} };
-				const rhsInstantiated = this.instantiateAttributes(rhs, match);
-
-				const overlapAndDifference =
-					this.computeOverlapAndDifferenceOfLhsAndRhs(lhs, rhsInstantiated);
-				await this.replaceMatch(match, overlapAndDifference);
 			}
-		}
 
-		return this.exportHostgraph(hostgraphData);
+			for (let i = 0; i < max; i++) {
+				const match = matches[i];
+
+				await this.performInstantiationAndReplacement(match, lhs, rhs);
+			}
+		} else {
+			// Handle edge case for empty pattern
+			// Additions are still possible!
+			await this.performInstantiationAndReplacement(
+				{ nodes: {}, edges: {} },
+				lhs,
+				rhs
+			);
+		}
+	}
+
+	private async performInstantiationAndReplacement(
+		match: DBGraphPatternMatchResult,
+		lhs: GraphSchema,
+		rhs: GraphSchema
+	) {
+		const rhsInstantiated = this.instantiateAttributes(rhs, match);
+
+		const overlapAndDifference = this.computeOverlapAndDifferenceOfLhsAndRhs(
+			lhs,
+			rhsInstantiated
+		);
+
+		await this.replaceMatch(match, overlapAndDifference);
 	}
 
 	public async importHostgraph(
