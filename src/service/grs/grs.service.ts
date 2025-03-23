@@ -178,8 +178,8 @@ export class GrsService {
 	private async exportHostgraph(
 		hostgraph: GraphSchema
 	): Promise<ResultGraphSchema> {
-		const nodes = await this.graphService.getAllNodes();
-		const edges = await this.graphService.getAllEdges();
+		const nodes = (await this.graphService.getAllNodes()) as GraphNodeSchema[];
+		const edges = (await this.graphService.getAllEdges()) as GraphEdgeSchema[];
 
 		// Attributes & Options should not have changed from the original hostgraph
 		const attributes = hostgraph.attributes;
