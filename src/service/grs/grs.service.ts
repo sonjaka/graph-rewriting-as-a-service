@@ -15,10 +15,11 @@ import {
 } from './types';
 import { GraphNodeSchema } from '../../types/node.schema';
 import { GraphEdgeSchema } from '../../types/edge.schema';
+import { RewritingRuleProcessingConfigSchema } from '../../types/run-config.schema';
 import { createEdgeUuid, createNodeUuid } from '../../utils/uuid';
 import { InstantiatorService } from '../instantiation/instantiator.service';
 
-type ResultGraphSchema = Omit<GraphSchema, 'nodes' | 'edges'> & {
+export type ResultGraphSchema = Omit<GraphSchema, 'nodes' | 'edges'> & {
 	nodes: (Omit<GraphNodeSchema, 'attributes'> & {
 		attributes: DBGraphNodeMetadata;
 	})[];
@@ -45,44 +46,92 @@ export class GrsService {
 		this.instantiatorService = new InstantiatorService();
 	}
 
-	public async replaceGraph(
+	public async transformGraph(
 		hostgraphData: GraphSchema,
-		rules: GraphRewritingRuleSchema[]
+		rules: GraphRewritingRuleSchema[] = [],
+		processingConfig: RewritingRuleProcessingConfigSchema[] = []
 	): Promise<ResultGraphSchema> {
 		this.graphService.graphType = hostgraphData.options.type;
 		await this.importHostgraph(hostgraphData);
 
-		for (const rule of rules) {
-			const { lhs, rhs } = rule;
+		if (processingConfig.length) {
+			for (const processStep of processingConfig) {
+				const ruleConfig = rules.find((rule) => rule.key === processStep.rule);
 
-			const matches = await this.graphService.findPatternMatch(
-				lhs.nodes,
-				lhs.edges,
-				lhs.options.type
-			);
-
-			if (matches.length) {
-				for (const match of matches) {
-					const rhsInstantiated = this.instantiateAttributes(rhs, match);
-
-					const overlapAndDifference =
-						this.computeOverlapAndDifferenceOfLhsAndRhs(lhs, rhsInstantiated);
-
-					await this.replaceMatch(match, overlapAndDifference);
+				if (!ruleConfig) {
+					throw Error(`Rule "${processStep.rule}" not found`);
 				}
-			} else {
-				// Handle edge case for empty pattern
-				// Additions are still possible!
-				const match = { nodes: {}, edges: {} };
-				const rhsInstantiated = this.instantiateAttributes(rhs, match);
 
-				const overlapAndDifference =
-					this.computeOverlapAndDifferenceOfLhsAndRhs(lhs, rhsInstantiated);
-				await this.replaceMatch(match, overlapAndDifference);
+				await this.executeRule(ruleConfig, processStep);
+			}
+		} else {
+			// If no sequence config is give, run and replace only the first match
+			for (const rule of rules) {
+				await this.executeRule(rule);
 			}
 		}
 
 		return this.exportHostgraph(hostgraphData);
+	}
+
+	private async executeRule(
+		ruleConfig: GraphRewritingRuleSchema,
+		sequenceConfig?: RewritingRuleProcessingConfigSchema
+	) {
+		const { lhs, rhs } = ruleConfig;
+
+		const matches = await this.graphService.findPatternMatch(
+			lhs.nodes,
+			lhs.edges,
+			lhs.options.type
+		);
+
+		// TODO: Check if match still applies after first replacements have already happened
+		// --> either we fix this, or we remove option for multiple replacements
+		// --> user can still replace all occurences by sending the request multiple times
+		if (matches.length) {
+			let max = 1;
+
+			if (sequenceConfig) {
+				if (sequenceConfig.options.mode === 'all') {
+					max = matches.length;
+				} else if (
+					sequenceConfig.options.mode === 'intervall' &&
+					sequenceConfig.options.intervall?.max
+				) {
+					max = sequenceConfig.options.intervall.max;
+				}
+			}
+
+			for (let i = 0; i < max; i++) {
+				const match = matches[i];
+
+				await this.performInstantiationAndReplacement(match, lhs, rhs);
+			}
+		} else {
+			// Handle edge case for empty pattern
+			// Additions are still possible!
+			await this.performInstantiationAndReplacement(
+				{ nodes: {}, edges: {} },
+				lhs,
+				rhs
+			);
+		}
+	}
+
+	private async performInstantiationAndReplacement(
+		match: DBGraphPatternMatchResult,
+		lhs: GraphSchema,
+		rhs: GraphSchema
+	) {
+		const rhsInstantiated = this.instantiateAttributes(rhs, match);
+
+		const overlapAndDifference = this.computeOverlapAndDifferenceOfLhsAndRhs(
+			lhs,
+			rhsInstantiated
+		);
+
+		await this.replaceMatch(match, overlapAndDifference);
 	}
 
 	public async importHostgraph(
@@ -129,8 +178,8 @@ export class GrsService {
 	private async exportHostgraph(
 		hostgraph: GraphSchema
 	): Promise<ResultGraphSchema> {
-		const nodes = await this.graphService.getAllNodes();
-		const edges = await this.graphService.getAllEdges();
+		const nodes = (await this.graphService.getAllNodes()) as GraphNodeSchema[];
+		const edges = (await this.graphService.getAllEdges()) as GraphEdgeSchema[];
 
 		// Attributes & Options should not have changed from the original hostgraph
 		const attributes = hostgraph.attributes;

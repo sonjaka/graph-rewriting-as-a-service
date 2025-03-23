@@ -7,6 +7,9 @@
 
 export interface GraphRewritingRuleSchema {
   key: string;
+  options?: {
+    homomorphic?: boolean;
+  };
   lhs: GraphSchema;
   rhs: GraphSchema;
 }

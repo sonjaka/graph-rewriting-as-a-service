@@ -8,7 +8,7 @@
 export interface GraphRewritingRequestSchema {
   hostgraph: GraphSchema;
   rules?: GraphRewritingRuleSchema[];
-  run?: RewritingRuleProcessingConfigSchema[];
+  sequence?: RewritingRuleProcessingConfigSchema[];
 }
 export interface GraphSchema {
   attributes: {
@@ -75,6 +75,9 @@ export interface GraphEdgeSchema {
 }
 export interface GraphRewritingRuleSchema {
   key: string;
+  options?: {
+    homomorphic?: boolean;
+  };
   lhs: GraphSchema;
   rhs: GraphSchema;
 }
