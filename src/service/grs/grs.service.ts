@@ -46,16 +46,15 @@ export class GrsService {
 		this.instantiatorService = new InstantiatorService();
 	}
 
-	public async replaceGraph(
+	public async transformGraph(
 		hostgraphData: GraphSchema,
-		rules: GraphRewritingRuleSchema[],
-		processingConfig: RewritingRuleProcessingConfigSchema[]
+		rules: GraphRewritingRuleSchema[] = [],
+		processingConfig: RewritingRuleProcessingConfigSchema[] = []
 	): Promise<ResultGraphSchema> {
 		this.graphService.graphType = hostgraphData.options.type;
 		await this.importHostgraph(hostgraphData);
 
-		console.log(processingConfig);
-
+		if (processingConfig.length) {
 		for (const processStep of processingConfig) {
 			const ruleConfig = rules.find((rule) => rule.key === processStep.rule);
 
@@ -63,6 +62,22 @@ export class GrsService {
 				throw Error(`Rule "${processStep.rule}" not found`);
 			}
 
+				await this.executeRule(ruleConfig, processStep);
+			}
+		} else {
+			// If no sequence config is give, run and replace only the first match
+			for (const rule of rules) {
+				await this.executeRule(rule);
+			}
+		}
+
+		return this.exportHostgraph(hostgraphData);
+	}
+
+	private async executeRule(
+		ruleConfig: GraphRewritingRuleSchema,
+		sequenceConfig?: RewritingRuleProcessingConfigSchema
+	) {
 			const { lhs, rhs } = ruleConfig;
 
 			const matches = await this.graphService.findPatternMatch(
@@ -73,15 +88,17 @@ export class GrsService {
 
 			// TODO: Check if match still applies after first replacements have already happened
 			if (matches.length) {
-				let max = matches.length;
+			let max = 1;
 
-				if (processStep.options.mode === 'first') {
-					max = 1;
+			if (sequenceConfig) {
+				if (sequenceConfig.options.mode === 'all') {
+					max = matches.length;
 				} else if (
-					processStep.options.mode === 'intervall' &&
-					processStep.options.intervall?.max
+					sequenceConfig.options.mode === 'intervall' &&
+					sequenceConfig.options.intervall?.max
 				) {
-					max = processStep.options.intervall.max;
+					max = sequenceConfig.options.intervall.max;
+				}
 				}
 
 				for (let i = 0; i < max; i++) {

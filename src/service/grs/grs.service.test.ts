@@ -175,7 +175,7 @@ describe('Integration tests for grs service agains testcontainers', () => {
 			return `n_${nodeCount}`;
 		});
 
-		const output = await grsService.replaceGraph(
+		const output = await grsService.transformGraph(
 			addNodeInput.hostgraph,
 			addNodeInput.rules ?? []
 		);
@@ -196,7 +196,7 @@ describe('Integration tests for grs service agains testcontainers', () => {
 			return `n_${nodeCount}`;
 		});
 
-		const output = await grsService.replaceGraph(
+		const output = await grsService.transformGraph(
 			addEdgeInput.hostgraph,
 			addEdgeInput.rules ?? []
 		);
@@ -217,7 +217,7 @@ describe('Integration tests for grs service agains testcontainers', () => {
 			return `n_${nodeCount}`;
 		});
 
-		const output = await grsService.replaceGraph(
+		const output = await grsService.transformGraph(
 			removeNodeInput.hostgraph,
 			removeNodeInput.rules ?? []
 		);
@@ -241,7 +241,7 @@ describe('Integration tests for grs service agains testcontainers', () => {
 			return `n_${nodeCount}`;
 		});
 
-		const output = await grsService.replaceGraph(
+		const output = await grsService.transformGraph(
 			removeEdgeInput.hostgraph,
 			removeEdgeInput.rules ?? []
 		);
@@ -265,7 +265,7 @@ describe('Integration tests for grs service agains testcontainers', () => {
 			return `n_${nodeCount}`;
 		});
 
-		const output = await grsService.replaceGraph(
+		const output = await grsService.transformGraph(
 			updateNodeInput.hostgraph,
 			updateNodeInput.rules ?? []
 		);
@@ -287,7 +287,7 @@ describe('Integration tests for grs service agains testcontainers', () => {
 			return `n_${nodeCount}`;
 		});
 
-		const output = await grsService.replaceGraph(
+		const output = await grsService.transformGraph(
 			updateEdgeInput.hostgraph,
 			updateEdgeInput.rules ?? []
 		);

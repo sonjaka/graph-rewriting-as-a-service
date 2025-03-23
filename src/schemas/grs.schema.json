@@ -14,7 +14,7 @@
 				"$ref": "rewrite-rule.schema.json"
 			}
 		},
-		"run": {
+		"sequence": {
 			"type": "array",
 			"items": {
 				"$ref": "run-config.schema.json"
