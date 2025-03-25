@@ -313,9 +313,6 @@ function expectOutputGraphToMatchExpectedOutputGraph(
 	expect(output.options).toEqual(
 		expect.objectContaining(expectedOutput.options)
 	);
-	expect(output.attributes).toEqual(
-		expect.objectContaining(expectedOutput.attributes)
-	);
 	expect(output.nodes).toEqual(expect.arrayContaining(expectedOutput.nodes));
 	expect(output.edges).toEqual(expect.arrayContaining(expectedOutput.edges));
 }

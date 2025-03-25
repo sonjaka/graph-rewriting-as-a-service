@@ -3,7 +3,6 @@
 	"options": {
 		"type": "directed"
 	},
-	"attributes": {},
 	"nodes": [
 		{
 			"key": "A",

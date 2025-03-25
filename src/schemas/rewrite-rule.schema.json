@@ -17,12 +17,12 @@
 			},
 			"additionalProperties": false
 		},
-		"lhs": {
-			"$ref": "graph.schema.json"
+		"patternGraph": {
+			"$ref": "patterngraph.schema.json"
 		},
-		"rhs": {
+		"replacementGraph": {
 			"$ref": "graph.schema.json"
 		}
 	},
-	"required": ["key", "lhs", "rhs"]
+	"required": ["key", "patternGraph", "replacementGraph"]
 }

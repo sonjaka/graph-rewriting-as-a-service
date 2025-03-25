@@ -78,12 +78,12 @@ export class GrsService {
 		ruleConfig: GraphRewritingRuleSchema,
 		sequenceConfig?: RewritingRuleProcessingConfigSchema
 	) {
-		const { lhs, rhs } = ruleConfig;
+		const { patternGraph, replacementGraph } = ruleConfig;
 
 		const matches = await this.graphService.findPatternMatch(
-			lhs.nodes,
-			lhs.edges,
-			lhs.options.type
+			patternGraph.nodes,
+			patternGraph.edges,
+			patternGraph.options.type
 		);
 
 		// TODO: Check if match still applies after first replacements have already happened
@@ -106,15 +106,19 @@ export class GrsService {
 			for (let i = 0; i < max; i++) {
 				const match = matches[i];
 
-				await this.performInstantiationAndReplacement(match, lhs, rhs);
+				await this.performInstantiationAndReplacement(
+					match,
+					patternGraph,
+					replacementGraph
+				);
 			}
 		} else {
 			// Handle edge case for empty pattern
 			// Additions are still possible!
 			await this.performInstantiationAndReplacement(
 				{ nodes: {}, edges: {} },
-				lhs,
-				rhs
+				patternGraph,
+				replacementGraph
 			);
 		}
 	}
@@ -140,14 +144,9 @@ export class GrsService {
 		// First delete all previous nodes and edges
 		await this.graphService.deleteAllNodes();
 
-		// not all attributes required by graphology are also required in our input scheme
-		// so we need to set default values here
-		if (!hostgraphData?.attributes) {
-			hostgraphData.attributes = {};
-		}
-
 		const parser = new GraphologyParserService();
-		const hostgraph = parser.parseGraph(hostgraphData);
+		// graphology requires graph attributes options
+		const hostgraph = parser.parseGraph({ ...hostgraphData, attributes: {} });
 
 		// Load the graph into the database
 		await this.loadGraphIntoDB(hostgraph);
@@ -181,11 +180,10 @@ export class GrsService {
 		const nodes = (await this.graphService.getAllNodes()) as GraphNodeSchema[];
 		const edges = (await this.graphService.getAllEdges()) as GraphEdgeSchema[];
 
-		// Attributes & Options should not have changed from the original hostgraph
-		const attributes = hostgraph.attributes;
+		// Options should not have changed from the original hostgraph
 		const options = hostgraph.options;
 
-		return { options, attributes, nodes, edges };
+		return { options, nodes, edges };
 	}
 
 	/**

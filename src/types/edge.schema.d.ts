@@ -19,7 +19,7 @@ export interface GraphEdgeSchema {
    */
   target: string;
   /**
-   * The edge's attributes.
+   * The edges attributes & values
    */
   attributes: {
     type?: string;
