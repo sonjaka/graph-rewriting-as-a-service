@@ -9,7 +9,10 @@ import {
 	beforeAll,
 } from 'vitest';
 
-import { GrsService, ResultGraphSchema } from './grs.service';
+import {
+	GraphTransformationService,
+	ResultGraphSchema,
+} from './graphTransformation.service';
 import { IDBGraphService } from '../db/types';
 import { GraphSchema } from '../../types/graph.schema';
 import { GraphRewritingRuleSchema } from '../../types/grs.schema';
@@ -71,7 +74,7 @@ describe('Test grs service', () => {
 	test.todo(
 		'Test loadGraphIntoDb should call GraphService functions',
 		async () => {
-			const grsService = new GrsService(mockGraphService);
+			const grsService = new GraphTransformationService(mockGraphService);
 
 			const createNodeSpy = vi.spyOn(mockGraphService, 'createNode');
 			const createEdgeSpy = vi.spyOn(mockGraphService, 'createEdge');
@@ -109,7 +112,7 @@ describe('Test grs service', () => {
 	);
 
 	test.todo('Test rules are correctly parsed into graphs', () => {
-		const grsService = new GrsService(mockGraphService);
+		const grsService = new GraphTransformationService(mockGraphService);
 		const rulesData = sampleRules as GraphRewritingRuleSchema[];
 		// @ts-expect-error parse rules is currently not used / commented out
 		const rules = grsService.parseRules(rulesData);
@@ -162,7 +165,7 @@ describe('Integration tests for grs service agains testcontainers', () => {
 	});
 
 	test('Test addition of simple node', async () => {
-		const grsService = new GrsService(graphService);
+		const grsService = new GraphTransformationService(graphService);
 
 		let nodeCount = 0;
 		let edgeCount = 0;
@@ -183,7 +186,7 @@ describe('Integration tests for grs service agains testcontainers', () => {
 		expectOutputGraphToMatchExpectedOutputGraph(output, addNodeExpectedOutput);
 	}, 10000);
 	test('Test addition of simple edge', async () => {
-		const grsService = new GrsService(graphService);
+		const grsService = new GraphTransformationService(graphService);
 
 		let nodeCount = 0;
 		let edgeCount = 0;
@@ -204,7 +207,7 @@ describe('Integration tests for grs service agains testcontainers', () => {
 		expectOutputGraphToMatchExpectedOutputGraph(output, addEdgeExpectedOutput);
 	}, 10000);
 	test('Test removal of simple node', async () => {
-		const grsService = new GrsService(graphService);
+		const grsService = new GraphTransformationService(graphService);
 
 		let nodeCount = 0;
 		let edgeCount = 0;
@@ -228,7 +231,7 @@ describe('Integration tests for grs service agains testcontainers', () => {
 		);
 	}, 10000);
 	test('Test removal of simple edge', async () => {
-		const grsService = new GrsService(graphService);
+		const grsService = new GraphTransformationService(graphService);
 
 		let nodeCount = 0;
 		let edgeCount = 0;
@@ -252,7 +255,7 @@ describe('Integration tests for grs service agains testcontainers', () => {
 		);
 	}, 10000);
 	test('Test update of simple node', async () => {
-		const grsService = new GrsService(graphService);
+		const grsService = new GraphTransformationService(graphService);
 
 		let nodeCount = 0;
 		let edgeCount = 0;
@@ -276,7 +279,7 @@ describe('Integration tests for grs service agains testcontainers', () => {
 		);
 	}, 10000);
 	test('Test update of simple edge', async () => {
-		const grsService = new GrsService(graphService);
+		const grsService = new GraphTransformationService(graphService);
 
 		let nodeCount = 0;
 		let edgeCount = 0;
