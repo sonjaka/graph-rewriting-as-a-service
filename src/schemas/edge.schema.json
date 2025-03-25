@@ -34,8 +34,7 @@
 						{ "$ref": "instantiated-attribute.schema.json" }
 					]
 				}
-			},
-			"additionalProperties": true
+			}
 		}
 	},
 	"required": ["key", "source", "target", "attributes"]

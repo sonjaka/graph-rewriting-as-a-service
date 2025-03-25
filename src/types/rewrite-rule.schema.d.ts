@@ -10,13 +10,10 @@ export interface GraphRewritingRuleSchema {
   options?: {
     homomorphic?: boolean;
   };
-  lhs: GraphSchema;
-  rhs: GraphSchema;
+  patternGraph: PatterngraphSchema;
+  replacementGraph: GraphSchema;
 }
-export interface GraphSchema {
-  attributes: {
-    [k: string]: unknown;
-  };
+export interface PatterngraphSchema {
   options: {
     /**
      * One of directed or undirected
@@ -27,6 +24,12 @@ export interface GraphSchema {
   };
   nodes: GraphNodeSchema[];
   edges: GraphEdgeSchema[];
+  nacs?: {
+    nodes?: GraphNodeSchema[];
+    edges?: GraphEdgeSchema[];
+    [k: string]: unknown;
+  };
+  [k: string]: unknown;
 }
 export interface GraphNodeSchema {
   /**
@@ -65,7 +68,7 @@ export interface GraphEdgeSchema {
    */
   target: string;
   /**
-   * The edge's attributes.
+   * The edges attributes & values
    */
   attributes: {
     type?: string;
@@ -75,4 +78,16 @@ export interface GraphEdgeSchema {
      */
     [k: string]: number | string | boolean | GraphInstantiatedAttributeSchema;
   };
+}
+export interface GraphSchema {
+  options: {
+    /**
+     * One of directed or undirected
+     */
+    type: "directed" | "undirected";
+    allowSelfLoops?: boolean;
+    multi?: boolean;
+  };
+  nodes: GraphNodeSchema[];
+  edges: GraphEdgeSchema[];
 }

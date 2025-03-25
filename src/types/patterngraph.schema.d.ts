@@ -5,7 +5,7 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
-export interface GraphSchema {
+export interface PatterngraphSchema {
   options: {
     /**
      * One of directed or undirected
@@ -16,6 +16,12 @@ export interface GraphSchema {
   };
   nodes: GraphNodeSchema[];
   edges: GraphEdgeSchema[];
+  nacs?: {
+    nodes?: GraphNodeSchema[];
+    edges?: GraphEdgeSchema[];
+    [k: string]: unknown;
+  };
+  [k: string]: unknown;
 }
 export interface GraphNodeSchema {
   /**
