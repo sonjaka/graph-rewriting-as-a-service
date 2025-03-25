@@ -6,7 +6,6 @@ export const input: GraphRewritingRequestSchema = {
 		options: {
 			type: 'directed',
 		},
-		attributes: {},
 		nodes: [
 			{
 				key: 'A',
@@ -35,19 +34,18 @@ export const input: GraphRewritingRequestSchema = {
 	rules: [
 		{
 			key: 'add_node',
-			lhs: {
+			patternGraph: {
 				options: {
 					type: 'directed',
 				},
-				attributes: {},
+
 				nodes: [],
 				edges: [],
 			},
-			rhs: {
+			replacementGraph: {
 				options: {
 					type: 'directed',
 				},
-				attributes: {},
 				nodes: [
 					{
 						key: 'C',
@@ -67,7 +65,6 @@ export const expectedOutput: GraphSchema = {
 	options: {
 		type: 'directed',
 	},
-	attributes: {},
 	nodes: [
 		{
 			key: 'n_1',

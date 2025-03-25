@@ -3,7 +3,6 @@
 		"options": {
 			"type": "directed"
 		},
-		"attributes": {},
 		"nodes": [
 			{
 				"key": "A",
@@ -48,11 +47,10 @@
 	"rules": [
 		{
 			"key": "add_triangle",
-			"lhs": {
+			"patternGraph": {
 				"options": {
 					"type": "directed"
 				},
-				"attributes": {},
 				"nodes": [
 					{
 						"key": "B",
@@ -61,11 +59,10 @@
 				],
 				"edges": []
 			},
-			"rhs": {
+			"replacementGraph": {
 				"options": {
 					"type": "directed"
 				},
-				"attributes": {},
 				"nodes": [
 					{
 						"key": "A",

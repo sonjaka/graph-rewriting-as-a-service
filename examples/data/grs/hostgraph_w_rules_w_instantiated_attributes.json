@@ -3,7 +3,6 @@
 		"options": {
 			"type": "directed"
 		},
-		"attributes": {},
 		"nodes": [
 			{
 				"key": "A",
@@ -48,7 +47,7 @@
 	"rules": [
 		{
 			"key": "add_triangle",
-			"lhs": {
+			"patternGraph": {
 				"options": {
 					"type": "directed"
 				},
@@ -61,7 +60,7 @@
 				],
 				"edges": []
 			},
-			"rhs": {
+			"replacementGraph": {
 				"options": {
 					"type": "directed"
 				},
@@ -144,7 +143,7 @@
 													"A"
 												]
 											},
-											"fizzbuzz",
+											"Should be A",
 
 											{
 												"==": [
@@ -152,7 +151,7 @@
 													"B"
 												]
 											},
-											"fizz",
+											"Should be B",
 
 											{
 												"==": [
@@ -160,8 +159,7 @@
 													"C"
 												]
 											},
-											"buzz",
-
+											"Should be C",
 											{ "var": "" }
 										]
 									}
