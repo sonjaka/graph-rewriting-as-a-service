@@ -6,7 +6,7 @@ import {
 	DBGraphNodeMetadata,
 	DBGraphPatternMatchResult,
 	IDBGraphService,
-} from '../db/types';
+} from '../../shared/types/database.types';
 import { GraphologyParserService } from './graphology.parser.service';
 import {
 	GrsGraphEdgeMetadata,

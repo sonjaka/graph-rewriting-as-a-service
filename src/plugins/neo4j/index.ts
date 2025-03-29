@@ -12,7 +12,7 @@ import GraphEdgeSchema from '../../shared/schemas/edge.schema.json';
 import GraphSchema from '../../shared/schemas/graph.schema.json';
 import GraphInstantiatedAttribute from '../../shared/schemas/instantiated-attribute.schema.json';
 
-import { Neo4jGraphService } from '../../service/db/neo4j/graph.service';
+import { Neo4jGraphService } from './service/graph.service';
 
 declare module 'fastify' {
 	interface FastifyInstance {

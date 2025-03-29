@@ -12,7 +12,7 @@ import {
 	afterEach,
 } from 'vitest';
 
-import { Neo4jGraphService } from './graph.service';
+import { Neo4jGraphService } from '../../../plugins/neo4j/service/graph.service';
 import { getApocJsonAllExport } from './testutils/helpers';
 
 let container: StartedNeo4jContainer;

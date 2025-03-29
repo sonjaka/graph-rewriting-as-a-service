@@ -5,7 +5,7 @@ import {
 	GraphEdgeSchema,
 	GraphEdgeSchema as GraphEdgeSchemaInterface,
 } from '../../../shared/types/edge.schema';
-import { Neo4jGraphService } from '../../../service/db/neo4j/graph.service';
+import { Neo4jGraphService } from '../service/graph.service';
 
 import {
 	createEdgeHandler,

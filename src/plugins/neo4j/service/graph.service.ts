@@ -21,7 +21,7 @@ import {
 	DBGraphEdge,
 	DBGraphPatternMatchResult,
 	DBGraphNACs,
-} from '../types';
+} from '../../../shared/types/database.types';
 import {
 	computeEdgeQueryString,
 	computeInjectivityClause,
