@@ -1,10 +1,10 @@
 import fastifyPlugin from 'fastify-plugin';
 import { FastifyInstance, FastifyPluginAsync } from 'fastify';
 
-import GraphRewritingRule from '../../schemas/rewrite-rule.schema.json';
-import GrsSchema from '../../schemas/grs.schema.json';
-import PatterngraphSchema from '../../schemas/patterngraph.schema.json';
-import RewritingRuleProcessingConfigSchema from '../../schemas/run-config.schema.json';
+import GraphRewritingRule from '../../shared/schemas/rewrite-rule.schema.json';
+import GrsSchema from '../../shared/schemas/grs.schema.json';
+import PatterngraphSchema from '../../shared/schemas/patterngraph.schema.json';
+import RewritingRuleProcessingConfigSchema from '../../shared/schemas/run-config.schema.json';
 
 import grsRoutes from '../grs/routes/grs';
 

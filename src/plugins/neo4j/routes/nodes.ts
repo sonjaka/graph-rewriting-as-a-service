@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify';
 
-import GraphNodeSchema from '../../../schemas/node.schema.json';
+import GraphNodeSchema from '../../../shared/schemas/node.schema.json';
 import { GraphNodeSchema as GraphNodeSchemaInterface } from '../../../types/node.schema';
 import {
 	createNodeHandler,
