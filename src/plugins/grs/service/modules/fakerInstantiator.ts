@@ -1,5 +1,8 @@
 import { faker, Faker } from '@faker-js/faker';
-import { IValueInstantiator, IValueInstantiatorOptions } from '../types';
+import {
+	IValueInstantiator,
+	IValueInstantiatorOptions,
+} from '../instantiator.types';
 
 // TODO: Check for better typing
 

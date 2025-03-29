@@ -13,14 +13,14 @@ import {
 	GraphTransformationService,
 	ResultGraphSchema,
 } from './graphTransformation.service';
-import { IDBGraphService } from '../../shared/types/database.types';
-import { GraphSchema } from '../../shared/types/graph.schema';
-import { GraphRewritingRuleSchema } from '../../shared/types/grs.schema';
+import { IDBGraphService } from '../../../shared/types/database.types';
+import { GraphSchema } from '../../../shared/types/graph.schema';
+import { GraphRewritingRuleSchema } from '../../../shared/types/grs.schema';
 import Graph from 'graphology';
 
 import { Neo4jContainer, StartedNeo4jContainer } from '@testcontainers/neo4j';
 import neo4j, { Driver, Session } from 'neo4j-driver';
-import { Neo4jGraphService } from '../../plugins/neo4j/service/graph.service';
+import { Neo4jGraphService } from '../../neo4j/service/graph.service';
 
 // Example Data
 import sampleGraphData from './testutils/samplegraph.json';
@@ -50,9 +50,9 @@ import {
 	expectedOutput as updateEdgeExpectedOutput,
 } from './testutils/updateEdge';
 
-import { createNodeUuid, createEdgeUuid } from '../../shared/utils/uuid';
+import { createNodeUuid, createEdgeUuid } from '../../../shared/utils/uuid';
 
-vi.mock('../../utils/uuid');
+vi.mock('../../../shared/utils/uuid');
 
 describe('Test grs service', () => {
 	let mockGraphService: IDBGraphService;

@@ -2,8 +2,11 @@ import JsonLogic from 'json-logic-js';
 import { JSONPath } from 'jsonpath-plus';
 import type { AdditionalOperation, RulesLogic } from 'json-logic-js';
 
-import { IValueInstantiator, IValueInstantiatorOptions } from '../types';
-import { GraphSchema } from '../../../shared/types/graph.schema';
+import {
+	IValueInstantiator,
+	IValueInstantiatorOptions,
+} from '../instantiator.types';
+import { GraphSchema } from '../../../../shared/types/graph.schema';
 
 type JsonLogicRule = RulesLogic<AdditionalOperation>;
 

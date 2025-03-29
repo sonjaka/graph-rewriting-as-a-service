@@ -1,5 +1,8 @@
 import RandExp from 'randexp';
-import { IValueInstantiator, IValueInstantiatorOptions } from '../types';
+import {
+	IValueInstantiator,
+	IValueInstantiatorOptions,
+} from '../instantiator.types';
 
 interface RandExpInstantiatorOptions extends IValueInstantiatorOptions {
 	pattern: string;

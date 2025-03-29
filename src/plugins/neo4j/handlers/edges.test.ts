@@ -21,8 +21,8 @@ import {
 	okReply,
 } from '../../../shared/utils/response';
 
-vi.mock('../../../service/graph/neo4j/graph.service');
-vi.mock('../../../utils/response');
+vi.mock('../service/graph.service');
+vi.mock('../../../shared/utils/response');
 
 describe('Tests node route handlers', () => {
 	let mockReply: FastifyReply;

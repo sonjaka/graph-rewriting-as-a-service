@@ -1,23 +1,23 @@
 import Graph from 'graphology';
-import { GraphSchema } from '../../shared/types/grs.schema';
-import { GraphRewritingRuleSchema } from '../../shared/types/rewrite-rule.schema';
+import { GraphSchema } from '../../../shared/types/grs.schema';
+import { GraphRewritingRuleSchema } from '../../../shared/types/rewrite-rule.schema';
 import {
 	DBGraphEdgeMetadata,
 	DBGraphNodeMetadata,
 	DBGraphPatternMatchResult,
 	IDBGraphService,
-} from '../../shared/types/database.types';
+} from '../../../shared/types/database.types';
 import { GraphologyParserService } from './graphology.parser.service';
 import {
 	GrsGraphEdgeMetadata,
 	GrsGraphMetadata,
 	GrsGraphNodeMetadata,
-} from './types';
-import { GraphNodeSchema } from '../../shared/types/node.schema';
-import { GraphEdgeSchema } from '../../shared/types/edge.schema';
-import { RewritingRuleProcessingConfigSchema } from '../../shared/types/run-config.schema';
-import { createEdgeUuid, createNodeUuid } from '../../shared/utils/uuid';
-import { InstantiatorService } from '../instantiation/instantiator.service';
+} from '../types';
+import { GraphNodeSchema } from '../../../shared/types/node.schema';
+import { GraphEdgeSchema } from '../../../shared/types/edge.schema';
+import { RewritingRuleProcessingConfigSchema } from '../../../shared/types/run-config.schema';
+import { createEdgeUuid, createNodeUuid } from '../../../shared/utils/uuid';
+import { InstantiatorService } from './instantiator.service';
 
 export type ResultGraphSchema = Omit<GraphSchema, 'nodes' | 'edges'> & {
 	nodes: (Omit<GraphNodeSchema, 'attributes'> & {

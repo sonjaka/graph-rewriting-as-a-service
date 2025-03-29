@@ -1,4 +1,4 @@
-import { IValueInstantiator } from './types';
+import { IValueInstantiator } from './instantiator.types';
 
 import { RandExpInstantiator } from './modules/randexpInstantiator';
 import { FakerInstantiator } from './modules/fakerInstantiator';
