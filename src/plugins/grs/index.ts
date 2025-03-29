@@ -11,6 +11,8 @@ import grsRoutes from '../grs/routes/grs';
 const grsPlugin: FastifyPluginAsync = async (fastify: FastifyInstance) => {
 	if (fastify.hasRequestDecorator('dbGraphService')) {
 		fastify.register(grsRoutes);
+	} else {
+		fastify.log.error('Fastify GRS Plugin: No database plugin installed.');
 	}
 
 	fastify.addSchema(RewritingRuleProcessingConfigSchema);
