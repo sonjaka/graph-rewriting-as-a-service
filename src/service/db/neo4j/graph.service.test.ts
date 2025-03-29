@@ -150,6 +150,7 @@ describe('Integration tests for graph service with testcontainers', () => {
 			const graphService = new Neo4jGraphService(session);
 			const updatedNodeData = {
 				metadata: {
+					label: null,
 					hello: 'world',
 				},
 				internalId: 'testnode1',

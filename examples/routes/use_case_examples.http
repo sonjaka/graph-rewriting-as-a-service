@@ -1,0 +1,25 @@
+// Simple Example: Sierpinski Triangles Example
+POST http://localhost:8080/grs
+Content-Type: application/json
+
+< ../data/usecases/sierpinsky_triangles.json
+
+
+// Example: EPK Instantiation with jsonLogic instantiated attributes
+POST http://localhost:8080/grs
+Content-Type: application/json
+
+< ../data/usecases/epk.json
+
+// TODO: Incomplete
+// Import Hostgraph only: Example "UML to Petrinet"
+# POST http://localhost:8080/grs
+# Content-Type: application/json
+
+# < ../data/usecases/uml_to_petrinet_hostgraph.json
+
+# // Example: UML to Petrinet
+# POST http://localhost:8080/grs
+# Content-Type: application/json
+
+# < ../data/usecases/uml_to_petrinet.json
