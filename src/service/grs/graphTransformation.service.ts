@@ -80,6 +80,18 @@ export class GraphTransformationService {
 	) {
 		const { patternGraph, replacementGraph } = ruleConfig;
 
+		// Handle edge case for empty pattern
+		// Additions are still possible!
+		if (!patternGraph.nodes.length && !patternGraph.edges.length) {
+			await this.performInstantiationAndReplacement(
+				{ nodes: {}, edges: {} },
+				patternGraph,
+				replacementGraph
+			);
+
+			return;
+		}
+
 		const matches = await this.graphService.findPatternMatch(
 			patternGraph.nodes,
 			patternGraph.edges,
@@ -112,14 +124,6 @@ export class GraphTransformationService {
 					replacementGraph
 				);
 			}
-		} else {
-			// Handle edge case for empty pattern
-			// Additions are still possible!
-			await this.performInstantiationAndReplacement(
-				{ nodes: {}, edges: {} },
-				patternGraph,
-				replacementGraph
-			);
 		}
 	}
 
@@ -201,48 +205,56 @@ export class GraphTransformationService {
 	) {
 		const preservedNodes: Record<string, string> = {};
 
-		// Remove all nodes and edges that are not in the replacement graph
-		const removedNodeIds = adjustments.removedNodes.map((node) => {
-			return occurence.nodes[node.key].key;
-		});
-		await this.graphService.deleteNodes(removedNodeIds);
+		if (Object.entries(occurence.nodes).length) {
+			// Remove all nodes and edges that are not in the replacement graph
+			const removedNodeIds = adjustments.removedNodes.map((node) => {
+				return occurence.nodes[node.key].key;
+			});
+			await this.graphService.deleteNodes(removedNodeIds);
+		}
 
-		const removedEdgesIds = adjustments.removedEdges.map((edge) => {
-			return occurence.edges[edge.key].key;
-		});
-		await this.graphService.deleteEdges(removedEdgesIds);
+		if (Object.entries(occurence.edges).length) {
+			const removedEdgesIds = adjustments.removedEdges.map((edge) => {
+				return occurence.edges[edge.key].key;
+			});
+			await this.graphService.deleteEdges(removedEdgesIds);
+		}
 
 		// Update all nodes and edges that are part of both search pattern and replacement graph
-		for (const [key, rhsNode] of adjustments.updatedNodes) {
-			if (rhsNode) {
-				const oldNode = occurence.nodes[key];
-				const internalId = oldNode.key;
+		if (Object.entries(occurence.nodes).length) {
+			for (const [key, rhsNode] of adjustments.updatedNodes) {
+				if (rhsNode) {
+					const oldNode = occurence.nodes[key];
+					const internalId = oldNode.key;
 
-				await this.graphService.updateNode(
-					rhsNode.attributes,
-					internalId,
-					oldNode.attributes?.type ? [oldNode.attributes?.type] : []
-				);
+					await this.graphService.updateNode(
+						rhsNode.attributes,
+						internalId,
+						oldNode.attributes?.type ? [oldNode.attributes?.type] : []
+					);
 
-				preservedNodes[key] = internalId;
+					preservedNodes[key] = internalId;
+				}
 			}
 		}
-		for (const [key, rhsEdge] of adjustments.updatedEdges) {
-			if (rhsEdge) {
-				const oldEdge = occurence.edges[key];
-				const internalId = oldEdge.key;
+		if (Object.entries(occurence.edges).length) {
+			for (const [key, rhsEdge] of adjustments.updatedEdges) {
+				if (rhsEdge) {
+					const oldEdge = occurence.edges[key];
+					const internalId = oldEdge.key;
 
-				const sourceInternalId = preservedNodes[rhsEdge.source];
-				const targetInternalId = preservedNodes[rhsEdge.target];
+					const sourceInternalId = preservedNodes[rhsEdge.source];
+					const targetInternalId = preservedNodes[rhsEdge.target];
 
-				await this.graphService.updateEdge(
-					sourceInternalId,
-					targetInternalId,
-					internalId,
-					rhsEdge.attributes ?? []
-				);
+					await this.graphService.updateEdge(
+						sourceInternalId,
+						targetInternalId,
+						internalId,
+						rhsEdge.attributes ?? []
+					);
 
-				preservedNodes[key] = internalId;
+					preservedNodes[key] = internalId;
+				}
 			}
 		}
 
