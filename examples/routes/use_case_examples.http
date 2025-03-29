@@ -4,14 +4,19 @@ Content-Type: application/json
 
 < ../data/usecases/uml_to_petrinet_hostgraph.json
 
-// Import Hostgraph only: Example "UML to Petrinet"
+// Example: UML to Petrinet
 POST http://localhost:8080/grs
 Content-Type: application/json
 
-< ../data/grs/uml_to_petrinet.json
+< ../data/usecases/uml_to_petrinet.json
 
 
 
+// Example: EPK Instantiation
+POST http://localhost:8080/grs
+Content-Type: application/json
+
+< ../data/usecases/epk.json
 
 
 
