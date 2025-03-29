@@ -9,3 +9,15 @@ POST http://localhost:8080/grs
 Content-Type: application/json
 
 < ../data/grs/uml_to_petrinet.json
+
+
+
+
+
+
+
+// Sierpinski Triangles Example
+POST http://localhost:8080/grs
+Content-Type: application/json
+
+< ../data/usecases/sierpinsky_triangles.json

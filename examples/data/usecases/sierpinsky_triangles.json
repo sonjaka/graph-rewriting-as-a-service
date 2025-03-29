@@ -1,0 +1,221 @@
+{
+	"hostgraph": {
+		"options": {
+			"type": "directed"
+		},
+		"nodes": [
+			{
+				"key": "A",
+				"attributes": {
+					"added": "yes"
+				}
+			},
+			{
+				"key": "B",
+				"attributes": {
+					"added": "yes"
+				}
+			},
+			{
+				"key": "C",
+				"attributes": {
+					"added": "no"
+				}
+			}
+		],
+		"edges": [
+			{
+				"key": "aToB",
+				"source": "A",
+				"target": "B",
+				"attributes": {}
+			},
+			{
+				"key": "bToC",
+				"source": "B",
+				"target": "C",
+				"attributes": {}
+			},
+			{
+				"key": "cToA",
+				"source": "C",
+				"target": "A",
+				"attributes": {}
+			}
+		]
+	},
+	"rules": [
+		{
+			"key": "add_generation",
+			"homomorphic": false,
+			"patternGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "A",
+						"attributes": {
+							"added": "yes"
+						}
+					},
+					{
+						"key": "B",
+						"attributes": {
+							"added": "yes"
+						}
+					},
+					{
+						"key": "C",
+						"attributes": {
+							"added": "no"
+						}
+					}
+				],
+				"edges": [
+					{
+						"key": "aToB",
+						"source": "A",
+						"target": "B",
+						"attributes": {}
+					},
+					{
+						"key": "bToC",
+						"source": "B",
+						"target": "C",
+						"attributes": {}
+					},
+					{
+						"key": "cToA",
+						"source": "C",
+						"target": "A",
+						"attributes": {}
+					}
+				]
+			},
+			"replacementGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "A",
+						"attributes": {
+							"added": "no"
+						}
+					},
+					{
+						"key": "AB",
+						"attributes": {
+							"added": "yes"
+						}
+					},
+					{
+						"key": "B",
+						"attributes": {
+							"added": "no"
+						}
+					},
+					{
+						"key": "BC",
+						"attributes": {
+							"added": "yes"
+						}
+					},
+					{
+						"key": "C",
+						"attributes": {
+							"added": "no"
+						}
+					},
+					{
+						"key": "CA",
+						"attributes": {
+							"added": "yes"
+						}
+					}
+				],
+				"edges": [
+					{
+						"key": "AtoAB",
+						"source": "A",
+						"target": "AB",
+						"attributes": {}
+					},
+					{
+						"key": "ABtoB",
+						"source": "AB",
+						"target": "B",
+						"attributes": {}
+					},
+					{
+						"key": "BtoBC",
+						"source": "B",
+						"target": "BC",
+						"attributes": {}
+					},
+					{
+						"key": "BCtoC",
+						"source": "BC",
+						"target": "C",
+						"attributes": {}
+					},
+					{
+						"key": "CtoCA",
+						"source": "C",
+						"target": "CA",
+						"attributes": {}
+					},
+					{
+						"key": "CAtoA",
+						"source": "CA",
+						"target": "A",
+						"attributes": {}
+					},
+					{
+						"key": "ABtoCA",
+						"source": "AB",
+						"target": "CA",
+						"attributes": {}
+					},
+					{
+						"key": "CAtoBC",
+						"source": "CA",
+						"target": "BC",
+						"attributes": {}
+					},
+					{
+						"key": "BCtoAB",
+						"source": "BC",
+						"target": "AB",
+						"attributes": {}
+					}
+				]
+			}
+		}
+	],
+	"sequence": [
+		{
+			"rule": "add_generation",
+			"options": {
+				"mode": "intervall",
+				"intervall": {
+					"min": 1,
+					"max": 1
+				}
+			}
+		},
+		{
+			"rule": "add_generation",
+			"options": {
+				"mode": "all"
+			}
+		},
+		{
+			"rule": "add_generation",
+			"options": {
+				"mode": "all"
+			}
+		}
+	]
+}
