@@ -87,14 +87,31 @@ export interface PatterngraphSchema {
     allowSelfLoops?: boolean;
     multi?: boolean;
   };
-  nodes: GraphNodeSchema[];
+  nodes: PatternNodeSchema[];
   edges: GraphEdgeSchema[];
   nacs?: {
-    nodes?: GraphNodeSchema[];
+    nodes?: PatternNodeSchema[];
     edges?: GraphEdgeSchema[];
     [k: string]: unknown;
   };
   [k: string]: unknown;
+}
+export interface PatternNodeSchema {
+  /**
+   * The node's ID, also used as node in an edges source/target etc.
+   */
+  key: string;
+  /**
+   * The node's attributes.
+   */
+  attributes: {
+    type?: string;
+    /**
+     * This interface was referenced by `undefined`'s JSON-Schema definition
+     * via the `patternProperty` "^(?!type$).*".
+     */
+    [k: string]: number | string | boolean | (number | string | boolean)[];
+  };
 }
 export interface RewritingRuleProcessingConfigSchema {
   /**

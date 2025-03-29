@@ -24,7 +24,7 @@
 		"nodes": {
 			"type": "array",
 			"items": {
-				"$ref": "node.schema.json"
+				"$ref": "patternnode.schema.json"
 			}
 		},
 		"edges": {
@@ -39,7 +39,7 @@
 				"nodes": {
 					"type": "array",
 					"items": {
-						"$ref": "node.schema.json"
+						"$ref": "patternnode.schema.json"
 					}
 				},
 				"edges": {

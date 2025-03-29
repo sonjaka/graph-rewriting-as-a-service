@@ -5,6 +5,8 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
+import { GraphNodeSchema } from "./node.schema";
+
 export interface PatterngraphSchema {
   options: {
     /**
@@ -14,16 +16,16 @@ export interface PatterngraphSchema {
     allowSelfLoops?: boolean;
     multi?: boolean;
   };
-  nodes: GraphNodeSchema[];
+  nodes: PatternNodeSchema[];
   edges: GraphEdgeSchema[];
   nacs?: {
-    nodes?: GraphNodeSchema[];
+    nodes?: PatternNodeSchema[];
     edges?: GraphEdgeSchema[];
     [k: string]: unknown;
   };
   [k: string]: unknown;
 }
-export interface GraphNodeSchema {
+export interface PatternNodeSchema extends GraphNodeSchema {
   /**
    * The node's ID, also used as node in an edges source/target etc.
    */
@@ -37,13 +39,7 @@ export interface GraphNodeSchema {
      * This interface was referenced by `undefined`'s JSON-Schema definition
      * via the `patternProperty` "^(?!type$).*".
      */
-    [k: string]: number | string | boolean | GraphInstantiatedAttributeSchema;
-  };
-}
-export interface GraphInstantiatedAttributeSchema {
-  type: string;
-  args: {
-    [k: string]: unknown;
+    [k: string]: number | string | boolean | (number | string | boolean)[];
   };
 }
 export interface GraphEdgeSchema {
@@ -69,5 +65,11 @@ export interface GraphEdgeSchema {
      * via the `patternProperty` "^(?!type$).*".
      */
     [k: string]: number | string | boolean | GraphInstantiatedAttributeSchema;
+  };
+}
+export interface GraphInstantiatedAttributeSchema {
+  type: string;
+  args: {
+    [k: string]: unknown;
   };
 }
