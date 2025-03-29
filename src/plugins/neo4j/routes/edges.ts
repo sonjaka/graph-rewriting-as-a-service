@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify';
 
 import GraphEdgeSchema from '../../../shared/schemas/edge.schema.json';
-import { GraphEdgeSchema as GraphEdgeSchemaInterface } from '../../../types/edge.schema';
+import { GraphEdgeSchema as GraphEdgeSchemaInterface } from '../../../shared/types/edge.schema';
 import {
 	createEdgeHandler,
 	getEdgeHandler,

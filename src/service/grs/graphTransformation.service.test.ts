@@ -14,8 +14,8 @@ import {
 	ResultGraphSchema,
 } from './graphTransformation.service';
 import { IDBGraphService } from '../db/types';
-import { GraphSchema } from '../../types/graph.schema';
-import { GraphRewritingRuleSchema } from '../../types/grs.schema';
+import { GraphSchema } from '../../shared/types/graph.schema';
+import { GraphRewritingRuleSchema } from '../../shared/types/grs.schema';
 import Graph from 'graphology';
 
 import { Neo4jContainer, StartedNeo4jContainer } from '@testcontainers/neo4j';
@@ -50,7 +50,7 @@ import {
 	expectedOutput as updateEdgeExpectedOutput,
 } from './testutils/updateEdge';
 
-import { createNodeUuid, createEdgeUuid } from '../../utils/uuid';
+import { createNodeUuid, createEdgeUuid } from '../../shared/utils/uuid';
 
 vi.mock('../../utils/uuid');
 

@@ -1,12 +1,12 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
 
-import { GraphNodeSchema as GraphNodeSchemaInterface } from '../../../types/node.schema';
+import { GraphNodeSchema as GraphNodeSchemaInterface } from '../../../shared/types/node.schema';
 import {
 	createdReply,
 	deletedReply,
 	notFoundReply,
 	okReply,
-} from '../../../utils/response';
+} from '../../../shared/utils/response';
 
 export interface ISingleNodeParams {
 	nodeInternalId: string;

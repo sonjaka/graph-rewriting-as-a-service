@@ -3,7 +3,7 @@ import { JSONPath } from 'jsonpath-plus';
 import type { AdditionalOperation, RulesLogic } from 'json-logic-js';
 
 import { IValueInstantiator, IValueInstantiatorOptions } from '../types';
-import { GraphSchema } from '../../../types/graph.schema';
+import { GraphSchema } from '../../../shared/types/graph.schema';
 
 type JsonLogicRule = RulesLogic<AdditionalOperation>;
 

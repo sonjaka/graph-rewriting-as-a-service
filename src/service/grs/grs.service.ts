@@ -39,7 +39,7 @@ interface GraphDiffResult {
 	removedEdges: GraphEdgeSchema[];
 }
 
-export class GraphTransformationService {
+export class GrsService {
 	private instantiatorService;
 
 	constructor(private readonly graphService: IDBGraphService) {

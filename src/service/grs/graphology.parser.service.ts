@@ -1,5 +1,5 @@
 import AbstractGraph, { SerializedGraph } from 'graphology-types';
-import { createEdgeUuid, createNodeUuid } from '../../utils/uuid';
+import { createEdgeUuid, createNodeUuid } from '../../shared/utils/uuid';
 import Graph from 'graphology';
 import {
 	GrsGraphEdgeMetadata,

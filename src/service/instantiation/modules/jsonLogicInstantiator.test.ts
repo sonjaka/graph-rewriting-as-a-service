@@ -6,7 +6,7 @@ import {
 	JsonPathErrors,
 } from './jsonLogicInstantiator';
 import { RulesLogic } from 'json-logic-js';
-import { GraphSchema } from '../../../types/grs.schema';
+import { GraphSchema } from '../../../shared/types/grs.schema';
 
 describe('JsonLogicInstantiator', () => {
 	test('Should return the instantiator key', () => {

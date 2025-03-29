@@ -4,7 +4,7 @@ import { expect, test, describe, vi, afterEach, beforeEach } from 'vitest';
 import {
 	GraphEdgeSchema,
 	GraphEdgeSchema as GraphEdgeSchemaInterface,
-} from '../../../types/edge.schema';
+} from '../../../shared/types/edge.schema';
 import { Neo4jGraphService } from '../../../service/db/neo4j/graph.service';
 
 import {
@@ -19,7 +19,7 @@ import {
 	deletedReply,
 	notFoundReply,
 	okReply,
-} from '../../../utils/response';
+} from '../../../shared/utils/response';
 
 vi.mock('../../../service/graph/neo4j/graph.service');
 vi.mock('../../../utils/response');
