@@ -1,5 +1,5 @@
 import { FastifyLoggerOptions } from 'fastify';
-import type { EnvVarAppEnvironment } from './env';
+import type { EnvVarAppEnvironment } from '../../config/env';
 import pino from 'pino';
 type PinoLoggerOptions = pino.LoggerOptions;
 

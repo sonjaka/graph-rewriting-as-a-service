@@ -6,7 +6,7 @@ import { Server, IncomingMessage, ServerResponse } from 'http';
 import Swagger from '@fastify/swagger';
 import SwaggerUI from '@fastify/swagger-ui';
 
-import { loggerConfig } from './config/logger';
+import { loggerConfig } from './shared/logger/logger';
 import { getAppEnvConfig } from './config/env';
 
 import healthRoutes from './routes/health';
