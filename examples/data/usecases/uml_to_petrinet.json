@@ -7,86 +7,86 @@
 			{
 				"key": "Start",
 				"attributes": {
-					"type": "Initial"
+					"umlType": "Initial"
 				}
 			},
 			{
 				"key": "ReceiveOrder",
 				"attributes": {
-					"type": "Action",
+					"umlType": "Action",
 					"label": "Receive Order"
 				}
 			},
 			{
 				"key": "Decision1",
 				"attributes": {
-					"type": "Decision"
+					"umlType": "Decision"
 				}
 			},
 			{
 				"key": "PrepareOrder",
 				"attributes": {
-					"type": "Action",
+					"umlType": "Action",
 					"label": "Prepare Order"
 				}
 			},
 			{
 				"key": "Fork1",
 				"attributes": {
-					"type": "Fork"
+					"umlType": "Fork"
 				}
 			},
 			{
 				"key": "ShipOrder",
 				"attributes": {
-					"type": "Action",
+					"umlType": "Action",
 					"label": "Ship Order"
 				}
 			},
 			{
 				"key": "SendInvoice",
 				"attributes": {
-					"type": "Action",
+					"umlType": "Action",
 					"label": "Send Invoice"
 				}
 			},
 			{
 				"key": "AwaitPayment",
 				"attributes": {
-					"type": "Action",
+					"umlType": "Action",
 					"label": "Await Payment"
 				}
 			},
 			{
 				"key": "ProcessPayment",
 				"attributes": {
-					"type": "Action",
+					"umlType": "Action",
 					"label": "Process Payment"
 				}
 			},
 			{
 				"key": "Join1",
 				"attributes": {
-					"type": "Join"
+					"umlType": "Join"
 				}
 			},
 			{
 				"key": "Merge1",
 				"attributes": {
-					"type": "Merge"
+					"umlType": "Merge"
 				}
 			},
 			{
 				"key": "CloseOrder",
 				"attributes": {
-					"type": "Action",
+					"umlType": "Action",
 					"label": "Close Order"
 				}
 			},
 			{
 				"key": "Final",
 				"attributes": {
-					"type": "ActivityFinal",
+					"umlType": "ActivityFinal",
 					"label": "Final"
 				}
 			}
@@ -109,7 +109,7 @@
 				"source": "Decision1",
 				"target": "Merge1",
 				"attributes": {
-					"type": "Reject Order",
+					"umlType": "Reject Order",
 					"label": "Reject Order"
 				}
 			},
@@ -118,7 +118,7 @@
 				"source": "Decision1",
 				"target": "PrepareOrder",
 				"attributes": {
-					"type": "Accept Order",
+					"umlType": "Accept Order",
 					"label": "Accept Order"
 				}
 			},
@@ -186,67 +186,6 @@
 	},
 	"rules": [
 		{
-			"key": "replace_standard_activity_edges",
-			"patternGraph": {
-				"options": {
-					"type": "directed"
-				},
-				"nodes": [
-					{
-						"key": "A",
-						"attributes": {}
-					},
-					{
-						"key": "B",
-						"attributes": {}
-					}
-				],
-				"edges": [
-					{
-						"key": "aToB",
-						"source": "A",
-						"target": "B",
-						"attributes": {}
-					}
-				]
-			},
-			"replacementGraph": {
-				"options": {
-					"type": "directed"
-				},
-				"nodes": [
-					{
-						"key": "A",
-						"attributes": {}
-					},
-					{
-						"key": "B",
-						"attributes": {}
-					},
-					{
-						"key": "C",
-						"attributes": {
-							"type": "Place"
-						}
-					}
-				],
-				"edges": [
-					{
-						"key": "aToC",
-						"source": "A",
-						"target": "C",
-						"attributes": {}
-					},
-					{
-						"key": "CtoB",
-						"source": "C",
-						"target": "B",
-						"attributes": {}
-					}
-				]
-			}
-		},
-		{
 			"key": "replace_controlnode_to_controlnode_edges",
 			"patternGraph": {
 				"options": {
@@ -256,13 +195,13 @@
 					{
 						"key": "A",
 						"attributes": {
-							"type": "Initial | Decision | Merge"
+							"umlType": ["Initial", "Decision", "Merge"]
 						}
 					},
 					{
 						"key": "B",
 						"attributes": {
-							"type": "Decision | Merge | FlowFinal | ActivityFinal"
+							"umlType": ["Decision", "Merge", "FlowFinal", "ActivityFinal"]
 						}
 					}
 				],
@@ -291,7 +230,7 @@
 					{
 						"key": "C",
 						"attributes": {
-							"type": "Transition"
+							"umlType": "Transition"
 						}
 					}
 				],
@@ -310,9 +249,333 @@
 					}
 				]
 			}
+		},
+		{
+			"key": "replace_standard_activity_edges",
+			"patternGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "A",
+						"attributes": {
+							"umlType": "Action"
+						}
+					},
+					{
+						"key": "B",
+						"attributes": {
+							"umlType": "Action"
+						}
+					}
+				],
+				"edges": [
+					{
+						"key": "aToB",
+						"source": "A",
+						"target": "B",
+						"attributes": {}
+					}
+				]
+			},
+			"replacementGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "A",
+						"attributes": {
+							"umlType": "Action"
+						}
+					},
+					{
+						"key": "B",
+						"attributes": {
+							"umlType": "Action"
+						}
+					},
+					{
+						"key": "C",
+						"attributes": {
+							"umlType": "Place"
+						}
+					}
+				],
+				"edges": [
+					{
+						"key": "aToC",
+						"source": "A",
+						"target": "C",
+						"attributes": {}
+					},
+					{
+						"key": "CtoB",
+						"source": "C",
+						"target": "B",
+						"attributes": {}
+					}
+				]
+			}
+		},
+		{
+			"key": "replace_fork_join_to_action_edges",
+			"patternGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "A",
+						"attributes": {
+							"umlType": ["Fork", "Join"]
+						}
+					},
+					{
+						"key": "B",
+						"attributes": {
+							"umlType": "Action"
+						}
+					}
+				],
+				"edges": [
+					{
+						"key": "aToB",
+						"source": "A",
+						"target": "B",
+						"attributes": {}
+					}
+				]
+			},
+			"replacementGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "A",
+						"attributes": {
+							"umlType": "Fork"
+						}
+					},
+					{
+						"key": "B",
+						"attributes": {
+							"umlType": "Action"
+						}
+					},
+					{
+						"key": "C",
+						"attributes": {
+							"umlType": "Place"
+						}
+					}
+				],
+				"edges": [
+					{
+						"key": "aToC",
+						"source": "A",
+						"target": "C",
+						"attributes": {}
+					},
+					{
+						"key": "CtoB",
+						"source": "C",
+						"target": "B",
+						"attributes": {}
+					}
+				]
+			}
+		},
+		{
+			"key": "replace_action_to_fork_join_edges",
+			"patternGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "A",
+						"attributes": {
+							"umlType": "Action"
+						}
+					},
+					{
+						"key": "B",
+						"attributes": {
+							"umlType": ["Join", "Fork"]
+						}
+					}
+				],
+				"edges": [
+					{
+						"key": "aToB",
+						"source": "A",
+						"target": "B",
+						"attributes": {}
+					}
+				]
+			},
+			"replacementGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "A",
+						"attributes": {
+							"umlType": "Action"
+						}
+					},
+					{
+						"key": "B",
+						"attributes": {}
+					},
+					{
+						"key": "C",
+						"attributes": {
+							"umlType": "Place"
+						}
+					}
+				],
+				"edges": [
+					{
+						"key": "aToC",
+						"source": "A",
+						"target": "C",
+						"attributes": {}
+					},
+					{
+						"key": "CtoB",
+						"source": "C",
+						"target": "B",
+						"attributes": {}
+					}
+				]
+			}
+		},
+		{
+			"key": "replace_control_nodes_with_places",
+			"patternGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "A",
+						"attributes": {
+							"umlType": [
+								"Initial",
+								"Decision",
+								"Merge",
+								"Decision",
+								"Merge",
+								"FlowFinal",
+								"ActivityFinal"
+							]
+						}
+					}
+				],
+				"edges": []
+			},
+			"replacementGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "A",
+						"attributes": {
+							"umlType": "Place"
+						}
+					}
+				],
+				"edges": []
+			}
+		},
+		{
+			"key": "replace_action_nodes_with_transitions",
+			"patternGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "A",
+						"attributes": {
+							"umlType": ["Action"]
+						}
+					}
+				],
+				"edges": []
+			},
+			"replacementGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "A",
+						"attributes": {
+							"umlType": "Transition"
+						}
+					}
+				],
+				"edges": []
+			}
+		},
+		{
+			"key": "replace_fork_nodes_with_transitions",
+			"patternGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "A",
+						"attributes": {
+							"umlType": ["Fork", "Join"]
+						}
+					}
+				],
+				"edges": []
+			},
+			"replacementGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "A",
+						"attributes": {
+							"umlType": "Transition"
+						}
+					}
+				],
+				"edges": []
+			}
 		}
 	],
 	"sequence": [
+		{
+			"rule": "replace_controlnode_to_controlnode_edges",
+			"options": {
+				"mode": "all"
+			}
+		},
+		{
+			"rule": "replace_fork_join_to_action_edges",
+			"options": {
+				"mode": "all"
+			}
+		},
+		{
+			"rule": "replace_action_to_fork_join_edges",
+			"options": {
+				"mode": "all"
+			}
+		},
 		{
 			"rule": "replace_standard_activity_edges",
 			"options": {
@@ -320,7 +583,19 @@
 			}
 		},
 		{
-			"rule": "replace_controlnode_to_controlnode_edges",
+			"rule": "replace_control_nodes_with_places",
+			"options": {
+				"mode": "all"
+			}
+		},
+		{
+			"rule": "replace_action_nodes_with_transitions",
+			"options": {
+				"mode": "all"
+			}
+		},
+		{
+			"rule": "replace_fork_nodes_with_transitions",
 			"options": {
 				"mode": "all"
 			}
