@@ -15,7 +15,7 @@ function computeAttributeWhereClause(
 
 	for (const [attribute, value] of Object.entries(attributes)) {
 		if (clause) {
-			clause += ` AND`;
+			clause += ' AND';
 		}
 
 		const paramId = createParameterUuid();
@@ -29,7 +29,7 @@ function computeAttributeWhereClause(
 		}
 	}
 
-	return { where: ` ${clause}`, params };
+	return { where: `${clause}`, params };
 }
 
 export function computeNodeQuery(

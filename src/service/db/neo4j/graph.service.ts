@@ -410,7 +410,9 @@ export class Neo4jGraphService implements IDBGraphService {
 
 		if (whereClauses.length) {
 			if (!hasWhere) {
-				query += ` WHERE `;
+				query += ' WHERE';
+			} else {
+				query += ' AND';
 			}
 
 			query += whereClauses.join(' AND');
