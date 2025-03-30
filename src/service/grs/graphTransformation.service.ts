@@ -231,10 +231,16 @@ export class GraphTransformationService {
 					const oldNode = occurence.nodes[key];
 					const internalId = oldNode.key;
 
+					let options = {};
+					if (rhsNode?.rewriteOptions) {
+						options = rhsNode.rewriteOptions;
+					}
+
 					await this.graphService.updateNode(
 						rhsNode.attributes ?? {},
 						internalId,
-						oldNode.attributes?.type ? [oldNode.attributes?.type] : []
+						oldNode.attributes?.type ? [oldNode.attributes?.type] : [],
+						options
 					);
 
 					preservedNodes[key] = internalId;

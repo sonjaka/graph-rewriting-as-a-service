@@ -12,6 +12,7 @@ export const input: GraphRewritingRequestSchema = {
 				attributes: {
 					label: 'A',
 					type: 'Event',
+					test: 'testA',
 				},
 			},
 			{
@@ -56,7 +57,6 @@ export const input: GraphRewritingRequestSchema = {
 						key: 'A',
 						attributes: {
 							label: 'A',
-							type: 'Event',
 						},
 					},
 				],
@@ -71,7 +71,7 @@ export const input: GraphRewritingRequestSchema = {
 						key: 'A',
 						attributes: {
 							label: 'Z',
-							type: 'Test',
+							test: null,
 						},
 					},
 				],
@@ -90,7 +90,7 @@ export const expectedOutput: GraphSchema = {
 			key: 'n_1',
 			attributes: {
 				label: 'Z',
-				type: 'Test',
+				type: 'Event',
 			},
 		},
 		{

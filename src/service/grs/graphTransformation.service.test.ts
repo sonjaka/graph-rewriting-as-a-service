@@ -50,7 +50,11 @@ import {
 	expectedOutput as updateEdgeExpectedOutput,
 } from './testutils/updateEdge';
 
-import { createNodeUuid, createEdgeUuid } from '../../utils/uuid';
+import {
+	createNodeUuid,
+	createEdgeUuid,
+	createParameterUuid,
+} from '../../utils/uuid';
 
 vi.mock('../../utils/uuid');
 
@@ -150,6 +154,7 @@ describe('Integration tests for grs service against testcontainers', () => {
 
 		let nodeCount = 0;
 		let edgeCount = 0;
+		let paramCount = 0;
 		vi.mocked(createEdgeUuid).mockImplementation(() => {
 			edgeCount++;
 			return `e_${edgeCount}`;
@@ -157,6 +162,10 @@ describe('Integration tests for grs service against testcontainers', () => {
 		vi.mocked(createNodeUuid).mockImplementation(() => {
 			nodeCount++;
 			return `n_${nodeCount}`;
+		});
+		vi.mocked(createParameterUuid).mockImplementation(() => {
+			paramCount++;
+			return `p_${paramCount}`;
 		});
 	});
 
@@ -185,16 +194,20 @@ describe('Integration tests for grs service against testcontainers', () => {
 
 		expectOutputGraphToMatchExpectedOutputGraph(output, addNodeExpectedOutput);
 	}, 10000);
+
 	test('Test addition of simple edge', async () => {
 		const grsService = new GraphTransformationService(graphService);
 
 		const output = await grsService.transformGraph(
 			addEdgeInput.hostgraph,
-			addEdgeInput.rules ?? []
+			addEdgeInput.rules
 		);
+
+		console.log(output);
 
 		expectOutputGraphToMatchExpectedOutputGraph(output, addEdgeExpectedOutput);
 	}, 10000);
+
 	test('Test removal of simple node', async () => {
 		const grsService = new GraphTransformationService(graphService);
 
@@ -208,19 +221,9 @@ describe('Integration tests for grs service against testcontainers', () => {
 			removeNodeExpectedOutput
 		);
 	}, 10000);
+
 	test('Test removal of simple edge', async () => {
 		const grsService = new GraphTransformationService(graphService);
-
-		let nodeCount = 0;
-		let edgeCount = 0;
-		vi.mocked(createEdgeUuid).mockImplementation(() => {
-			edgeCount++;
-			return `e_${edgeCount}`;
-		});
-		vi.mocked(createNodeUuid).mockImplementation(() => {
-			nodeCount++;
-			return `n_${nodeCount}`;
-		});
 
 		const output = await grsService.transformGraph(
 			removeEdgeInput.hostgraph,
@@ -232,19 +235,24 @@ describe('Integration tests for grs service against testcontainers', () => {
 			removeEdgeExpectedOutput
 		);
 	}, 10000);
+
 	test('Test update of simple node', async () => {
 		const grsService = new GraphTransformationService(graphService);
 
+		// Default mode: modify
 		const output = await grsService.transformGraph(
 			updateNodeInput.hostgraph,
 			updateNodeInput.rules ?? []
 		);
+
+		console.log(output.nodes);
 
 		expectOutputGraphToMatchExpectedOutputGraph(
 			output,
 			updateNodeExpectedOutput
 		);
 	}, 10000);
+
 	test('Test update of simple edge', async () => {
 		const grsService = new GraphTransformationService(graphService);
 
