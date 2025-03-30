@@ -21,6 +21,6 @@ describe('Test uuid helpers', () => {
 		const paramUuid = createParameterUuid();
 
 		expect(paramUuid).not.toContain('-');
-		expect(paramUuid.startsWith('e')).toBe(true);
+		expect(paramUuid.startsWith('p')).toBe(true);
 	});
 });
