@@ -404,5 +404,6 @@
 				"mode": "all"
 			}
 		}
-	]
+	],
+	"returnHistory": true
 }

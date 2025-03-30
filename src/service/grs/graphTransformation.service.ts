@@ -45,6 +45,11 @@ interface GraphDiffResult {
 
 export class GraphTransformationService {
 	private instantiatorService;
+	private history: ResultGraphSchema[] = [];
+	private trackHistory = false;
+	private hostgraphOptions: GraphSchema['options'] = {
+		type: 'undirected',
+	};
 
 	constructor(private readonly graphService: IDBGraphService) {
 		this.instantiatorService = new InstantiatorService();
@@ -53,10 +58,15 @@ export class GraphTransformationService {
 	public async transformGraph(
 		hostgraphData: GraphSchema,
 		rules: GraphRewritingRuleSchema[] = [],
-		processingConfig: RewritingRuleProcessingConfigSchema[] = []
-	): Promise<ResultGraphSchema> {
+		processingConfig: RewritingRuleProcessingConfigSchema[] = [],
+		useHistory = false
+	): Promise<ResultGraphSchema[]> {
 		this.graphService.graphType = hostgraphData.options.type;
 		await this.importHostgraph(hostgraphData);
+
+		this.history = [];
+		this.trackHistory = useHistory;
+		this.hostgraphOptions = hostgraphData.options;
 
 		if (processingConfig.length) {
 			for (const processStep of processingConfig) {
@@ -75,7 +85,10 @@ export class GraphTransformationService {
 			}
 		}
 
-		return this.exportHostgraph(hostgraphData);
+		const finalHostgraph = await this.exportHostgraph();
+		this.history.push(finalHostgraph);
+
+		return this.history;
 	}
 
 	private async executeRule(
@@ -127,6 +140,11 @@ export class GraphTransformationService {
 					patternGraph,
 					replacementGraph
 				);
+
+				if (this.trackHistory) {
+					const currentHostgraph = await this.exportHostgraph();
+					this.history.push(currentHostgraph);
+				}
 			}
 		}
 	}
@@ -183,13 +201,17 @@ export class GraphTransformationService {
 	}
 
 	private async exportHostgraph(
-		hostgraph: GraphSchema
+		hostgraph?: GraphSchema
 	): Promise<ResultGraphSchema> {
 		const nodes = (await this.graphService.getAllNodes()) as GraphNodeSchema[];
 		const edges = (await this.graphService.getAllEdges()) as GraphEdgeSchema[];
 
+		let options = this.hostgraphOptions;
+
 		// Options should not have changed from the original hostgraph
-		const options = hostgraph.options;
+		if (hostgraph) {
+			options = hostgraph.options;
+		}
 
 		return { options, nodes, edges };
 	}

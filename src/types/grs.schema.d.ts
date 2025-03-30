@@ -9,6 +9,7 @@ export interface GraphRewritingRequestSchema {
   hostgraph: GraphSchema;
   rules?: GraphRewritingRuleSchema[];
   sequence?: RewritingRuleProcessingConfigSchema[];
+  returnHistory?: boolean;
 }
 export interface GraphSchema {
   options: {
