@@ -1,7 +1,7 @@
 import { expect, test, describe } from 'vitest';
 import { createNodeQuery, updateNodeQuery } from './base';
 
-describe('Test cypher utils', () => {
+describe('Test cypher query generation', () => {
 	describe('Test createNodeQuery', () => {
 		test('Test createNodeQuery with single label and no attributes', () => {
 			const { cypher, params } = createNodeQuery('n', ['LabelA']);
