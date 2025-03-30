@@ -32,7 +32,7 @@ export function updateNodeQuery(
 	options: NodeUpdateRewriteOptions = {}
 ): QueryComputationResult {
 	let cypher = '';
-	const params: Record<string, any> = {
+	const params: { internalId: string; metadata?: Record<string, unknown> } = {
 		internalId,
 	};
 
