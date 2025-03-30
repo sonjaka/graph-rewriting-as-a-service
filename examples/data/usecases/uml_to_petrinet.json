@@ -7,86 +7,86 @@
 			{
 				"key": "Start",
 				"attributes": {
-					"umlType": "Initial"
+					"type": "Initial"
 				}
 			},
 			{
 				"key": "ReceiveOrder",
 				"attributes": {
-					"umlType": "Action",
+					"type": "Action",
 					"label": "Receive Order"
 				}
 			},
 			{
 				"key": "Decision1",
 				"attributes": {
-					"umlType": "Decision"
+					"type": "Decision"
 				}
 			},
 			{
 				"key": "PrepareOrder",
 				"attributes": {
-					"umlType": "Action",
+					"type": "Action",
 					"label": "Prepare Order"
 				}
 			},
 			{
 				"key": "Fork1",
 				"attributes": {
-					"umlType": "Fork"
+					"type": "Fork"
 				}
 			},
 			{
 				"key": "ShipOrder",
 				"attributes": {
-					"umlType": "Action",
+					"type": "Action",
 					"label": "Ship Order"
 				}
 			},
 			{
 				"key": "SendInvoice",
 				"attributes": {
-					"umlType": "Action",
+					"type": "Action",
 					"label": "Send Invoice"
 				}
 			},
 			{
 				"key": "AwaitPayment",
 				"attributes": {
-					"umlType": "Action",
+					"type": "Action",
 					"label": "Await Payment"
 				}
 			},
 			{
 				"key": "ProcessPayment",
 				"attributes": {
-					"umlType": "Action",
+					"type": "Action",
 					"label": "Process Payment"
 				}
 			},
 			{
 				"key": "Join1",
 				"attributes": {
-					"umlType": "Join"
+					"type": "Join"
 				}
 			},
 			{
 				"key": "Merge1",
 				"attributes": {
-					"umlType": "Merge"
+					"type": "Merge"
 				}
 			},
 			{
 				"key": "CloseOrder",
 				"attributes": {
-					"umlType": "Action",
+					"type": "Action",
 					"label": "Close Order"
 				}
 			},
 			{
 				"key": "Final",
 				"attributes": {
-					"umlType": "ActivityFinal",
+					"type": "ActivityFinal",
 					"label": "Final"
 				}
 			}
@@ -109,7 +109,7 @@
 				"source": "Decision1",
 				"target": "Merge1",
 				"attributes": {
-					"umlType": "Reject Order",
+					"type": "Reject Order",
 					"label": "Reject Order"
 				}
 			},
@@ -118,7 +118,7 @@
 				"source": "Decision1",
 				"target": "PrepareOrder",
 				"attributes": {
-					"umlType": "Accept Order",
+					"type": "Accept Order",
 					"label": "Accept Order"
 				}
 			},
@@ -195,13 +195,13 @@
 					{
 						"key": "A",
 						"attributes": {
-							"umlType": ["Initial", "Decision", "Merge"]
+							"type": ["Initial", "Decision", "Merge"]
 						}
 					},
 					{
 						"key": "B",
 						"attributes": {
-							"umlType": ["Decision", "Merge", "FlowFinal", "ActivityFinal"]
+							"type": ["Decision", "Merge", "FlowFinal", "ActivityFinal"]
 						}
 					}
 				],
@@ -230,7 +230,7 @@
 					{
 						"key": "C",
 						"attributes": {
-							"umlType": "Transition"
+							"type": "Transition"
 						}
 					}
 				],
@@ -260,13 +260,13 @@
 					{
 						"key": "A",
 						"attributes": {
-							"umlType": "Action"
+							"type": "Action"
 						}
 					},
 					{
 						"key": "B",
 						"attributes": {
-							"umlType": "Action"
+							"type": "Action"
 						}
 					}
 				],
@@ -287,19 +287,19 @@
 					{
 						"key": "A",
 						"attributes": {
-							"umlType": "Action"
+							"type": "Action"
 						}
 					},
 					{
 						"key": "B",
 						"attributes": {
-							"umlType": "Action"
+							"type": "Action"
 						}
 					},
 					{
 						"key": "C",
 						"attributes": {
-							"umlType": "Place"
+							"type": "Place"
 						}
 					}
 				],
@@ -329,13 +329,13 @@
 					{
 						"key": "A",
 						"attributes": {
-							"umlType": ["Fork", "Join"]
+							"type": ["Fork", "Join"]
 						}
 					},
 					{
 						"key": "B",
 						"attributes": {
-							"umlType": "Action"
+							"type": "Action"
 						}
 					}
 				],
@@ -356,19 +356,19 @@
 					{
 						"key": "A",
 						"attributes": {
-							"umlType": "Fork"
+							"type": "Fork"
 						}
 					},
 					{
 						"key": "B",
 						"attributes": {
-							"umlType": "Action"
+							"type": "Action"
 						}
 					},
 					{
 						"key": "C",
 						"attributes": {
-							"umlType": "Place"
+							"type": "Place"
 						}
 					}
 				],
@@ -398,13 +398,13 @@
 					{
 						"key": "A",
 						"attributes": {
-							"umlType": "Action"
+							"type": "Action"
 						}
 					},
 					{
 						"key": "B",
 						"attributes": {
-							"umlType": ["Join", "Fork"]
+							"type": ["Join", "Fork"]
 						}
 					}
 				],
@@ -425,7 +425,7 @@
 					{
 						"key": "A",
 						"attributes": {
-							"umlType": "Action"
+							"type": "Action"
 						}
 					},
 					{
@@ -435,7 +435,7 @@
 					{
 						"key": "C",
 						"attributes": {
-							"umlType": "Place"
+							"type": "Place"
 						}
 					}
 				],
@@ -465,7 +465,7 @@
 					{
 						"key": "A",
 						"attributes": {
-							"umlType": [
+							"type": [
 								"Initial",
 								"Decision",
 								"Merge",
@@ -487,7 +487,7 @@
 					{
 						"key": "A",
 						"attributes": {
-							"umlType": "Place"
+							"type": "Place"
 						}
 					}
 				],
@@ -504,7 +504,7 @@
 					{
 						"key": "A",
 						"attributes": {
-							"umlType": ["Action"]
+							"type": ["Action"]
 						}
 					}
 				],
@@ -518,7 +518,7 @@
 					{
 						"key": "A",
 						"attributes": {
-							"umlType": "Transition"
+							"type": "Transition"
 						}
 					}
 				],
@@ -535,7 +535,7 @@
 					{
 						"key": "A",
 						"attributes": {
-							"umlType": ["Fork", "Join"]
+							"type": ["Fork", "Join"]
 						}
 					}
 				],
@@ -549,7 +549,7 @@
 					{
 						"key": "A",
 						"attributes": {
-							"umlType": "Transition"
+							"type": "Transition"
 						}
 					}
 				],
