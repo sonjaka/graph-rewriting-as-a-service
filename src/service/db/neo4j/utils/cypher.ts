@@ -1,3 +1,4 @@
+import { createParameterUuid } from '../../../../utils/uuid';
 import { DBGraphNACs } from '../../types';
 
 function sanitizeStringLiteral(string: string) {
@@ -24,6 +25,67 @@ function computeAttributesString(attributes: Record<string, unknown>) {
 	}
 
 	return attributeStrings.length ? `{${attributeStrings.join(', ')}}` : '';
+}
+
+function computeAttributeWhereClause(
+	attributes: Record<string, unknown>,
+	matchVariable: string
+) {
+	let clause = '';
+	const params: Record<string, unknown> = {};
+
+	for (const [attribute, value] of Object.entries(attributes)) {
+		if (clause) {
+			clause += ` AND`;
+		}
+
+		const paramId = createParameterUuid();
+
+		params[paramId] = value;
+
+		if (Array.isArray(value)) {
+			clause += ` ${matchVariable}.${attribute} IN $${paramId}`;
+		} else {
+			clause += ` ${matchVariable}.${attribute} = $${paramId}`;
+		}
+	}
+
+	return { where: ` ${clause}`, params };
+}
+
+interface QueryComputationResult {
+	queryString: string;
+	where?: string;
+	params?: Record<string, unknown>;
+}
+
+export function computeNodeQuery(
+	matchVariable: string,
+	labels: string[],
+	attributes: Record<string, unknown>
+): QueryComputationResult {
+	const result: QueryComputationResult = {};
+	matchVariable = sanitizeIdentifier(matchVariable);
+
+	// TODO: Use parameters instead of string concatenation for attributes
+	const nodeLabels = labels
+		.map((label) => `\`${sanitizeIdentifier(label)}\``)
+		.join(':');
+
+	if (Object.keys(attributes).length) {
+		const { where, params } = computeAttributeWhereClause(
+			attributes,
+			matchVariable
+		);
+		result['where'] = where;
+		result['params'] = params;
+	}
+
+	// const metadata = computeAttributesString(attributes);
+
+	result.queryString = `(\`${matchVariable}\`:${nodeLabels})`;
+
+	return result;
 }
 
 export function computeNodeQueryString(

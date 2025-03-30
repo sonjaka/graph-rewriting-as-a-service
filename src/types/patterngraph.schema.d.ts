@@ -5,9 +5,7 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
-import { GraphNodeSchema } from "./node.schema";
-
-export interface PatterngraphSchema {
+export interface PatternGraphSchema {
   options: {
     /**
      * One of directed or undirected
@@ -25,21 +23,15 @@ export interface PatterngraphSchema {
   };
   [k: string]: unknown;
 }
-export interface PatternNodeSchema extends GraphNodeSchema {
-  /**
-   * The node's ID, also used as node in an edges source/target etc.
-   */
+export interface PatternNodeSchema {
   key: string;
-  /**
-   * The node's attributes.
-   */
-  attributes: {
-    type?: string;
+  attributes?: {
+    type?: string | string[];
     /**
      * This interface was referenced by `undefined`'s JSON-Schema definition
      * via the `patternProperty` "^(?!type$).*".
      */
-    [k: string]: number | string | boolean | (number | string | boolean)[];
+    [k: string]: number | string | boolean | null | (number | string | boolean)[];
   };
 }
 export interface GraphEdgeSchema {

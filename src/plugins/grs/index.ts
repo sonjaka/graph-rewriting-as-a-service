@@ -5,6 +5,8 @@ import GraphRewritingRule from '../../schemas/rewrite-rule.schema.json';
 import GrsSchema from '../../schemas/grs.schema.json';
 import PatternnodeSchema from '../../schemas/patternnode.schema.json';
 import PatterngraphSchema from '../../schemas/patterngraph.schema.json';
+import ReplacementnodeSchema from '../../schemas/replacementnode.schema.json';
+import ReplacementgraphSchema from '../../schemas/replacementgraph.schema.json';
 import RewritingRuleProcessingConfigSchema from '../../schemas/run-config.schema.json';
 
 import grsRoutes from '../grs/routes/grs';
@@ -17,6 +19,8 @@ const grsPlugin: FastifyPluginAsync = async (fastify: FastifyInstance) => {
 	fastify.addSchema(RewritingRuleProcessingConfigSchema);
 	fastify.addSchema(PatternnodeSchema);
 	fastify.addSchema(PatterngraphSchema);
+	fastify.addSchema(ReplacementnodeSchema);
+	fastify.addSchema(ReplacementgraphSchema);
 	fastify.addSchema(GraphRewritingRule);
 	fastify.addSchema(GrsSchema);
 };

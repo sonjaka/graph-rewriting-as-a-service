@@ -28,6 +28,7 @@ import {
 	computeNodeQueryString,
 	createNodeCypher,
 	computeNacClause,
+	computeNodeQuery,
 } from './utils/cypher';
 
 type Neo4jNode = Node<Integer, DBGraphNodeProperties>;
@@ -334,6 +335,9 @@ export class Neo4jGraphService implements IDBGraphService {
 		let query = '';
 		let hasWhere = false;
 		const queryVars: string[] = [];
+		let parameters = {};
+
+		const whereClauses: string[] = [];
 
 		const nodesQueries: string[] = [];
 		nodes.forEach((node) => {
@@ -343,9 +347,19 @@ export class Neo4jGraphService implements IDBGraphService {
 				node.attributes
 			);
 
-			nodesQueries.push(
-				computeNodeQueryString(node.key, nodeLabels, node.attributes)
+			// nodesQueries.push(
+			// 	computeNodeQueryString(node.key, nodeLabels, node.attributes)
+			// );
+			const { queryString, where, params } = computeNodeQuery(
+				node.key,
+				nodeLabels,
+				node.attributes
 			);
+
+			if (where) whereClauses.push(where);
+			if (params) parameters = { ...parameters, ...params };
+
+			nodesQueries.push(queryString);
 		});
 		query += nodesQueries.join(', ');
 
@@ -394,11 +408,19 @@ export class Neo4jGraphService implements IDBGraphService {
 			return [{ nodes: {}, edges: {} }];
 		}
 
+		if (whereClauses.length) {
+			if (!hasWhere) {
+				query += ` WHERE `;
+			}
+
+			query += whereClauses.join(' AND');
+		}
+
 		// Else build cypher and query database
 		const cypher = `MATCH ${query} RETURN ${queryVars.join(', ')}`;
 
 		const res = await this.session.executeRead((tx: ManagedTransaction) =>
-			tx.run<Neo4jPatternMatchResult>(cypher)
+			tx.run<Neo4jPatternMatchResult>(cypher, parameters)
 		);
 
 		const result = this.mapPatternMatchToResult(res, queryVars);
@@ -518,7 +540,9 @@ export class Neo4jGraphService implements IDBGraphService {
 	private constructNodeLabelsFromAttributes(attributes: DBGraphNodeMetadata) {
 		const nodeTypes = [this.defaultNodeLabel];
 		if (attributes.type) {
-			nodeTypes.push(attributes.type);
+			if (!Array.isArray(attributes.type)) {
+				nodeTypes.push(attributes.type);
+			}
 		}
 
 		return nodeTypes;

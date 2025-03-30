@@ -18,6 +18,8 @@ import { GraphEdgeSchema } from '../../types/edge.schema';
 import { RewritingRuleProcessingConfigSchema } from '../../types/run-config.schema';
 import { createEdgeUuid, createNodeUuid } from '../../utils/uuid';
 import { InstantiatorService } from '../instantiation/instantiator.service';
+import { PatterngraphSchema } from '../../types/patterngraph.schema';
+import { PatternNodeSchema } from '../../types/patternnode.schema';
 
 export type ResultGraphSchema = Omit<GraphSchema, 'nodes' | 'edges'> & {
 	nodes: (Omit<GraphNodeSchema, 'attributes'> & {
@@ -33,7 +35,7 @@ type EdgeMatchMap = Map<string, GraphEdgeSchema | undefined>;
 interface GraphDiffResult {
 	updatedNodes: NodeMatchMap;
 	addedNodes: GraphNodeSchema[];
-	removedNodes: GraphNodeSchema[];
+	removedNodes: PatternNodeSchema[];
 	updatedEdges: EdgeMatchMap;
 	addedEdges: GraphEdgeSchema[];
 	removedEdges: GraphEdgeSchema[];
@@ -129,7 +131,7 @@ export class GraphTransformationService {
 
 	private async performInstantiationAndReplacement(
 		match: DBGraphPatternMatchResult,
-		lhs: GraphSchema,
+		lhs: PatterngraphSchema,
 		rhs: GraphSchema
 	) {
 		const rhsInstantiated = this.instantiateAttributes(rhs, match);
@@ -284,11 +286,11 @@ export class GraphTransformationService {
 	}
 
 	private computeOverlapAndDifferenceOfLhsAndRhs(
-		lhs: GraphSchema,
+		lhs: PatterngraphSchema,
 		rhs: GraphSchema
 	): GraphDiffResult {
 		const updatedNodes: NodeMatchMap = new Map();
-		const removedNodes: GraphNodeSchema[] = [];
+		const removedNodes: PatternNodeSchema[] = [];
 		const addedNodes: GraphNodeSchema[] = [];
 
 		const updatedEdges: EdgeMatchMap = new Map();
@@ -365,7 +367,6 @@ export class GraphTransformationService {
 		// the match now has a nodes object with the searchgraph key as property key
 		// but for th jsonLogic matching we want the same structure as in the searchgraph
 		const formattedMatch: GraphSchema = {
-			attributes: graph.attributes,
 			options: graph.options,
 			nodes: [],
 			edges: [],

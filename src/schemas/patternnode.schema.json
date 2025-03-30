@@ -6,15 +6,21 @@
 	"additionalProperties": false,
 	"properties": {
 		"key": {
-			"description": "The node's ID, also used as node in an edges source/target etc.",
 			"type": "string"
 		},
 		"attributes": {
-			"description": "The node's attributes. ",
 			"type": "object",
 			"properties": {
 				"type": {
-					"type": "string"
+					"anyOf": [
+						{ "type": "string" },
+						{
+							"type": "array",
+							"items": {
+								"anyOf": [{ "type": "string" }]
+							}
+						}
+					]
 				}
 			},
 			"patternProperties": {
@@ -23,6 +29,7 @@
 						{ "type": "number" },
 						{ "type": "string" },
 						{ "type": "boolean" },
+						{ "type": "null" },
 						{
 							"type": "array",
 							"items": {
@@ -38,5 +45,5 @@
 			}
 		}
 	},
-	"required": ["key", "attributes"]
+	"required": ["key"]
 }
