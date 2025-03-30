@@ -11,12 +11,6 @@ Content-Type: application/json
 
 < ../data/usecases/epk.json
 
-// TODO: Incomplete
-// Import Hostgraph only: Example "UML to Petrinet"
-# POST http://localhost:8080/grs
-# Content-Type: application/json
-
-# < ../data/usecases/uml_to_petrinet_hostgraph.json
 
 // Example: UML to Petrinet
 POST http://localhost:8080/grs
