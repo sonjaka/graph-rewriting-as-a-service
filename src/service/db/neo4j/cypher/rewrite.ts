@@ -1,31 +1,10 @@
 import { createParameterUuid } from '../../../../utils/uuid';
 import { DBGraphNACs } from '../../types';
-
-function sanitizeStringLiteral(string: string) {
-	string.trim();
-	string.replace(/['|\u0027]/g, "\u005c' ");
-	string.replace(/["|\u0022]/g, '\u005c"');
-
-	return string;
-}
-
-function sanitizeIdentifier(string: string) {
-	string = string.trim();
-	string = string.replace(/[`|\u0060]/g, '``');
-
-	return string;
-}
-
-function computeAttributesString(attributes: Record<string, unknown>) {
-	const attributeStrings = [];
-	for (const [key, value] of Object.entries(attributes)) {
-		attributeStrings.push(
-			`${sanitizeStringLiteral(key)}:"${value instanceof String ? sanitizeStringLiteral(value as string) : value}"`
-		);
-	}
-
-	return attributeStrings.length ? `{${attributeStrings.join(', ')}}` : '';
-}
+import {
+	computeAttributesString,
+	MatchQueryComputationResult,
+	sanitizeIdentifier,
+} from './utils';
 
 function computeAttributeWhereClause(
 	attributes: Record<string, unknown>,
@@ -53,18 +32,14 @@ function computeAttributeWhereClause(
 	return { where: ` ${clause}`, params };
 }
 
-interface QueryComputationResult {
-	queryString: string;
-	where?: string;
-	params?: Record<string, unknown>;
-}
-
 export function computeNodeQuery(
 	matchVariable: string,
 	labels: string[],
 	attributes: Record<string, unknown>
-): QueryComputationResult {
-	const result: QueryComputationResult = {};
+): MatchQueryComputationResult {
+	const result: MatchQueryComputationResult = {
+		cypher: '',
+	};
 	matchVariable = sanitizeIdentifier(matchVariable);
 
 	// TODO: Use parameters instead of string concatenation for attributes
@@ -83,7 +58,7 @@ export function computeNodeQuery(
 
 	// const metadata = computeAttributesString(attributes);
 
-	result.queryString = `(\`${matchVariable}\`:${nodeLabels})`;
+	result.cypher = `(\`${matchVariable}\`:${nodeLabels})`;
 
 	return result;
 }
@@ -221,22 +196,4 @@ export function computeNacClause(nacs: DBGraphNACs[], hasWhere: boolean) {
 	});
 
 	return { cypher, hasWhere };
-}
-
-export function createNodeCypher(
-	matchVariable: string,
-	labels: string[],
-	attributes: Record<string, unknown> = {}
-) {
-	const nodeLabels = labels
-		.map((label) => `\`${sanitizeIdentifier(label)}\``)
-		.join(':');
-
-	const params: Record<string, Record<string, unknown>> = {};
-	if (attributes) {
-		params.nodeMetadata = attributes;
-	}
-	const cypher = `CREATE (${matchVariable}:${nodeLabels}${Object.entries(params?.nodeMetadata).length ? ' $nodeMetadata' : ''}) RETURN ${matchVariable}`;
-
-	return { cypher, params };
 }
