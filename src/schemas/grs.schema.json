@@ -21,6 +21,7 @@
 			}
 		},
 		"returnHistory": {
+			"description": "If set to true, the resultset will include the exported hostgraph after each rewriting step in chronological order.",
 			"type": "boolean",
 			"default": false
 		}
