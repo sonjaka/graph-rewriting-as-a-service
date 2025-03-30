@@ -64,7 +64,8 @@ export interface IDBGraphService {
 	updateNode(
 		metadata: DBGraphNodeMetadata,
 		internalId: DBGraphNodeInternalId,
-		oldTypes: string[]
+		oldTypes: string[],
+		options: Record<string, unknown>
 	): Promise<DBGraphNodeResult>;
 	getNode(
 		internalId: DBGraphNodeInternalId
