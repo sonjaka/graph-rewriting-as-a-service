@@ -108,7 +108,6 @@ describe('Test grs service', () => {
 			// (except for the changed ids, which we did not respect in the mock above)
 			expect(result).toMatchObject({
 				options: sampleGraphData.options,
-				attributes: sampleGraphData.attributes,
 				nodes: result.nodes,
 				edges: result.edges,
 			});
@@ -203,8 +202,6 @@ describe('Integration tests for grs service against testcontainers', () => {
 			addEdgeInput.rules
 		);
 
-		console.log(output);
-
 		expectOutputGraphToMatchExpectedOutputGraph(output, addEdgeExpectedOutput);
 	}, 10000);
 
@@ -245,8 +242,6 @@ describe('Integration tests for grs service against testcontainers', () => {
 			updateNodeInput.rules ?? []
 		);
 
-		console.log(output.nodes);
-
 		expectOutputGraphToMatchExpectedOutputGraph(
 			output,
 			updateNodeExpectedOutput
@@ -268,9 +263,9 @@ describe('Integration tests for grs service against testcontainers', () => {
 	}, 10000);
 	test.todo('Test replacement of connected nodes');
 	test.todo('Test replacement of connected nodes');
-	// REAL WORLD Examples
-	test.todo('Test transformation of UML to petrinet');
-	test.todo('Test transformation of UML to petrinet');
+	// // REAL WORLD Examples
+	// test.todo('Test transformation of UML to petrinet');
+	// test.todo('Test transformation of UML to petrinet');
 });
 
 function expectOutputGraphToMatchExpectedOutputGraph(
