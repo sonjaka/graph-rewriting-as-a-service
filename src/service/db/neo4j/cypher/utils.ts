@@ -8,11 +8,12 @@ export interface MatchQueryComputationResult extends QueryComputationResult {
 }
 
 export function sanitizeStringLiteral(string: string) {
-	string.trim();
-	string.replace(/['|\u0027]/g, "\u005c' ");
-	string.replace(/["|\u0022]/g, '\u005c"');
+	let result = string;
+	result = result.trim();
+	result = result.replace(/['|\u0027]/g, "\u005c'");
+	result = result.replace(/["|\u0022]/g, '\u005c"');
 
-	return string;
+	return result;
 }
 
 export function sanitizeIdentifier(string: string) {
