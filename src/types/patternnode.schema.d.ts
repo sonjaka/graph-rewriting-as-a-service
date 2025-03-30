@@ -5,23 +5,14 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
-export interface GraphNodeSchema {
-  /**
-   * The node's ID, also used as node in an edges source/target etc.
-   */
+export interface PatternNodeSchema {
   key: string;
-  /**
-   * The node's attributes.
-   */
-  attributes: {
-    /**
-     * If given, the type will be used as a Neo4j Node label. Allows for easier debugging.
-     */
-    type?: string;
+  attributes?: {
+    type?: string | string[];
     /**
      * This interface was referenced by `undefined`'s JSON-Schema definition
      * via the `patternProperty` "^(?!type$).*".
      */
-    [k: string]: number | string | boolean;
+    [k: string]: number | string | boolean | null | (number | string | boolean)[];
   };
 }

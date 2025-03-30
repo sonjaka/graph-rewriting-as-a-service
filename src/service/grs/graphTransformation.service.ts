@@ -18,6 +18,10 @@ import { GraphEdgeSchema } from '../../types/edge.schema';
 import { RewritingRuleProcessingConfigSchema } from '../../types/run-config.schema';
 import { createEdgeUuid, createNodeUuid } from '../../utils/uuid';
 import { InstantiatorService } from '../instantiation/instantiator.service';
+import { PatternGraphSchema } from '../../types/patterngraph.schema';
+import { PatternNodeSchema } from '../../types/patternnode.schema';
+import { ReplacementGraphSchema } from '../../types/replacementgraph.schema';
+import { ReplacementNodeSchema } from '../../types/replacementnode.schema';
 
 export type ResultGraphSchema = Omit<GraphSchema, 'nodes' | 'edges'> & {
 	nodes: (Omit<GraphNodeSchema, 'attributes'> & {
@@ -28,12 +32,12 @@ export type ResultGraphSchema = Omit<GraphSchema, 'nodes' | 'edges'> & {
 	})[];
 };
 
-type NodeMatchMap = Map<string, GraphNodeSchema | undefined>;
+type NodeMatchMap = Map<string, ReplacementNodeSchema | undefined>;
 type EdgeMatchMap = Map<string, GraphEdgeSchema | undefined>;
 interface GraphDiffResult {
 	updatedNodes: NodeMatchMap;
-	addedNodes: GraphNodeSchema[];
-	removedNodes: GraphNodeSchema[];
+	addedNodes: ReplacementNodeSchema[];
+	removedNodes: PatternNodeSchema[];
 	updatedEdges: EdgeMatchMap;
 	addedEdges: GraphEdgeSchema[];
 	removedEdges: GraphEdgeSchema[];
@@ -129,8 +133,8 @@ export class GraphTransformationService {
 
 	private async performInstantiationAndReplacement(
 		match: DBGraphPatternMatchResult,
-		lhs: GraphSchema,
-		rhs: GraphSchema
+		lhs: PatternGraphSchema,
+		rhs: ReplacementGraphSchema
 	) {
 		const rhsInstantiated = this.instantiateAttributes(rhs, match);
 
@@ -227,16 +231,23 @@ export class GraphTransformationService {
 					const oldNode = occurence.nodes[key];
 					const internalId = oldNode.key;
 
+					let options = {};
+					if (rhsNode?.rewriteOptions) {
+						options = rhsNode.rewriteOptions;
+					}
+
 					await this.graphService.updateNode(
-						rhsNode.attributes,
+						rhsNode.attributes ?? {},
 						internalId,
-						oldNode.attributes?.type ? [oldNode.attributes?.type] : []
+						oldNode.attributes?.type ? [oldNode.attributes?.type] : [],
+						options
 					);
 
 					preservedNodes[key] = internalId;
 				}
 			}
 		}
+
 		if (Object.entries(occurence.edges).length) {
 			for (const [key, rhsEdge] of adjustments.updatedEdges) {
 				if (rhsEdge) {
@@ -262,7 +273,7 @@ export class GraphTransformationService {
 		for (const rhsNode of adjustments.addedNodes) {
 			const internalId = createNodeUuid();
 
-			await this.graphService.createNode(rhsNode.attributes, internalId);
+			await this.graphService.createNode(rhsNode.attributes ?? {}, internalId);
 
 			preservedNodes[rhsNode.key] = internalId;
 		}
@@ -284,12 +295,12 @@ export class GraphTransformationService {
 	}
 
 	private computeOverlapAndDifferenceOfLhsAndRhs(
-		lhs: GraphSchema,
-		rhs: GraphSchema
+		lhs: PatternGraphSchema,
+		rhs: ReplacementGraphSchema
 	): GraphDiffResult {
 		const updatedNodes: NodeMatchMap = new Map();
-		const removedNodes: GraphNodeSchema[] = [];
-		const addedNodes: GraphNodeSchema[] = [];
+		const removedNodes: PatternNodeSchema[] = [];
+		const addedNodes: ReplacementNodeSchema[] = [];
 
 		const updatedEdges: EdgeMatchMap = new Map();
 		const removedEdges: GraphEdgeSchema[] = [];
@@ -356,16 +367,15 @@ export class GraphTransformationService {
 	}
 
 	private instantiateAttributes(
-		graph: GraphSchema,
+		graph: ReplacementGraphSchema,
 		match: DBGraphPatternMatchResult
-	): GraphSchema {
+	): ReplacementGraphSchema {
 		// clone graph for assignment to make sure attribute is only instantiated for this match
 		const instantiatedGraph = structuredClone(graph);
 
 		// the match now has a nodes object with the searchgraph key as property key
 		// but for th jsonLogic matching we want the same structure as in the searchgraph
 		const formattedMatch: GraphSchema = {
-			attributes: graph.attributes,
 			options: graph.options,
 			nodes: [],
 			edges: [],
@@ -384,12 +394,15 @@ export class GraphTransformationService {
 		}
 
 		instantiatedGraph.nodes.map((node) => {
-			for (const [key, attribute] of Object.entries(node.attributes)) {
-				if (typeof attribute === 'object') {
-					node.attributes[key] = this.instantiatorService.instantiate(
-						attribute.type,
-						{ ...attribute.args, match: formattedMatch }
-					);
+			if (node.attributes) {
+				for (const [key, attribute] of Object.entries(node.attributes)) {
+					if (attribute === null) continue;
+					if (typeof attribute === 'object') {
+						node.attributes[key] = this.instantiatorService.instantiate(
+							attribute.type,
+							{ ...attribute.args, match: formattedMatch }
+						);
+					}
 				}
 			}
 		});

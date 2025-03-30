@@ -186,67 +186,6 @@
 	},
 	"rules": [
 		{
-			"key": "replace_standard_activity_edges",
-			"patternGraph": {
-				"options": {
-					"type": "directed"
-				},
-				"nodes": [
-					{
-						"key": "A",
-						"attributes": {}
-					},
-					{
-						"key": "B",
-						"attributes": {}
-					}
-				],
-				"edges": [
-					{
-						"key": "aToB",
-						"source": "A",
-						"target": "B",
-						"attributes": {}
-					}
-				]
-			},
-			"replacementGraph": {
-				"options": {
-					"type": "directed"
-				},
-				"nodes": [
-					{
-						"key": "A",
-						"attributes": {}
-					},
-					{
-						"key": "B",
-						"attributes": {}
-					},
-					{
-						"key": "C",
-						"attributes": {
-							"type": "Place"
-						}
-					}
-				],
-				"edges": [
-					{
-						"key": "aToC",
-						"source": "A",
-						"target": "C",
-						"attributes": {}
-					},
-					{
-						"key": "CtoB",
-						"source": "C",
-						"target": "B",
-						"attributes": {}
-					}
-				]
-			}
-		},
-		{
 			"key": "replace_controlnode_to_controlnode_edges",
 			"patternGraph": {
 				"options": {
@@ -256,13 +195,13 @@
 					{
 						"key": "A",
 						"attributes": {
-							"type": "Initial | Decision | Merge"
+							"type": ["Initial", "Decision", "Merge"]
 						}
 					},
 					{
 						"key": "B",
 						"attributes": {
-							"type": "Decision | Merge | FlowFinal | ActivityFinal"
+							"type": ["Decision", "Merge", "FlowFinal", "ActivityFinal"]
 						}
 					}
 				],
@@ -310,9 +249,333 @@
 					}
 				]
 			}
+		},
+		{
+			"key": "replace_standard_activity_edges",
+			"patternGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "A",
+						"attributes": {
+							"type": "Action"
+						}
+					},
+					{
+						"key": "B",
+						"attributes": {
+							"type": "Action"
+						}
+					}
+				],
+				"edges": [
+					{
+						"key": "aToB",
+						"source": "A",
+						"target": "B",
+						"attributes": {}
+					}
+				]
+			},
+			"replacementGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "A",
+						"attributes": {
+							"type": "Action"
+						}
+					},
+					{
+						"key": "B",
+						"attributes": {
+							"type": "Action"
+						}
+					},
+					{
+						"key": "C",
+						"attributes": {
+							"type": "Place"
+						}
+					}
+				],
+				"edges": [
+					{
+						"key": "aToC",
+						"source": "A",
+						"target": "C",
+						"attributes": {}
+					},
+					{
+						"key": "CtoB",
+						"source": "C",
+						"target": "B",
+						"attributes": {}
+					}
+				]
+			}
+		},
+		{
+			"key": "replace_fork_join_to_action_edges",
+			"patternGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "A",
+						"attributes": {
+							"type": ["Fork", "Join"]
+						}
+					},
+					{
+						"key": "B",
+						"attributes": {
+							"type": "Action"
+						}
+					}
+				],
+				"edges": [
+					{
+						"key": "aToB",
+						"source": "A",
+						"target": "B",
+						"attributes": {}
+					}
+				]
+			},
+			"replacementGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "A",
+						"attributes": {
+							"type": "Fork"
+						}
+					},
+					{
+						"key": "B",
+						"attributes": {
+							"type": "Action"
+						}
+					},
+					{
+						"key": "C",
+						"attributes": {
+							"type": "Place"
+						}
+					}
+				],
+				"edges": [
+					{
+						"key": "aToC",
+						"source": "A",
+						"target": "C",
+						"attributes": {}
+					},
+					{
+						"key": "CtoB",
+						"source": "C",
+						"target": "B",
+						"attributes": {}
+					}
+				]
+			}
+		},
+		{
+			"key": "replace_action_to_fork_join_edges",
+			"patternGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "A",
+						"attributes": {
+							"type": "Action"
+						}
+					},
+					{
+						"key": "B",
+						"attributes": {
+							"type": ["Join", "Fork"]
+						}
+					}
+				],
+				"edges": [
+					{
+						"key": "aToB",
+						"source": "A",
+						"target": "B",
+						"attributes": {}
+					}
+				]
+			},
+			"replacementGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "A",
+						"attributes": {
+							"type": "Action"
+						}
+					},
+					{
+						"key": "B",
+						"attributes": {}
+					},
+					{
+						"key": "C",
+						"attributes": {
+							"type": "Place"
+						}
+					}
+				],
+				"edges": [
+					{
+						"key": "aToC",
+						"source": "A",
+						"target": "C",
+						"attributes": {}
+					},
+					{
+						"key": "CtoB",
+						"source": "C",
+						"target": "B",
+						"attributes": {}
+					}
+				]
+			}
+		},
+		{
+			"key": "replace_control_nodes_with_places",
+			"patternGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "A",
+						"attributes": {
+							"type": [
+								"Initial",
+								"Decision",
+								"Merge",
+								"Decision",
+								"Merge",
+								"FlowFinal",
+								"ActivityFinal"
+							]
+						}
+					}
+				],
+				"edges": []
+			},
+			"replacementGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "A",
+						"attributes": {
+							"type": "Place"
+						}
+					}
+				],
+				"edges": []
+			}
+		},
+		{
+			"key": "replace_action_nodes_with_transitions",
+			"patternGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "A",
+						"attributes": {
+							"type": ["Action"]
+						}
+					}
+				],
+				"edges": []
+			},
+			"replacementGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "A",
+						"attributes": {
+							"type": "Transition"
+						}
+					}
+				],
+				"edges": []
+			}
+		},
+		{
+			"key": "replace_fork_nodes_with_transitions",
+			"patternGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "A",
+						"attributes": {
+							"type": ["Fork", "Join"]
+						}
+					}
+				],
+				"edges": []
+			},
+			"replacementGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "A",
+						"attributes": {
+							"type": "Transition"
+						}
+					}
+				],
+				"edges": []
+			}
 		}
 	],
 	"sequence": [
+		{
+			"rule": "replace_controlnode_to_controlnode_edges",
+			"options": {
+				"mode": "all"
+			}
+		},
+		{
+			"rule": "replace_fork_join_to_action_edges",
+			"options": {
+				"mode": "all"
+			}
+		},
+		{
+			"rule": "replace_action_to_fork_join_edges",
+			"options": {
+				"mode": "all"
+			}
+		},
 		{
 			"rule": "replace_standard_activity_edges",
 			"options": {
@@ -320,7 +583,19 @@
 			}
 		},
 		{
-			"rule": "replace_controlnode_to_controlnode_edges",
+			"rule": "replace_control_nodes_with_places",
+			"options": {
+				"mode": "all"
+			}
+		},
+		{
+			"rule": "replace_action_nodes_with_transitions",
+			"options": {
+				"mode": "all"
+			}
+		},
+		{
+			"rule": "replace_fork_nodes_with_transitions",
 			"options": {
 				"mode": "all"
 			}

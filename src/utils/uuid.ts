@@ -11,3 +11,7 @@ export function createNodeUuid() {
 export function createEdgeUuid() {
 	return 'e_' + createNormalizedUuid();
 }
+
+export function createParameterUuid() {
+	return 'p_' + createNormalizedUuid();
+}

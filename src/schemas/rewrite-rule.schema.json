@@ -21,7 +21,7 @@
 			"$ref": "patterngraph.schema.json"
 		},
 		"replacementGraph": {
-			"$ref": "graph.schema.json"
+			"$ref": "replacementgraph.schema.json"
 		}
 	},
 	"required": ["key", "patternGraph", "replacementGraph"]

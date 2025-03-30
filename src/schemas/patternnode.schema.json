@@ -1,0 +1,49 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "patternnode.schema.json",
+	"title": "Pattern Node Schema",
+	"type": "object",
+	"additionalProperties": false,
+	"properties": {
+		"key": {
+			"type": "string"
+		},
+		"attributes": {
+			"type": "object",
+			"properties": {
+				"type": {
+					"anyOf": [
+						{ "type": "string" },
+						{
+							"type": "array",
+							"items": {
+								"anyOf": [{ "type": "string" }]
+							}
+						}
+					]
+				}
+			},
+			"patternProperties": {
+				"^(?!type$).*": {
+					"anyOf": [
+						{ "type": "number" },
+						{ "type": "string" },
+						{ "type": "boolean" },
+						{ "type": "null" },
+						{
+							"type": "array",
+							"items": {
+								"anyOf": [
+									{ "type": "number" },
+									{ "type": "string" },
+									{ "type": "boolean" }
+								]
+							}
+						}
+					]
+				}
+			}
+		}
+	},
+	"required": ["key"]
+}

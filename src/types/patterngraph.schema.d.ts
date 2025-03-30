@@ -5,7 +5,7 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
-export interface PatterngraphSchema {
+export interface PatternGraphSchema {
   options: {
     /**
      * One of directed or undirected
@@ -14,36 +14,24 @@ export interface PatterngraphSchema {
     allowSelfLoops?: boolean;
     multi?: boolean;
   };
-  nodes: GraphNodeSchema[];
+  nodes: PatternNodeSchema[];
   edges: GraphEdgeSchema[];
   nacs?: {
-    nodes?: GraphNodeSchema[];
+    nodes?: PatternNodeSchema[];
     edges?: GraphEdgeSchema[];
     [k: string]: unknown;
   };
   [k: string]: unknown;
 }
-export interface GraphNodeSchema {
-  /**
-   * The node's ID, also used as node in an edges source/target etc.
-   */
+export interface PatternNodeSchema {
   key: string;
-  /**
-   * The node's attributes.
-   */
-  attributes: {
-    type?: string;
+  attributes?: {
+    type?: string | string[];
     /**
      * This interface was referenced by `undefined`'s JSON-Schema definition
      * via the `patternProperty` "^(?!type$).*".
      */
-    [k: string]: number | string | boolean | GraphInstantiatedAttributeSchema;
-  };
-}
-export interface GraphInstantiatedAttributeSchema {
-  type: string;
-  args: {
-    [k: string]: unknown;
+    [k: string]: number | string | boolean | null | (number | string | boolean)[];
   };
 }
 export interface GraphEdgeSchema {
@@ -69,5 +57,11 @@ export interface GraphEdgeSchema {
      * via the `patternProperty` "^(?!type$).*".
      */
     [k: string]: number | string | boolean | GraphInstantiatedAttributeSchema;
+  };
+}
+export interface GraphInstantiatedAttributeSchema {
+  type: string;
+  args: {
+    [k: string]: unknown;
   };
 }

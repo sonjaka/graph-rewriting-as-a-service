@@ -1,0 +1,84 @@
+{
+	"hostgraph": {
+		"options": {
+			"type": "directed"
+		},
+		"nodes": [
+			{
+				"key": "A",
+				"attributes": {
+					"label": "A"
+				}
+			},
+			{
+				"key": "B",
+				"attributes": {
+					"label": "B",
+					"test": "keep"
+				}
+			},
+			{
+				"key": "C",
+				"attributes": {
+					"label": "C"
+				}
+			}
+		],
+		"edges": [
+			{
+				"key": "aToB",
+				"source": "A",
+				"target": "B",
+				"attributes": {}
+			},
+			{
+				"key": "bToC",
+				"source": "B",
+				"target": "C",
+				"attributes": {}
+			},
+			{
+				"key": "cToA",
+				"source": "C",
+				"target": "A",
+				"attributes": {}
+			}
+		]
+	},
+	"rules": [
+		{
+			"key": "update_node",
+			"patternGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "B",
+						"attributes": {
+							"label": "B"
+						}
+					}
+				],
+				"edges": []
+			},
+			"replacementGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "B",
+						"attributes": {
+							"replacement": "Attribute 'keep' should be gone!"
+						},
+						"rewriteOptions": {
+							"attributeReplacementMode": "replace"
+						}
+					}
+				],
+				"edges": []
+			}
+		}
+	]
+}

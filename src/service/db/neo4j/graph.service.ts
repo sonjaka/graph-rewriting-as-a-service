@@ -17,7 +17,6 @@ import {
 	DBGraphEdgeResult,
 	DBGraphEdgeMetadata,
 	DBGraphType,
-	DBGraphNode,
 	DBGraphEdge,
 	DBGraphPatternMatchResult,
 	DBGraphNACs,
@@ -25,10 +24,11 @@ import {
 import {
 	computeEdgeQueryString,
 	computeInjectivityClause,
-	computeNodeQueryString,
-	createNodeCypher,
 	computeNacClause,
-} from './utils/cypher';
+	computeNodeQuery,
+} from './cypher/rewrite';
+import { createNodeQuery, updateNodeQuery } from './cypher/base';
+import { PatternNodeSchema } from '../../../types/patterngraph.schema';
 
 type Neo4jNode = Node<Integer, DBGraphNodeProperties>;
 type Neo4jRelationship = Relationship<Integer, DBGraphEdgeProperties>;
@@ -49,6 +49,8 @@ type Neo4jPatternMatchResult = Record<
 type Neo4jCreateNodeResult = Neo4jNodeResult;
 type Neo4jUpdateNodeResult = Neo4jNodeResult;
 type Neo4jGetNodesResult = Neo4jNodeResult;
+
+type PatternNodeMetadata = Exclude<PatternNodeSchema['attributes'], undefined>;
 
 export class Neo4jGraphService implements IDBGraphService {
 	defaultNodeLabel = `GRS_Node`;
@@ -72,7 +74,7 @@ export class Neo4jGraphService implements IDBGraphService {
 		const nodeLabels = this.constructNodeLabelsFromAttributes(metadata);
 
 		const $nodeVar = 'n';
-		const { cypher, params } = createNodeCypher($nodeVar, nodeLabels, metadata);
+		const { cypher, params } = createNodeQuery($nodeVar, nodeLabels, metadata);
 		const res = await this.session.executeWrite((tx: ManagedTransaction) =>
 			tx.run<Neo4jCreateNodeResult>(cypher, params)
 		);
@@ -86,33 +88,34 @@ export class Neo4jGraphService implements IDBGraphService {
 	public async updateNode(
 		metadata: DBGraphNodeMetadata,
 		internalId: DBGraphNodeInternalId,
-		oldTypes: string[] = []
+		oldTypes: string[] = [],
+		options = {}
 	): Promise<DBGraphNodeResult> {
-		if (internalId) {
-			metadata['_grs_internalId'] = internalId;
+		if (!internalId) {
+			throw new Error(
+				'Neo4jGraphService: no internalId given in updateNode clause'
+			);
 		}
+		metadata['_grs_internalId'] = internalId;
 
 		const nodeLabels = this.constructNodeLabelsFromAttributes(metadata);
 
-		let cypher = '';
-		if (oldTypes.length) {
-			const oldNodeType = oldTypes.join(':');
+		const removedLabels = oldTypes.filter((type) => !nodeLabels.includes(type));
 
-			cypher = `MATCH (n:\`${oldNodeType}\` { _grs_internalId: $internalId }) \
-		        REMOVE n:\`${oldNodeType}\` \
-		        SET n:${nodeLabels.map((label) => '`' + label + '`').join(':')}, n += $metadata \
-		        RETURN n`;
-		} else {
-			cypher = `MATCH (n { _grs_internalId: $internalId }) \
-		        SET n += $metadata \
-		        RETURN n`;
-		}
-
+		const nodeVar = 'n';
+		const { cypher, params } = updateNodeQuery(
+			nodeVar,
+			internalId,
+			nodeLabels,
+			removedLabels,
+			metadata,
+			options
+		);
 		const res = await this.session.executeWrite((tx: ManagedTransaction) =>
-			tx.run<Neo4jUpdateNodeResult>(cypher, { internalId, metadata })
+			tx.run<Neo4jUpdateNodeResult>(cypher, params)
 		);
 
-		const nodeRecords = res.records.map((record) => record.get('n'));
+		const nodeRecords = res.records.map((record) => record.get(nodeVar));
 		const nodes = this.mapNodeRecordsToNodesResult(nodeRecords);
 
 		return nodes[0];
@@ -325,7 +328,7 @@ export class Neo4jGraphService implements IDBGraphService {
 	 * @returns {Promise<DBGraphPatternMatchResult[] | []>}
 	 */
 	public async findPatternMatch(
-		nodes: DBGraphNode[],
+		nodes: PatternNodeSchema[],
 		edges: DBGraphEdge[],
 		type: DBGraphType = 'undirected',
 		homo = true,
@@ -334,18 +337,29 @@ export class Neo4jGraphService implements IDBGraphService {
 		let query = '';
 		let hasWhere = false;
 		const queryVars: string[] = [];
+		let parameters = {};
+
+		const whereClauses: string[] = [];
 
 		const nodesQueries: string[] = [];
 		nodes.forEach((node) => {
 			queryVars.push(node.key);
 
-			const nodeLabels = this.constructNodeLabelsFromAttributes(
-				node.attributes
+			let nodeLabels: string[] = [];
+			if (node.attributes) {
+				nodeLabels = this.constructNodeLabelsFromAttributes(node.attributes);
+			}
+
+			const { cypher, where, params } = computeNodeQuery(
+				node.key,
+				nodeLabels,
+				node.attributes ?? {}
 			);
 
-			nodesQueries.push(
-				computeNodeQueryString(node.key, nodeLabels, node.attributes)
-			);
+			if (where) whereClauses.push(where);
+			if (params) parameters = { ...parameters, ...params };
+
+			nodesQueries.push(cypher);
 		});
 		query += nodesQueries.join(', ');
 
@@ -394,11 +408,21 @@ export class Neo4jGraphService implements IDBGraphService {
 			return [{ nodes: {}, edges: {} }];
 		}
 
+		if (whereClauses.length) {
+			if (!hasWhere) {
+				query += ' WHERE';
+			} else {
+				query += ' AND';
+			}
+
+			query += whereClauses.join(' AND');
+		}
+
 		// Else build cypher and query database
 		const cypher = `MATCH ${query} RETURN ${queryVars.join(', ')}`;
 
 		const res = await this.session.executeRead((tx: ManagedTransaction) =>
-			tx.run<Neo4jPatternMatchResult>(cypher)
+			tx.run<Neo4jPatternMatchResult>(cypher, parameters)
 		);
 
 		const result = this.mapPatternMatchToResult(res, queryVars);
@@ -515,10 +539,14 @@ export class Neo4jGraphService implements IDBGraphService {
 		}
 	}
 
-	private constructNodeLabelsFromAttributes(attributes: DBGraphNodeMetadata) {
+	private constructNodeLabelsFromAttributes(
+		attributes: DBGraphNodeMetadata | PatternNodeMetadata
+	) {
 		const nodeTypes = [this.defaultNodeLabel];
 		if (attributes.type) {
-			nodeTypes.push(attributes.type);
+			if (!Array.isArray(attributes.type)) {
+				nodeTypes.push(attributes.type);
+			}
 		}
 
 		return nodeTypes;

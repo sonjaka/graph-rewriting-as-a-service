@@ -1,7 +1,7 @@
 {
 	"$schema": "http://json-schema.org/draft-07/schema#",
-	"$id": "patterngraph.schema.json",
-	"title": "Pattern Graph Schema",
+	"$id": "replacementgraph.schema.json",
+	"title": "Replacement Graph Schema",
 	"type": "object",
 	"properties": {
 		"options": {
@@ -24,30 +24,13 @@
 		"nodes": {
 			"type": "array",
 			"items": {
-				"$ref": "patternnode.schema.json"
+				"$ref": "replacementnode.schema.json"
 			}
 		},
 		"edges": {
 			"type": "array",
 			"items": {
 				"$ref": "edge.schema.json"
-			}
-		},
-		"nacs": {
-			"type": "object",
-			"properties": {
-				"nodes": {
-					"type": "array",
-					"items": {
-						"$ref": "patternnode.schema.json"
-					}
-				},
-				"edges": {
-					"type": "array",
-					"items": {
-						"$ref": "edge.schema.json"
-					}
-				}
 			}
 		}
 	},

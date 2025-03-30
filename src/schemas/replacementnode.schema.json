@@ -1,0 +1,48 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "replacementnode.schema.json",
+	"title": "Replacement Node Schema",
+	"type": "object",
+	"additionalProperties": false,
+	"properties": {
+		"key": {
+			"type": "string"
+		},
+		"attributes": {
+			"type": "object",
+			"properties": {
+				"type": {
+					"description": "If given, the type will be used as a Neo4j Node label. Allows for easier debugging.",
+					"type": "string"
+				}
+			},
+			"patternProperties": {
+				"^(?!type$).*": {
+					"anyOf": [
+						{ "type": "number" },
+						{ "type": "string" },
+						{ "type": "boolean" },
+						{ "type": "null" },
+						{ "$ref": "instantiated-attribute.schema.json" }
+					]
+				}
+			}
+		},
+		"rewriteOptions": {
+			"type": "object",
+			"properties": {
+				"attributeReplacementMode": {
+					"description": "Defines how the attributes are handles during rewrite. 'Modifiy' mode adds or updates the given attributes. Setting an attribute to null deletes it. 'Replace' mode deletes all attributes of the matched node and then sets the given attributes. 'Delete' mode deletes all attributes and doesn't add any new ones.",
+					"enum": ["modify", "replace", "delete"],
+					"default": "modify"
+				},
+				"cloneSearchmatchNode": {
+					"description": "Allows definition of a node matches through the search pattern to be cloned. The value should be the key of the pattern node. This option clones the node with all attributes and connected edges. Given attributes modifications will be applied after cloning.",
+					"type": "string"
+				}
+			},
+			"additionalProperties": false
+		}
+	},
+	"required": ["key"]
+}

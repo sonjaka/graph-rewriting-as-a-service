@@ -14,6 +14,7 @@
 			"type": "object",
 			"properties": {
 				"type": {
+					"description": "If given, the type will be used as a Neo4j Node label. Allows for easier debugging.",
 					"type": "string"
 				}
 			},
@@ -22,8 +23,7 @@
 					"oneOf": [
 						{ "type": "number" },
 						{ "type": "string" },
-						{ "type": "boolean" },
-						{ "$ref": "instantiated-attribute.schema.json" }
+						{ "type": "boolean" }
 					]
 				}
 			}

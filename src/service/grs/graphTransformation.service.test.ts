@@ -50,7 +50,11 @@ import {
 	expectedOutput as updateEdgeExpectedOutput,
 } from './testutils/updateEdge';
 
-import { createNodeUuid, createEdgeUuid } from '../../utils/uuid';
+import {
+	createNodeUuid,
+	createEdgeUuid,
+	createParameterUuid,
+} from '../../utils/uuid';
 
 vi.mock('../../utils/uuid');
 
@@ -104,7 +108,6 @@ describe('Test grs service', () => {
 			// (except for the changed ids, which we did not respect in the mock above)
 			expect(result).toMatchObject({
 				options: sampleGraphData.options,
-				attributes: sampleGraphData.attributes,
 				nodes: result.nodes,
 				edges: result.edges,
 			});
@@ -127,7 +130,7 @@ describe('Test grs service', () => {
 	});
 });
 
-describe('Integration tests for grs service agains testcontainers', () => {
+describe('Integration tests for grs service against testcontainers', () => {
 	let container: StartedNeo4jContainer;
 	let driver: Driver;
 	let session: Session;
@@ -147,6 +150,22 @@ describe('Integration tests for grs service agains testcontainers', () => {
 		graphService = new Neo4jGraphService(session);
 
 		vi.resetAllMocks(); // Clear and set back implementation
+
+		let nodeCount = 0;
+		let edgeCount = 0;
+		let paramCount = 0;
+		vi.mocked(createEdgeUuid).mockImplementation(() => {
+			edgeCount++;
+			return `e_${edgeCount}`;
+		});
+		vi.mocked(createNodeUuid).mockImplementation(() => {
+			nodeCount++;
+			return `n_${nodeCount}`;
+		});
+		vi.mocked(createParameterUuid).mockImplementation(() => {
+			paramCount++;
+			return `p_${paramCount}`;
+		});
 	});
 
 	afterEach(async () => {
@@ -167,17 +186,6 @@ describe('Integration tests for grs service agains testcontainers', () => {
 	test('Test addition of simple node', async () => {
 		const grsService = new GraphTransformationService(graphService);
 
-		let nodeCount = 0;
-		let edgeCount = 0;
-		vi.mocked(createEdgeUuid).mockImplementation(() => {
-			edgeCount++;
-			return `e_${edgeCount}`;
-		});
-		vi.mocked(createNodeUuid).mockImplementation(() => {
-			nodeCount++;
-			return `n_${nodeCount}`;
-		});
-
 		const output = await grsService.transformGraph(
 			addNodeInput.hostgraph,
 			addNodeInput.rules ?? []
@@ -185,40 +193,20 @@ describe('Integration tests for grs service agains testcontainers', () => {
 
 		expectOutputGraphToMatchExpectedOutputGraph(output, addNodeExpectedOutput);
 	}, 10000);
+
 	test('Test addition of simple edge', async () => {
 		const grsService = new GraphTransformationService(graphService);
 
-		let nodeCount = 0;
-		let edgeCount = 0;
-		vi.mocked(createEdgeUuid).mockImplementation(() => {
-			edgeCount++;
-			return `e_${edgeCount}`;
-		});
-		vi.mocked(createNodeUuid).mockImplementation(() => {
-			nodeCount++;
-			return `n_${nodeCount}`;
-		});
-
 		const output = await grsService.transformGraph(
 			addEdgeInput.hostgraph,
-			addEdgeInput.rules ?? []
+			addEdgeInput.rules
 		);
 
 		expectOutputGraphToMatchExpectedOutputGraph(output, addEdgeExpectedOutput);
 	}, 10000);
+
 	test('Test removal of simple node', async () => {
 		const grsService = new GraphTransformationService(graphService);
-
-		let nodeCount = 0;
-		let edgeCount = 0;
-		vi.mocked(createEdgeUuid).mockImplementation(() => {
-			edgeCount++;
-			return `e_${edgeCount}`;
-		});
-		vi.mocked(createNodeUuid).mockImplementation(() => {
-			nodeCount++;
-			return `n_${nodeCount}`;
-		});
 
 		const output = await grsService.transformGraph(
 			removeNodeInput.hostgraph,
@@ -230,19 +218,9 @@ describe('Integration tests for grs service agains testcontainers', () => {
 			removeNodeExpectedOutput
 		);
 	}, 10000);
+
 	test('Test removal of simple edge', async () => {
 		const grsService = new GraphTransformationService(graphService);
-
-		let nodeCount = 0;
-		let edgeCount = 0;
-		vi.mocked(createEdgeUuid).mockImplementation(() => {
-			edgeCount++;
-			return `e_${edgeCount}`;
-		});
-		vi.mocked(createNodeUuid).mockImplementation(() => {
-			nodeCount++;
-			return `n_${nodeCount}`;
-		});
 
 		const output = await grsService.transformGraph(
 			removeEdgeInput.hostgraph,
@@ -254,20 +232,11 @@ describe('Integration tests for grs service agains testcontainers', () => {
 			removeEdgeExpectedOutput
 		);
 	}, 10000);
+
 	test('Test update of simple node', async () => {
 		const grsService = new GraphTransformationService(graphService);
 
-		let nodeCount = 0;
-		let edgeCount = 0;
-		vi.mocked(createEdgeUuid).mockImplementation(() => {
-			edgeCount++;
-			return `e_${edgeCount}`;
-		});
-		vi.mocked(createNodeUuid).mockImplementation(() => {
-			nodeCount++;
-			return `n_${nodeCount}`;
-		});
-
+		// Default mode: modify
 		const output = await grsService.transformGraph(
 			updateNodeInput.hostgraph,
 			updateNodeInput.rules ?? []
@@ -278,19 +247,9 @@ describe('Integration tests for grs service agains testcontainers', () => {
 			updateNodeExpectedOutput
 		);
 	}, 10000);
+
 	test('Test update of simple edge', async () => {
 		const grsService = new GraphTransformationService(graphService);
-
-		let nodeCount = 0;
-		let edgeCount = 0;
-		vi.mocked(createEdgeUuid).mockImplementation(() => {
-			edgeCount++;
-			return `e_${edgeCount}`;
-		});
-		vi.mocked(createNodeUuid).mockImplementation(() => {
-			nodeCount++;
-			return `n_${nodeCount}`;
-		});
 
 		const output = await grsService.transformGraph(
 			updateEdgeInput.hostgraph,
@@ -304,9 +263,9 @@ describe('Integration tests for grs service agains testcontainers', () => {
 	}, 10000);
 	test.todo('Test replacement of connected nodes');
 	test.todo('Test replacement of connected nodes');
-	// REAL WORLD Examples
-	test.todo('Test transformation of UML to petrinet');
-	test.todo('Test transformation of UML to petrinet');
+	// // REAL WORLD Examples
+	// test.todo('Test transformation of UML to petrinet');
+	// test.todo('Test transformation of UML to petrinet');
 });
 
 function expectOutputGraphToMatchExpectedOutputGraph(

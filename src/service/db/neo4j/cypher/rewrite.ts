@@ -1,29 +1,66 @@
+import { createParameterUuid } from '../../../../utils/uuid';
 import { DBGraphNACs } from '../../types';
+import {
+	computeAttributesString,
+	MatchQueryComputationResult,
+	sanitizeIdentifier,
+} from './utils';
 
-function sanitizeStringLiteral(string: string) {
-	string.trim();
-	string.replace(/['|\u0027]/g, "\u005c' ");
-	string.replace(/["|\u0022]/g, '\u005c"');
+function computeAttributeWhereClause(
+	attributes: Record<string, unknown>,
+	matchVariable: string
+) {
+	let clause = '';
+	const params: Record<string, unknown> = {};
 
-	return string;
-}
+	for (const [attribute, value] of Object.entries(attributes)) {
+		if (clause) {
+			clause += ' AND';
+		}
 
-function sanitizeIdentifier(string: string) {
-	string = string.trim();
-	string = string.replace(/[`|\u0060]/g, '``');
+		const paramId = createParameterUuid();
 
-	return string;
-}
+		params[paramId] = value;
 
-function computeAttributesString(attributes: Record<string, unknown>) {
-	const attributeStrings = [];
-	for (const [key, value] of Object.entries(attributes)) {
-		attributeStrings.push(
-			`${sanitizeStringLiteral(key)}:"${value instanceof String ? sanitizeStringLiteral(value as string) : value}"`
-		);
+		if (Array.isArray(value)) {
+			clause += ` ${matchVariable}.${attribute} IN $${paramId}`;
+		} else {
+			clause += ` ${matchVariable}.${attribute} = $${paramId}`;
+		}
 	}
 
-	return attributeStrings.length ? `{${attributeStrings.join(', ')}}` : '';
+	return { where: `${clause}`, params };
+}
+
+export function computeNodeQuery(
+	matchVariable: string,
+	labels: string[],
+	attributes: Record<string, unknown>
+): MatchQueryComputationResult {
+	const result: MatchQueryComputationResult = {
+		cypher: '',
+	};
+	matchVariable = sanitizeIdentifier(matchVariable);
+
+	// TODO: Use parameters instead of string concatenation for attributes
+	const nodeLabels = labels
+		.map((label) => `\`${sanitizeIdentifier(label)}\``)
+		.join(':');
+
+	if (Object.keys(attributes).length) {
+		const { where, params } = computeAttributeWhereClause(
+			attributes,
+			matchVariable
+		);
+		result['where'] = where;
+		result['params'] = params;
+	}
+
+	// const metadata = computeAttributesString(attributes);
+
+	result.cypher = `(\`${matchVariable}\`:${nodeLabels})`;
+
+	return result;
 }
 
 export function computeNodeQueryString(
@@ -154,27 +191,9 @@ export function computeNacClause(nacs: DBGraphNACs[], hasWhere: boolean) {
 
 		cypher += ` RETURN COUNT(*) as nac_matches${index} }`;
 
-		cypher += ` WITH * WHERE nac_matches${index}=0 `;
+		cypher += ` WITH * WHERE nac_matches${index}=0`;
 		hasWhere = true;
 	});
 
 	return { cypher, hasWhere };
-}
-
-export function createNodeCypher(
-	matchVariable: string,
-	labels: string[],
-	attributes: Record<string, unknown> = {}
-) {
-	const nodeLabels = labels
-		.map((label) => `\`${sanitizeIdentifier(label)}\``)
-		.join(':');
-
-	const params: Record<string, Record<string, unknown>> = {};
-	if (attributes) {
-		params.nodeMetadata = attributes;
-	}
-	const cypher = `CREATE (${matchVariable}:${nodeLabels}${Object.entries(params?.nodeMetadata).length ? ' $nodeMetadata' : ''}) RETURN ${matchVariable}`;
-
-	return { cypher, params };
 }
