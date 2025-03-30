@@ -1,3 +1,5 @@
+import { PatternNodeSchema } from '../../types/patternnode.schema';
+
 export type DBGraphNodeInternalId = string;
 export type DBGraphEdgeInternalId = string;
 
@@ -28,7 +30,7 @@ export interface DBGraphEdgeMetadata {
 
 export interface DBGraphNode {
 	key: DBGraphNodeInternalId;
-	attributes: DBGraphNodeMetadata;
+	attributes?: DBGraphNodeMetadata;
 }
 
 export interface DBGraphEdge {
@@ -96,7 +98,7 @@ export interface IDBGraphService {
 	): Promise<DBGraphEdgeResult[]>;
 	getAllEdges(): Promise<DBGraphEdgeResult[]>;
 	findPatternMatch(
-		nodes: DBGraphNode[],
+		nodes: PatternNodeSchema[],
 		edges: DBGraphEdge[],
 		type: DBGraphType
 	): Promise<DBGraphPatternMatchResult[] | []>;

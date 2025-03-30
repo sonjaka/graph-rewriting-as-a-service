@@ -17,7 +17,6 @@ import {
 	DBGraphEdgeResult,
 	DBGraphEdgeMetadata,
 	DBGraphType,
-	DBGraphNode,
 	DBGraphEdge,
 	DBGraphPatternMatchResult,
 	DBGraphNACs,
@@ -25,11 +24,11 @@ import {
 import {
 	computeEdgeQueryString,
 	computeInjectivityClause,
-	computeNodeQueryString,
 	createNodeCypher,
 	computeNacClause,
 	computeNodeQuery,
 } from './utils/cypher';
+import { PatternNodeSchema } from '../../../types/patterngraph.schema';
 
 type Neo4jNode = Node<Integer, DBGraphNodeProperties>;
 type Neo4jRelationship = Relationship<Integer, DBGraphEdgeProperties>;
@@ -50,6 +49,8 @@ type Neo4jPatternMatchResult = Record<
 type Neo4jCreateNodeResult = Neo4jNodeResult;
 type Neo4jUpdateNodeResult = Neo4jNodeResult;
 type Neo4jGetNodesResult = Neo4jNodeResult;
+
+type PatternNodeMetadata = Exclude<PatternNodeSchema['attributes'], undefined>;
 
 export class Neo4jGraphService implements IDBGraphService {
 	defaultNodeLabel = `GRS_Node`;
@@ -326,7 +327,7 @@ export class Neo4jGraphService implements IDBGraphService {
 	 * @returns {Promise<DBGraphPatternMatchResult[] | []>}
 	 */
 	public async findPatternMatch(
-		nodes: DBGraphNode[],
+		nodes: PatternNodeSchema[],
 		edges: DBGraphEdge[],
 		type: DBGraphType = 'undirected',
 		homo = true,
@@ -343,17 +344,15 @@ export class Neo4jGraphService implements IDBGraphService {
 		nodes.forEach((node) => {
 			queryVars.push(node.key);
 
-			const nodeLabels = this.constructNodeLabelsFromAttributes(
-				node.attributes
-			);
+			let nodeLabels: string[] = [];
+			if (node.attributes) {
+				nodeLabels = this.constructNodeLabelsFromAttributes(node.attributes);
+			}
 
-			// nodesQueries.push(
-			// 	computeNodeQueryString(node.key, nodeLabels, node.attributes)
-			// );
 			const { queryString, where, params } = computeNodeQuery(
 				node.key,
 				nodeLabels,
-				node.attributes
+				node.attributes ?? {}
 			);
 
 			if (where) whereClauses.push(where);
@@ -537,7 +536,9 @@ export class Neo4jGraphService implements IDBGraphService {
 		}
 	}
 
-	private constructNodeLabelsFromAttributes(attributes: DBGraphNodeMetadata) {
+	private constructNodeLabelsFromAttributes(
+		attributes: DBGraphNodeMetadata | PatternNodeMetadata
+	) {
 		const nodeTypes = [this.defaultNodeLabel];
 		if (attributes.type) {
 			if (!Array.isArray(attributes.type)) {

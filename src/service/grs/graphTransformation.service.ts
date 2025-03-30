@@ -18,8 +18,10 @@ import { GraphEdgeSchema } from '../../types/edge.schema';
 import { RewritingRuleProcessingConfigSchema } from '../../types/run-config.schema';
 import { createEdgeUuid, createNodeUuid } from '../../utils/uuid';
 import { InstantiatorService } from '../instantiation/instantiator.service';
-import { PatterngraphSchema } from '../../types/patterngraph.schema';
+import { PatternGraphSchema } from '../../types/patterngraph.schema';
 import { PatternNodeSchema } from '../../types/patternnode.schema';
+import { ReplacementGraphSchema } from '../../types/replacementgraph.schema';
+import { ReplacementNodeSchema } from '../../types/replacementnode.schema';
 
 export type ResultGraphSchema = Omit<GraphSchema, 'nodes' | 'edges'> & {
 	nodes: (Omit<GraphNodeSchema, 'attributes'> & {
@@ -30,11 +32,11 @@ export type ResultGraphSchema = Omit<GraphSchema, 'nodes' | 'edges'> & {
 	})[];
 };
 
-type NodeMatchMap = Map<string, GraphNodeSchema | undefined>;
+type NodeMatchMap = Map<string, ReplacementNodeSchema | undefined>;
 type EdgeMatchMap = Map<string, GraphEdgeSchema | undefined>;
 interface GraphDiffResult {
 	updatedNodes: NodeMatchMap;
-	addedNodes: GraphNodeSchema[];
+	addedNodes: ReplacementNodeSchema[];
 	removedNodes: PatternNodeSchema[];
 	updatedEdges: EdgeMatchMap;
 	addedEdges: GraphEdgeSchema[];
@@ -131,8 +133,8 @@ export class GraphTransformationService {
 
 	private async performInstantiationAndReplacement(
 		match: DBGraphPatternMatchResult,
-		lhs: PatterngraphSchema,
-		rhs: GraphSchema
+		lhs: PatternGraphSchema,
+		rhs: ReplacementGraphSchema
 	) {
 		const rhsInstantiated = this.instantiateAttributes(rhs, match);
 
@@ -230,7 +232,7 @@ export class GraphTransformationService {
 					const internalId = oldNode.key;
 
 					await this.graphService.updateNode(
-						rhsNode.attributes,
+						rhsNode.attributes ?? {},
 						internalId,
 						oldNode.attributes?.type ? [oldNode.attributes?.type] : []
 					);
@@ -239,6 +241,7 @@ export class GraphTransformationService {
 				}
 			}
 		}
+
 		if (Object.entries(occurence.edges).length) {
 			for (const [key, rhsEdge] of adjustments.updatedEdges) {
 				if (rhsEdge) {
@@ -264,7 +267,7 @@ export class GraphTransformationService {
 		for (const rhsNode of adjustments.addedNodes) {
 			const internalId = createNodeUuid();
 
-			await this.graphService.createNode(rhsNode.attributes, internalId);
+			await this.graphService.createNode(rhsNode.attributes ?? {}, internalId);
 
 			preservedNodes[rhsNode.key] = internalId;
 		}
@@ -286,12 +289,12 @@ export class GraphTransformationService {
 	}
 
 	private computeOverlapAndDifferenceOfLhsAndRhs(
-		lhs: PatterngraphSchema,
-		rhs: GraphSchema
+		lhs: PatternGraphSchema,
+		rhs: ReplacementGraphSchema
 	): GraphDiffResult {
 		const updatedNodes: NodeMatchMap = new Map();
 		const removedNodes: PatternNodeSchema[] = [];
-		const addedNodes: GraphNodeSchema[] = [];
+		const addedNodes: ReplacementNodeSchema[] = [];
 
 		const updatedEdges: EdgeMatchMap = new Map();
 		const removedEdges: GraphEdgeSchema[] = [];
@@ -358,9 +361,9 @@ export class GraphTransformationService {
 	}
 
 	private instantiateAttributes(
-		graph: GraphSchema,
+		graph: ReplacementGraphSchema,
 		match: DBGraphPatternMatchResult
-	): GraphSchema {
+	): ReplacementGraphSchema {
 		// clone graph for assignment to make sure attribute is only instantiated for this match
 		const instantiatedGraph = structuredClone(graph);
 
@@ -385,12 +388,15 @@ export class GraphTransformationService {
 		}
 
 		instantiatedGraph.nodes.map((node) => {
-			for (const [key, attribute] of Object.entries(node.attributes)) {
-				if (typeof attribute === 'object') {
-					node.attributes[key] = this.instantiatorService.instantiate(
-						attribute.type,
-						{ ...attribute.args, match: formattedMatch }
-					);
+			if (node.attributes) {
+				for (const [key, attribute] of Object.entries(node.attributes)) {
+					if (attribute === null) continue;
+					if (typeof attribute === 'object') {
+						node.attributes[key] = this.instantiatorService.instantiate(
+							attribute.type,
+							{ ...attribute.args, match: formattedMatch }
+						);
+					}
 				}
 			}
 		});
