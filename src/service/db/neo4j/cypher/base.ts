@@ -26,9 +26,9 @@ export function createNodeQuery(
 export function updateNodeQuery(
 	matchVariable: string,
 	internalId: DBGraphNodeInternalId,
-	labels: string[],
-	removedLabels: string[],
-	attributes: DBGraphNodeMetadata,
+	labels: string[] = [],
+	removedLabels: string[] = [],
+	attributes: DBGraphNodeMetadata = {},
 	options: NodeUpdateRewriteOptions = {}
 ): QueryComputationResult {
 	let cypher = '';
