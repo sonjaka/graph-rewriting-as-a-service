@@ -115,11 +115,11 @@ describe('Test cypher query generation', () => {
 			);
 
 			expect(cypher).toBe(
-				'MATCH (n { _grs_internalId: $internalId }) SET n = {}  RETURN n'
+				'MATCH (n { _grs_internalId: $internalId }) SET n = $metadata  RETURN n'
 			);
 			expect(params).toStrictEqual({
 				internalId: 'n_1234',
-				metadata: { hello: 'world' },
+				metadata: { _grs_internalId: 'n_1234' },
 			});
 		});
 

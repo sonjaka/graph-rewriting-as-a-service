@@ -32,9 +32,8 @@ export function updateNodeQuery(
 	options: NodeUpdateRewriteOptions = {}
 ): QueryComputationResult {
 	let cypher = '';
-	const params = {
+	const params: Record<string, any> = {
 		internalId,
-		metadata: attributes,
 	};
 
 	cypher += `MATCH (${matchVariable} { _grs_internalId: $internalId }) `;
@@ -56,12 +55,16 @@ export function updateNodeQuery(
 	}
 
 	if (options.attributeReplacementMode === 'delete') {
-		cypher += `SET ${matchVariable} = {} `;
+		const metadata = { _grs_internalId: internalId };
+		params['metadata'] = metadata;
+		cypher += `SET ${matchVariable} = $metadata `;
 	} else if (options.attributeReplacementMode === 'replace') {
 		cypher += `SET ${matchVariable} = $metadata `;
+		params['metadata'] = attributes;
 	} else {
 		// default should be to "update" the metadata
 		cypher += `SET ${matchVariable} += $metadata `;
+		params['metadata'] = attributes;
 	}
 
 	cypher += ` RETURN ${matchVariable}`;
