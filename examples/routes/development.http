@@ -1,4 +1,12 @@
 
+
+// ADD EDGES
+POST http://localhost:8080/grs
+Content-Type: application/json
+
+< ../data/development/add_edge.json
+
+// UPDATE NODES
 // Should update node B with additional attributes
 POST http://localhost:8080/grs
 Content-Type: application/json

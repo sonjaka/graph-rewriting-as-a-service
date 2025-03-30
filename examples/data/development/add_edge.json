@@ -1,0 +1,86 @@
+{
+	"hostgraph": {
+		"options": {
+			"type": "directed"
+		},
+		"nodes": [
+			{
+				"key": "A",
+				"attributes": {
+					"label": "A",
+					"type": "Event"
+				}
+			},
+			{
+				"key": "B",
+				"attributes": {
+					"label": "B"
+				}
+			}
+		],
+		"edges": [
+			{
+				"key": "aToB",
+				"source": "A",
+				"target": "B",
+				"attributes": {}
+			}
+		]
+	},
+	"rules": [
+		{
+			"key": "add_edge",
+			"patternGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "A",
+						"attributes": {
+							"label": "A",
+							"type": "Event"
+						}
+					},
+					{
+						"key": "B",
+						"attributes": {
+							"label": "B",
+							"type": "Function"
+						}
+					}
+				],
+				"edges": []
+			},
+			"replacementGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "A",
+						"attributes": {
+							"label": "A",
+							"type": "Event"
+						}
+					},
+					{
+						"key": "B",
+						"attributes": {
+							"label": "B",
+							"type": "Function"
+						}
+					}
+				],
+				"edges": [
+					{
+						"key": "bToA",
+						"source": "B",
+						"target": "A",
+						"attributes": {}
+					}
+				]
+			}
+		}
+	]
+}
