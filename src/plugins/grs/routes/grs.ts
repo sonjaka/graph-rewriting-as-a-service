@@ -33,6 +33,7 @@ const grsHandler = async (
 	const hostgraphData = request.body.hostgraph;
 	const rules = request.body.rules || [];
 	const sequence = request.body.sequence || [];
+	const useHistory = request.body.returnHistory || false;
 
 	if (!dbGraphService) {
 		throw new Error('Graph Service not set');
@@ -44,7 +45,8 @@ const grsHandler = async (
 		const result = await grsService.transformGraph(
 			hostgraphData,
 			rules,
-			sequence
+			sequence,
+			useHistory
 		);
 
 		return okReply(reply, result);

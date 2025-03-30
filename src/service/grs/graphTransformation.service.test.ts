@@ -191,7 +191,10 @@ describe('Integration tests for grs service against testcontainers', () => {
 			addNodeInput.rules ?? []
 		);
 
-		expectOutputGraphToMatchExpectedOutputGraph(output, addNodeExpectedOutput);
+		expectOutputGraphToMatchExpectedOutputGraph(
+			output[0],
+			addNodeExpectedOutput
+		);
 	}, 10000);
 
 	test('Test addition of simple edge', async () => {
@@ -202,7 +205,10 @@ describe('Integration tests for grs service against testcontainers', () => {
 			addEdgeInput.rules
 		);
 
-		expectOutputGraphToMatchExpectedOutputGraph(output, addEdgeExpectedOutput);
+		expectOutputGraphToMatchExpectedOutputGraph(
+			output[0],
+			addEdgeExpectedOutput
+		);
 	}, 10000);
 
 	test('Test removal of simple node', async () => {
@@ -214,7 +220,7 @@ describe('Integration tests for grs service against testcontainers', () => {
 		);
 
 		expectOutputGraphToMatchExpectedOutputGraph(
-			output,
+			output[0],
 			removeNodeExpectedOutput
 		);
 	}, 10000);
@@ -228,7 +234,7 @@ describe('Integration tests for grs service against testcontainers', () => {
 		);
 
 		expectOutputGraphToMatchExpectedOutputGraph(
-			output,
+			output[0],
 			removeEdgeExpectedOutput
 		);
 	}, 10000);
@@ -243,7 +249,7 @@ describe('Integration tests for grs service against testcontainers', () => {
 		);
 
 		expectOutputGraphToMatchExpectedOutputGraph(
-			output,
+			output[0],
 			updateNodeExpectedOutput
 		);
 	}, 10000);
@@ -257,7 +263,7 @@ describe('Integration tests for grs service against testcontainers', () => {
 		);
 
 		expectOutputGraphToMatchExpectedOutputGraph(
-			output,
+			output[0],
 			updateEdgeExpectedOutput
 		);
 	}, 10000);

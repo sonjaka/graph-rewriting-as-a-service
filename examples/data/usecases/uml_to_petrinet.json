@@ -600,5 +600,6 @@
 				"mode": "all"
 			}
 		}
-	]
+	],
+	"returnHistory": true
 }
