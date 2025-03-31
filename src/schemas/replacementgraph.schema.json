@@ -30,7 +30,7 @@
 		"edges": {
 			"type": "array",
 			"items": {
-				"$ref": "edge.schema.json"
+				"$ref": "replacementedge.schema.json"
 			}
 		}
 	},

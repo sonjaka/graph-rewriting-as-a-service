@@ -1,28 +1,36 @@
 {
 	"$schema": "http://json-schema.org/draft-07/schema#",
-	"$id": "replacementnode.schema.json",
-	"title": "Replacement Node Schema",
+	"$id": "replacementedge.schema.json",
+	"title": "Replacement Edge Schema",
 	"type": "object",
 	"additionalProperties": false,
 	"properties": {
 		"key": {
+			"description": "The edge's ID",
+			"type": "string"
+		},
+		"source": {
+			"description": "The key of the node at the edge's source",
+			"type": "string"
+		},
+		"target": {
+			"description": "The key of the node at the edge's target",
 			"type": "string"
 		},
 		"attributes": {
+			"description": "The edges attributes & values",
 			"type": "object",
 			"properties": {
 				"type": {
-					"description": "If given, the type will be used as a Neo4j Node label. Allows for easier debugging.",
 					"type": "string"
 				}
 			},
 			"patternProperties": {
 				"^(?!type$).*": {
-					"anyOf": [
+					"oneOf": [
 						{ "type": "number" },
 						{ "type": "string" },
 						{ "type": "boolean" },
-						{ "type": "null" },
 						{ "$ref": "instantiated-attribute.schema.json" }
 					]
 				}
@@ -40,5 +48,5 @@
 			"additionalProperties": false
 		}
 	},
-	"required": ["key"]
+	"required": ["key", "source", "target", "attributes"]
 }

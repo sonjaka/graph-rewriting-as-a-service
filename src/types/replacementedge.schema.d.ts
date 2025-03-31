@@ -5,18 +5,29 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
-export interface ReplacementNodeSchema {
+export interface ReplacementEdgeSchema {
+  /**
+   * The edge's ID
+   */
   key: string;
-  attributes?: {
-    /**
-     * If given, the type will be used as a Neo4j Node label. Allows for easier debugging.
-     */
+  /**
+   * The key of the node at the edge's source
+   */
+  source: string;
+  /**
+   * The key of the node at the edge's target
+   */
+  target: string;
+  /**
+   * The edges attributes & values
+   */
+  attributes: {
     type?: string;
     /**
      * This interface was referenced by `undefined`'s JSON-Schema definition
      * via the `patternProperty` "^(?!type$).*".
      */
-    [k: string]: number | string | boolean | null | GraphInstantiatedAttributeSchema;
+    [k: string]: number | string | boolean | GraphInstantiatedAttributeSchema;
   };
   rewriteOptions?: {
     /**

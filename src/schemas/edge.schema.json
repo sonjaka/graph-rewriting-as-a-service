@@ -30,8 +30,7 @@
 					"oneOf": [
 						{ "type": "number" },
 						{ "type": "string" },
-						{ "type": "boolean" },
-						{ "$ref": "instantiated-attribute.schema.json" }
+						{ "type": "boolean" }
 					]
 				}
 			}
