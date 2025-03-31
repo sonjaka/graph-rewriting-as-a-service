@@ -22,7 +22,7 @@ import {
 	DBGraphNACs,
 } from '../types';
 import {
-	computeEdgeQueryString,
+	computeEdgeQuery,
 	computeInjectivityClause,
 	computeNacClause,
 	computeNodeQuery,
@@ -367,16 +367,19 @@ export class Neo4jGraphService implements IDBGraphService {
 		edges.forEach((edge) => {
 			queryVars.push(edge.key);
 
-			edgesQueries.push(
-				computeEdgeQueryString(
-					edge.key,
-					this.defaultRelationshipLabel,
-					edge.attributes,
-					edge.source,
-					edge.target,
-					type === 'directed'
-				)
+			const { cypher, where, params } = computeEdgeQuery(
+				edge.key,
+				this.defaultRelationshipLabel,
+				edge.attributes,
+				edge.source,
+				edge.target,
+				type === 'directed'
 			);
+
+			if (where) whereClauses.push(where);
+			if (params) parameters = { ...parameters, ...params };
+
+			edgesQueries.push(cypher);
 		});
 		if (nodesQueries.length && edgesQueries.length) query += ', ';
 		query += edgesQueries.join(', ');

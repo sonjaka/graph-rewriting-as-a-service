@@ -42,7 +42,6 @@ export function computeNodeQuery(
 	};
 	matchVariable = sanitizeIdentifier(matchVariable);
 
-	// TODO: Use parameters instead of string concatenation for attributes
 	const nodeLabels = labels
 		.map((label) => `\`${sanitizeIdentifier(label)}\``)
 		.join(':');
@@ -55,8 +54,6 @@ export function computeNodeQuery(
 		result['where'] = where;
 		result['params'] = params;
 	}
-
-	// const metadata = computeAttributesString(attributes);
 
 	result.cypher = `(\`${matchVariable}\`:${nodeLabels})`;
 
@@ -78,6 +75,34 @@ export function computeNodeQueryString(
 	const metadata = computeAttributesString(attributes);
 
 	return `(\`${matchVariable}\`:${nodeLabels}${metadata.length ? ` ${metadata}` : ''})`;
+}
+
+export function computeEdgeQuery(
+	matchVariable: string,
+	type: string,
+	attributes: Record<string, unknown>,
+	source: string,
+	target: string,
+	directed = false
+): MatchQueryComputationResult {
+	const result: MatchQueryComputationResult = {
+		cypher: '',
+	};
+
+	matchVariable = sanitizeIdentifier(matchVariable);
+
+	if (Object.keys(attributes).length) {
+		const { where, params } = computeAttributeWhereClause(
+			attributes,
+			matchVariable
+		);
+		result['where'] = where;
+		result['params'] = params;
+	}
+
+	result.cypher = `(${source})-${type ? `[\`${matchVariable}\`:${type}]` : `[\`${matchVariable}\`]`}-${directed ? '>' : ''}(${target})`;
+
+	return result;
 }
 
 export function computeEdgeQueryString(

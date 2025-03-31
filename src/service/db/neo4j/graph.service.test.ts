@@ -1314,8 +1314,11 @@ describe('Unit tests for graph service with mocked neo4j functions', () => {
 			await graphService.findPatternMatch([], edges);
 			expect(neo4jSpy).toHaveBeenCalled();
 			expect(mockTx.run).toHaveBeenCalledWith(
-				'MATCH (A)-[`aToB`:GRS_Relationship {hello:"world", attribute:"value"}]-(B) RETURN aToB',
-				{}
+				'MATCH (A)-[`aToB`:GRS_Relationship]-(B) WHERE aToB.hello = $p_1 AND aToB.attribute = $p_2 RETURN aToB',
+				{
+					p_1: 'world',
+					p_2: 'value',
+				}
 			);
 		});
 
@@ -1421,8 +1424,8 @@ describe('Unit tests for graph service with mocked neo4j functions', () => {
 			await graphService.findPatternMatch(nodes, edges, 'directed');
 			expect(neo4jSpy).toHaveBeenCalled();
 			expect(mockTx.run).toHaveBeenCalledWith(
-				'MATCH (`A`:`GRS_Node`), (`B`:`GRS_Node`:`BType`), (`C`:`GRS_Node`), (A)-[`aToB`:GRS_Relationship {type:"edge connector"}]->(B), (B)-[`bToC`:GRS_Relationship]->(C) WHERE B.type = $p_1 RETURN A, B, C, aToB, bToC',
-				{ p_1: 'BType' }
+				'MATCH (`A`:`GRS_Node`), (`B`:`GRS_Node`:`BType`), (`C`:`GRS_Node`), (A)-[`aToB`:GRS_Relationship]->(B), (B)-[`bToC`:GRS_Relationship]->(C) WHERE B.type = $p_1 AND aToB.type = $p_2 RETURN A, B, C, aToB, bToC',
+				{ p_1: 'BType', p_2: 'edge connector' }
 			);
 		});
 
@@ -1480,8 +1483,8 @@ describe('Unit tests for graph service with mocked neo4j functions', () => {
 			await graphService.findPatternMatch(nodes, edges, 'directed', true, nacs);
 			expect(neo4jSpy).toHaveBeenCalled();
 			expect(mockTx.run).toHaveBeenCalledWith(
-				'MATCH (`A`:`GRS_Node`), (`B`:`GRS_Node`:`BType`), (`C`:`GRS_Node`), (A)-[`aToB`:GRS_Relationship {type:"edge connector"}]->(B), (B)-[`bToC`:GRS_Relationship]->(C) WITH * call { WITH * MATCH (`C`:`GRS_Node` {test:"value"})  RETURN COUNT(*) as nac_matches0 } WITH * WHERE nac_matches0=0 AND B.type = $p_1 RETURN A, B, C, aToB, bToC',
-				{ p_1: 'BType' }
+				'MATCH (`A`:`GRS_Node`), (`B`:`GRS_Node`:`BType`), (`C`:`GRS_Node`), (A)-[`aToB`:GRS_Relationship]->(B), (B)-[`bToC`:GRS_Relationship]->(C) WITH * call { WITH * MATCH (`C`:`GRS_Node` {test:"value"})  RETURN COUNT(*) as nac_matches0 } WITH * WHERE nac_matches0=0 AND B.type = $p_1 AND aToB.type = $p_2 RETURN A, B, C, aToB, bToC',
+				{ p_1: 'BType', p_2: 'edge connector' }
 			);
 		});
 	});
