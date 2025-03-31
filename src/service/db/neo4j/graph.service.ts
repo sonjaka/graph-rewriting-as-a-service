@@ -20,6 +20,7 @@ import {
 	DBGraphEdge,
 	DBGraphPatternMatchResult,
 	DBGraphNACs,
+	EdgeUpdateRewriteOptions,
 } from '../types';
 import {
 	computeEdgeQuery,
@@ -241,15 +242,38 @@ export class Neo4jGraphService implements IDBGraphService {
 		internalIdSource: DBGraphNodeInternalId,
 		internalIdTarget: DBGraphNodeInternalId,
 		internalId: DBGraphNodeInternalId,
-		metadata: DBGraphEdgeMetadata
+		metadata: DBGraphEdgeMetadata,
+		options: EdgeUpdateRewriteOptions = {}
 	) {
+		if (!internalId) {
+			throw new Error(
+				'Neo4jGraphService: no internalId given in updateEdge clause'
+			);
+		}
+		const oldEdge = await this.getEdge(internalId);
+
 		await this.deleteEdge(internalId);
+
+		let attributes = {};
+
+		if (options?.attributeReplacementMode === 'delete') {
+			attributes = {};
+		} else if (options?.attributeReplacementMode === 'replace') {
+			attributes = {
+				...metadata,
+			};
+		} else if (oldEdge) {
+			attributes = {
+				...oldEdge.attributes,
+				...metadata,
+			};
+		}
 
 		const edge = await this.createEdge(
 			internalIdSource,
 			internalIdTarget,
 			internalId,
-			metadata
+			attributes
 		);
 
 		return edge;

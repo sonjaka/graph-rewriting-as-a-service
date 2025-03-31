@@ -22,6 +22,7 @@ import { PatternGraphSchema } from '../../types/patterngraph.schema';
 import { PatternNodeSchema } from '../../types/patternnode.schema';
 import { ReplacementGraphSchema } from '../../types/replacementgraph.schema';
 import { ReplacementNodeSchema } from '../../types/replacementnode.schema';
+import { ReplacementEdgeSchema } from '../../types/replacementedge.schema';
 
 export type ResultGraphSchema = Omit<GraphSchema, 'nodes' | 'edges'> & {
 	nodes: (Omit<GraphNodeSchema, 'attributes'> & {
@@ -33,13 +34,13 @@ export type ResultGraphSchema = Omit<GraphSchema, 'nodes' | 'edges'> & {
 };
 
 type NodeMatchMap = Map<string, ReplacementNodeSchema | undefined>;
-type EdgeMatchMap = Map<string, GraphEdgeSchema | undefined>;
+type EdgeMatchMap = Map<string, ReplacementEdgeSchema | undefined>;
 interface GraphDiffResult {
 	updatedNodes: NodeMatchMap;
 	addedNodes: ReplacementNodeSchema[];
 	removedNodes: PatternNodeSchema[];
 	updatedEdges: EdgeMatchMap;
-	addedEdges: GraphEdgeSchema[];
+	addedEdges: ReplacementEdgeSchema[];
 	removedEdges: GraphEdgeSchema[];
 }
 
@@ -279,11 +280,17 @@ export class GraphTransformationService {
 					const sourceInternalId = preservedNodes[rhsEdge.source];
 					const targetInternalId = preservedNodes[rhsEdge.target];
 
+					let options = {};
+					if (rhsEdge?.rewriteOptions) {
+						options = rhsEdge.rewriteOptions;
+					}
+
 					await this.graphService.updateEdge(
 						sourceInternalId,
 						targetInternalId,
 						internalId,
-						rhsEdge.attributes ?? []
+						rhsEdge.attributes ?? [],
+						options
 					);
 
 					preservedNodes[key] = internalId;

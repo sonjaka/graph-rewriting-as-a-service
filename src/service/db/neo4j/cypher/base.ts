@@ -1,9 +1,13 @@
-import { ReplacementNodeSchema } from '../../../../types/replacementnode.schema';
-import { DBGraphNodeInternalId, DBGraphNodeMetadata } from '../../types';
+import {
+	DBGraphEdge,
+	DBGraphEdgeMetadata,
+	DBGraphNodeInternalId,
+	DBGraphNodeMetadata,
+	EdgeUpdateRewriteOptions,
+	NodeUpdateRewriteOptions,
+} from '../../types';
 
 import { QueryComputationResult, sanitizeIdentifier } from './utils';
-
-type NodeUpdateRewriteOptions = ReplacementNodeSchema['rewriteOptions'];
 
 export function createNodeQuery(
 	matchVariable: string,
@@ -52,6 +56,41 @@ export function updateNodeQuery(
 			.join(':');
 
 		cypher += `SET ${matchVariable}:${sanitizedLabels} `;
+	}
+
+	if (options.attributeReplacementMode === 'delete') {
+		const metadata = { _grs_internalId: internalId };
+		params['metadata'] = metadata;
+		cypher += `SET ${matchVariable} = $metadata `;
+	} else if (options.attributeReplacementMode === 'replace') {
+		cypher += `SET ${matchVariable} = $metadata `;
+		params['metadata'] = attributes;
+	} else {
+		// default should be to "update" the metadata
+		cypher += `SET ${matchVariable} += $metadata `;
+		params['metadata'] = attributes;
+	}
+
+	cypher += ` RETURN ${matchVariable}`;
+
+	return { cypher, params };
+}
+
+export function updateEdgeQuery(
+	matchVariable: string,
+	internalIdSource: DBGraphNodeInternalId,
+	internalIdTarget: DBGraphNodeInternalId,
+	internalId: DBGraphNodeInternalId,
+	attributes: DBGraphEdgeMetadata = {},
+	oldEdge: DBGraphEdge,
+	options: EdgeUpdateRewriteOptions = {}
+): QueryComputationResult {
+	const cypher = '';
+	const params: { internalId: string; metadata?: Record<string, unknown> } = {
+		internalId,
+	};
+
+	if (oldEdge) {
 	}
 
 	if (options.attributeReplacementMode === 'delete') {
