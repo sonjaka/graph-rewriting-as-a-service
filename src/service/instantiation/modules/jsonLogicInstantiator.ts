@@ -73,7 +73,6 @@ export class JsonLogicInstantiator
 
 		if (data && typeof data === 'object') {
 			for (const [key, value] of Object.entries(data)) {
-				console.log(typeof value);
 				if (Array.isArray(value)) {
 					(data as AdditionalOperation)[key] = value.map((item) =>
 						this.resolveSearchGraphValue(item, graph)
