@@ -333,7 +333,7 @@ export class GraphTransformationService {
 
 		const updatedEdges: EdgeMatchMap = new Map();
 		const removedEdges: GraphEdgeSchema[] = [];
-		const addedEdges: GraphEdgeSchema[] = [];
+		const addedEdges: ReplacementEdgeSchema[] = [];
 
 		// All nodes in search graph that are also in replacement are "updated"
 		// All nodes in search graph that are not in replacement are "deleted"
