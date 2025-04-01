@@ -3,6 +3,7 @@ import { GraphSchema } from '../../types/grs.schema';
 import { GraphRewritingRuleSchema } from '../../types/rewrite-rule.schema';
 import {
 	DBGraphEdgeMetadata,
+	DBGraphNACs,
 	DBGraphNodeMetadata,
 	DBGraphPatternMatchResult,
 	IDBGraphService,
@@ -97,7 +98,7 @@ export class GraphTransformationService {
 		ruleConfig: GraphRewritingRuleSchema,
 		sequenceConfig?: RewritingRuleProcessingConfigSchema
 	) {
-		const { patternGraph, replacementGraph } = ruleConfig;
+		const { options, patternGraph, replacementGraph } = ruleConfig;
 
 		let repetitions = 1;
 		if (sequenceConfig?.options?.repeat) {
@@ -130,10 +131,21 @@ export class GraphTransformationService {
 				return;
 			}
 
+			let homomorphic = true;
+			if (options && 'homomorphic' in options) {
+				homomorphic = options.homomorphic ? true : false;
+			}
+
+			let nacs: DBGraphNACs[] = [];
+			if (patternGraph.nacs) {
+				nacs = [patternGraph.nacs];
+			}
 			const matches = await this.graphService.findPatternMatch(
 				patternGraph.nodes,
 				patternGraph.edges,
-				patternGraph.options.type
+				patternGraph.options.type,
+				homomorphic,
+				nacs
 			);
 
 			// TODO: Check if match still applies after first replacements have already happened

@@ -107,6 +107,8 @@ export interface IDBGraphService {
 	findPatternMatch(
 		nodes: PatternNodeSchema[],
 		edges: DBGraphEdge[],
-		type: DBGraphType
+		type: DBGraphType,
+		homo: boolean,
+		nacs: DBGraphNACs[]
 	): Promise<DBGraphPatternMatchResult[] | []>;
 }
