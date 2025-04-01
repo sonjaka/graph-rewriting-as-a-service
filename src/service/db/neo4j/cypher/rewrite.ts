@@ -1,5 +1,6 @@
 import { createParameterUuid } from '../../../../utils/uuid';
 import { DBGraphNACs } from '../../types';
+import { DEFAULT_NODE_LABEL } from '../constants';
 import {
 	computeAttributesString,
 	MatchQueryComputationResult,
@@ -55,6 +56,7 @@ export function computeNodeQuery(
 		result['params'] = params;
 	}
 
+	// result.cypher = `(\`${matchVariable}\`)`;
 	result.cypher = `(\`${matchVariable}\`:${nodeLabels})`;
 
 	return result;
@@ -196,7 +198,11 @@ export function computeNacClause(nacs: DBGraphNACs[], hasWhere: boolean) {
 
 		nacNodes?.forEach((node) => {
 			cypher += ` WITH * MATCH `;
-			cypher += computeNodeQueryString(node.key, ['GRS_Node'], node.attributes);
+			cypher += computeNodeQueryString(
+				node.key,
+				[DEFAULT_NODE_LABEL],
+				node.attributes ?? {}
+			);
 			cypher += ` `;
 		});
 
@@ -205,7 +211,7 @@ export function computeNacClause(nacs: DBGraphNACs[], hasWhere: boolean) {
 			// TODO: add directed edges
 			cypher += computeEdgeQueryString(
 				edge.key,
-				'GRS_Relationship',
+				'DEFAULT_RELATIONSHIP_LABEL',
 				edge.attributes,
 				edge.source,
 				edge.target

@@ -35,14 +35,6 @@ export interface GraphNodeSchema {
    * The node's attributes.
    */
   attributes: {
-    /**
-     * If given, the type will be used as a Neo4j Node label. Allows for easier debugging.
-     */
-    type?: string;
-    /**
-     * This interface was referenced by `undefined`'s JSON-Schema definition
-     * via the `patternProperty` "^(?!type$).*".
-     */
     [k: string]: number | string | boolean;
   };
 }
@@ -100,11 +92,6 @@ export interface PatternGraphSchema {
 export interface PatternNodeSchema {
   key: string;
   attributes?: {
-    type?: string | string[];
-    /**
-     * This interface was referenced by `undefined`'s JSON-Schema definition
-     * via the `patternProperty` "^(?!type$).*".
-     */
     [k: string]: number | string | boolean | null | (number | string | boolean)[];
   };
 }
@@ -124,14 +111,6 @@ export interface ReplacementGraphSchema {
 export interface ReplacementNodeSchema {
   key: string;
   attributes?: {
-    /**
-     * If given, the type will be used as a Neo4j Node label. Allows for easier debugging.
-     */
-    type?: string;
-    /**
-     * This interface was referenced by `undefined`'s JSON-Schema definition
-     * via the `patternProperty` "^(?!type$).*".
-     */
     [k: string]: number | string | boolean | null | GraphInstantiatedAttributeSchema;
   };
   rewriteOptions?: {

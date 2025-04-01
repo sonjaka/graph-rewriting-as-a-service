@@ -21,14 +21,6 @@ export interface ReplacementGraphSchema {
 export interface ReplacementNodeSchema {
   key: string;
   attributes?: {
-    /**
-     * If given, the type will be used as a Neo4j Node label. Allows for easier debugging.
-     */
-    type?: string;
-    /**
-     * This interface was referenced by `undefined`'s JSON-Schema definition
-     * via the `patternProperty` "^(?!type$).*".
-     */
     [k: string]: number | string | boolean | null | GraphInstantiatedAttributeSchema;
   };
   rewriteOptions?: {

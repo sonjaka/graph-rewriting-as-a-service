@@ -8,11 +8,6 @@
 export interface PatternNodeSchema {
   key: string;
   attributes?: {
-    type?: string | string[];
-    /**
-     * This interface was referenced by `undefined`'s JSON-Schema definition
-     * via the `patternProperty` "^(?!type$).*".
-     */
     [k: string]: number | string | boolean | null | (number | string | boolean)[];
   };
 }
