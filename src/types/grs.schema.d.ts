@@ -174,5 +174,6 @@ export interface RewritingRuleProcessingConfigSchema {
       min: number;
       max: number;
     };
+    repeat?: number | [number, number];
   };
 }

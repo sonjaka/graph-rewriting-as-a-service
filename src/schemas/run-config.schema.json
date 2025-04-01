@@ -21,14 +21,27 @@
 					"type": "object",
 					"properties": {
 						"min": {
-							"type": "number"
+							"type": "integer"
 						},
 						"max": {
-							"type": "number"
+							"type": "integer"
 						}
 					},
 					"additionalProperties": false,
 					"required": ["min", "max"]
+				},
+				"repeat": {
+					"anyOf": [
+						{ "type": "integer" },
+						{
+							"type": "array",
+							"items": {
+								"type": "integer"
+							},
+							"minItems": 2,
+							"maxItems": 2
+						}
+					]
 				}
 			},
 			"additionalProperties": false,

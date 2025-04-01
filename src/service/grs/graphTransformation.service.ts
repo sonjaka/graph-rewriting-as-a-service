@@ -23,6 +23,7 @@ import { PatternNodeSchema } from '../../types/patternnode.schema';
 import { ReplacementGraphSchema } from '../../types/replacementgraph.schema';
 import { ReplacementNodeSchema } from '../../types/replacementnode.schema';
 import { ReplacementEdgeSchema } from '../../types/replacementedge.schema';
+import { getRandomIntBetween } from '../../utils/numbers';
 
 export type ResultGraphSchema = Omit<GraphSchema, 'nodes' | 'edges'> & {
 	nodes: (Omit<GraphNodeSchema, 'attributes'> & {
@@ -98,53 +99,73 @@ export class GraphTransformationService {
 	) {
 		const { patternGraph, replacementGraph } = ruleConfig;
 
-		// Handle edge case for empty pattern
-		// Additions are still possible!
-		if (!patternGraph.nodes.length && !patternGraph.edges.length) {
-			await this.performInstantiationAndReplacement(
-				{ nodes: {}, edges: {} },
-				patternGraph,
-				replacementGraph
-			);
-
-			return;
+		let repetitions = 1;
+		if (sequenceConfig?.options?.repeat) {
+			if (
+				Array.isArray(sequenceConfig.options.repeat) &&
+				sequenceConfig.options.repeat.length === 2
+			) {
+				const min = sequenceConfig.options.repeat[0];
+				const max = sequenceConfig.options.repeat[1];
+				repetitions = getRandomIntBetween(min, max);
+			} else if (typeof sequenceConfig.options.repeat === 'number') {
+				repetitions = sequenceConfig.options.repeat;
+			} else {
+				throw Error(
+					'GraphTransformationService: sequence.options.repeat is not a number or numberArray'
+				);
+			}
 		}
 
-		const matches = await this.graphService.findPatternMatch(
-			patternGraph.nodes,
-			patternGraph.edges,
-			patternGraph.options.type
-		);
-
-		// TODO: Check if match still applies after first replacements have already happened
-		// --> either we fix this, or we remove option for multiple replacements
-		// --> user can still replace all occurences by sending the request multiple times
-		if (matches.length) {
-			let max = 1;
-
-			if (sequenceConfig) {
-				if (sequenceConfig.options.mode === 'all') {
-					max = matches.length;
-				} else if (
-					sequenceConfig.options.mode === 'interval' &&
-					sequenceConfig.options?.interval?.max
-				) {
-					max = Math.min(sequenceConfig.options.interval.max, matches.length);
-				}
-			}
-
-			for (let i = 0; i < max; i++) {
-				const match = matches[i];
-
+		for (let i = 0; i < repetitions; i++) {
+			// Handle edge case for empty pattern
+			// Additions are still possible!
+			if (!patternGraph.nodes.length && !patternGraph.edges.length) {
 				await this.performInstantiationAndReplacement(
-					match,
+					{ nodes: {}, edges: {} },
 					patternGraph,
 					replacementGraph
 				);
 
-				if (this.trackHistory) {
-					const currentHostgraph = await this.exportHostgraph();
-					this.history.push(currentHostgraph);
+				return;
+			}
+
+			const matches = await this.graphService.findPatternMatch(
+				patternGraph.nodes,
+				patternGraph.edges,
+				patternGraph.options.type
+			);
+
+			// TODO: Check if match still applies after first replacements have already happened
+			// --> either we fix this, or we remove option for multiple replacements
+			// --> user can still replace all occurences by sending the request multiple times
+			if (matches.length) {
+				let max = 1;
+
+				if (sequenceConfig) {
+					if (sequenceConfig.options.mode === 'all') {
+						max = matches.length;
+					} else if (
+						sequenceConfig.options.mode === 'interval' &&
+						sequenceConfig.options?.interval?.max
+					) {
+						max = Math.min(sequenceConfig.options.interval.max, matches.length);
+					}
+				}
+
+				for (let i = 0; i < max; i++) {
+					const match = matches[i];
+
+					await this.performInstantiationAndReplacement(
+						match,
+						patternGraph,
+						replacementGraph
+					);
+
+					if (this.trackHistory) {
+						const currentHostgraph = await this.exportHostgraph();
+						this.history.push(currentHostgraph);
+					}
 				}
 			}
 		}
