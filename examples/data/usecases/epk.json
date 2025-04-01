@@ -403,6 +403,16 @@
 			"options": {
 				"mode": "all"
 			}
+		},
+		{
+			"rule": "add_branches_to_gates",
+			"options": {
+				"mode": "interval",
+				"interval": {
+					"min": 1,
+					"max": 4
+				}
+			}
 		}
 	],
 	"returnHistory": true

@@ -198,8 +198,8 @@
 		{
 			"rule": "add_generation",
 			"options": {
-				"mode": "intervall",
-				"intervall": {
+				"mode": "interval",
+				"interval": {
 					"min": 1,
 					"max": 1
 				}

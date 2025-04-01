@@ -126,10 +126,10 @@ export class GraphTransformationService {
 				if (sequenceConfig.options.mode === 'all') {
 					max = matches.length;
 				} else if (
-					sequenceConfig.options.mode === 'intervall' &&
-					sequenceConfig.options.intervall?.max
+					sequenceConfig.options.mode === 'interval' &&
+					sequenceConfig.options?.interval?.max
 				) {
-					max = sequenceConfig.options.intervall.max;
+					max = Math.min(sequenceConfig.options.interval.max, matches.length);
 				}
 			}
 
@@ -410,20 +410,24 @@ export class GraphTransformationService {
 			edges: [],
 		};
 
-		for (const [key, node] of Object.entries(match.nodes)) {
-			const formattedNode = { ...node };
-			formattedNode.key = key;
-			formattedMatch.nodes.push(formattedNode as GraphNodeSchema);
+		if (match?.nodes) {
+			for (const [key, node] of Object.entries(match.nodes)) {
+				const formattedNode = { ...node };
+				formattedNode.key = key;
+				formattedMatch.nodes.push(formattedNode as GraphNodeSchema);
+			}
 		}
 
-		for (const [key, edge] of Object.entries(match.edges)) {
-			const formattedEdge = { ...edge };
-			formattedEdge.key = key;
-			formattedMatch.edges.push(formattedEdge as GraphEdgeSchema);
+		if (match?.edges) {
+			for (const [key, edge] of Object.entries(match.edges)) {
+				const formattedEdge = { ...edge };
+				formattedEdge.key = key;
+				formattedMatch.edges.push(formattedEdge as GraphEdgeSchema);
+			}
 		}
 
 		instantiatedGraph.nodes.map((node) => {
-			if (node.attributes) {
+			if (node?.attributes) {
 				for (const [key, attribute] of Object.entries(node.attributes)) {
 					if (attribute === null) continue;
 					if (typeof attribute === 'object') {
