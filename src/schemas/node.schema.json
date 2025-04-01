@@ -19,7 +19,8 @@
 					{ "type": "boolean" }
 				]
 			}
-		}
+		},
+		"additionalProperties": false
 	},
 	"required": ["key", "attributes"]
 }

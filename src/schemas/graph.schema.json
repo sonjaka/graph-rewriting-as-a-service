@@ -33,7 +33,8 @@
 			"items": {
 				"$ref": "edge.schema.json"
 			}
-		}
+		},
+		"additionalProperties": false
 	},
 	"required": ["options", "nodes", "edges"]
 }

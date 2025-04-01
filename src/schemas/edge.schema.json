@@ -34,7 +34,8 @@
 					]
 				}
 			}
-		}
+		},
+		"additionalProperties": false
 	},
 	"required": ["key", "source", "target", "attributes"]
 }

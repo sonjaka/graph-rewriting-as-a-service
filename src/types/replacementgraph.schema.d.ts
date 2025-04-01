@@ -16,7 +16,6 @@ export interface ReplacementGraphSchema {
   };
   nodes: ReplacementNodeSchema[];
   edges: ReplacementEdgeSchema[];
-  [k: string]: unknown;
 }
 export interface ReplacementNodeSchema {
   key: string;

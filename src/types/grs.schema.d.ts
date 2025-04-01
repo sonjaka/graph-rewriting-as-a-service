@@ -13,6 +13,7 @@ export interface GraphRewritingRequestSchema {
    * If set to true, the resultset will include the exported hostgraph after each rewriting step in chronological order.
    */
   returnHistory?: boolean;
+  additionalProperties?: never;
 }
 export interface GraphSchema {
   options: {
@@ -25,6 +26,7 @@ export interface GraphSchema {
   };
   nodes: GraphNodeSchema[];
   edges: GraphEdgeSchema[];
+  additionalProperties?: never;
 }
 export interface GraphNodeSchema {
   /**
@@ -37,6 +39,7 @@ export interface GraphNodeSchema {
   attributes: {
     [k: string]: number | string | boolean;
   };
+  additionalProperties?: never;
 }
 export interface GraphEdgeSchema {
   /**
@@ -62,6 +65,7 @@ export interface GraphEdgeSchema {
      */
     [k: string]: number | string | boolean;
   };
+  additionalProperties?: never;
 }
 export interface GraphRewritingRuleSchema {
   key: string;
@@ -83,11 +87,9 @@ export interface PatternGraphSchema {
   nodes: PatternNodeSchema[];
   edges: GraphEdgeSchema[];
   nacs?: {
-    nodes?: PatternNodeSchema[];
-    edges?: GraphEdgeSchema[];
-    [k: string]: unknown;
+    nodes: PatternNodeSchema[];
+    edges: GraphEdgeSchema[];
   };
-  [k: string]: unknown;
 }
 export interface PatternNodeSchema {
   key: string;
@@ -106,7 +108,6 @@ export interface ReplacementGraphSchema {
   };
   nodes: ReplacementNodeSchema[];
   edges: ReplacementEdgeSchema[];
-  [k: string]: unknown;
 }
 export interface ReplacementNodeSchema {
   key: string;

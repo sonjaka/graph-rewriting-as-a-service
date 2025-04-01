@@ -25,11 +25,9 @@ export interface PatternGraphSchema {
   nodes: PatternNodeSchema[];
   edges: GraphEdgeSchema[];
   nacs?: {
-    nodes?: PatternNodeSchema[];
-    edges?: GraphEdgeSchema[];
-    [k: string]: unknown;
+    nodes: PatternNodeSchema[];
+    edges: GraphEdgeSchema[];
   };
-  [k: string]: unknown;
 }
 export interface PatternNodeSchema {
   key: string;
@@ -61,6 +59,7 @@ export interface GraphEdgeSchema {
      */
     [k: string]: number | string | boolean;
   };
+  additionalProperties?: never;
 }
 export interface ReplacementGraphSchema {
   options: {
@@ -73,7 +72,6 @@ export interface ReplacementGraphSchema {
   };
   nodes: ReplacementNodeSchema[];
   edges: ReplacementEdgeSchema[];
-  [k: string]: unknown;
 }
 export interface ReplacementNodeSchema {
   key: string;

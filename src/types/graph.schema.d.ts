@@ -16,6 +16,7 @@ export interface GraphSchema {
   };
   nodes: GraphNodeSchema[];
   edges: GraphEdgeSchema[];
+  additionalProperties?: never;
 }
 export interface GraphNodeSchema {
   /**
@@ -28,6 +29,7 @@ export interface GraphNodeSchema {
   attributes: {
     [k: string]: number | string | boolean;
   };
+  additionalProperties?: never;
 }
 export interface GraphEdgeSchema {
   /**
@@ -53,4 +55,5 @@ export interface GraphEdgeSchema {
      */
     [k: string]: number | string | boolean;
   };
+  additionalProperties?: never;
 }

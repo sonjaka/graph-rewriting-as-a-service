@@ -16,4 +16,5 @@ export interface GraphNodeSchema {
   attributes: {
     [k: string]: number | string | boolean;
   };
+  additionalProperties?: never;
 }

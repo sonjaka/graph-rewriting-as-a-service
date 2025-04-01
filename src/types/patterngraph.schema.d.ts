@@ -17,11 +17,9 @@ export interface PatternGraphSchema {
   nodes: PatternNodeSchema[];
   edges: GraphEdgeSchema[];
   nacs?: {
-    nodes?: PatternNodeSchema[];
-    edges?: GraphEdgeSchema[];
-    [k: string]: unknown;
+    nodes: PatternNodeSchema[];
+    edges: GraphEdgeSchema[];
   };
-  [k: string]: unknown;
 }
 export interface PatternNodeSchema {
   key: string;
@@ -53,4 +51,5 @@ export interface GraphEdgeSchema {
      */
     [k: string]: number | string | boolean;
   };
+  additionalProperties?: never;
 }

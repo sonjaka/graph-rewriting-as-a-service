@@ -29,4 +29,5 @@ export interface GraphEdgeSchema {
      */
     [k: string]: number | string | boolean;
   };
+  additionalProperties?: never;
 }

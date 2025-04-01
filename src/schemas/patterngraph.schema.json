@@ -3,6 +3,7 @@
 	"$id": "patterngraph.schema.json",
 	"title": "Pattern Graph Schema",
 	"type": "object",
+	"additionalProperties": false,
 	"properties": {
 		"options": {
 			"type": "object",
@@ -48,7 +49,9 @@
 						"$ref": "edge.schema.json"
 					}
 				}
-			}
+			},
+			"required": ["nodes", "edges"],
+			"additionalProperties": false
 		}
 	},
 	"required": ["options", "nodes", "edges"]
