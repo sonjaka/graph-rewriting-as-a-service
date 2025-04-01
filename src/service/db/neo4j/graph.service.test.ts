@@ -15,6 +15,7 @@ import {
 import { Neo4jGraphService } from './graph.service';
 import { getApocJsonAllExport } from './testutils/helpers';
 import { createParameterUuid } from '../../../utils/uuid';
+import { PatternNodeSchema } from '../../../types/patternnode.schema';
 
 let container: StartedNeo4jContainer;
 let driver: Driver;
@@ -1219,7 +1220,7 @@ describe('Unit tests for graph service with mocked neo4j functions', () => {
 			await graphService.findPatternMatch(nodes, []);
 			expect(neo4jSpy).toHaveBeenCalled();
 			expect(mockTx.run).toHaveBeenCalledWith(
-				'MATCH (`A`:`GRS_Node`:`NodeTypeA`), (`B`:`GRS_Node`) WHERE A.test = $p_1 AND A.type = $p_2 AND B.test = $p_3 AND B.numberAttribute = $p_4 RETURN A, B',
+				'MATCH (`A`:`GRS_Node`), (`B`:`GRS_Node`) WHERE A.test = $p_1 AND A.type = $p_2 AND B.test = $p_3 AND B.numberAttribute = $p_4 RETURN A, B',
 				{
 					p_1: 'hello world',
 					p_2: 'NodeTypeA',
@@ -1333,7 +1334,7 @@ describe('Unit tests for graph service with mocked neo4j functions', () => {
 					key: 'B',
 					attributes: {},
 				},
-			];
+			] as PatternNodeSchema[];
 
 			const edges = [
 				{
@@ -1364,7 +1365,7 @@ describe('Unit tests for graph service with mocked neo4j functions', () => {
 					key: 'B',
 					attributes: {},
 				},
-			];
+			] as PatternNodeSchema[];
 
 			const edges = [
 				{
@@ -1401,7 +1402,7 @@ describe('Unit tests for graph service with mocked neo4j functions', () => {
 					key: 'C',
 					attributes: {},
 				},
-			];
+			] as PatternNodeSchema[];
 
 			const edges = [
 				{
@@ -1424,7 +1425,7 @@ describe('Unit tests for graph service with mocked neo4j functions', () => {
 			await graphService.findPatternMatch(nodes, edges, 'directed');
 			expect(neo4jSpy).toHaveBeenCalled();
 			expect(mockTx.run).toHaveBeenCalledWith(
-				'MATCH (`A`:`GRS_Node`), (`B`:`GRS_Node`:`BType`), (`C`:`GRS_Node`), (A)-[`aToB`:GRS_Relationship]->(B), (B)-[`bToC`:GRS_Relationship]->(C) WHERE B.type = $p_1 AND aToB.type = $p_2 RETURN A, B, C, aToB, bToC',
+				'MATCH (`A`:`GRS_Node`), (`B`:`GRS_Node`), (`C`:`GRS_Node`), (A)-[`aToB`:GRS_Relationship]->(B), (B)-[`bToC`:GRS_Relationship]->(C) WHERE B.type = $p_1 AND aToB.type = $p_2 RETURN A, B, C, aToB, bToC',
 				{ p_1: 'BType', p_2: 'edge connector' }
 			);
 		});
@@ -1446,7 +1447,7 @@ describe('Unit tests for graph service with mocked neo4j functions', () => {
 					key: 'C',
 					attributes: {},
 				},
-			];
+			] as PatternNodeSchema[];
 
 			const edges = [
 				{
@@ -1483,7 +1484,7 @@ describe('Unit tests for graph service with mocked neo4j functions', () => {
 			await graphService.findPatternMatch(nodes, edges, 'directed', true, nacs);
 			expect(neo4jSpy).toHaveBeenCalled();
 			expect(mockTx.run).toHaveBeenCalledWith(
-				'MATCH (`A`:`GRS_Node`), (`B`:`GRS_Node`:`BType`), (`C`:`GRS_Node`), (A)-[`aToB`:GRS_Relationship]->(B), (B)-[`bToC`:GRS_Relationship]->(C) WITH * call { WITH * MATCH (`C`:`GRS_Node` {test:"value"})  RETURN COUNT(*) as nac_matches0 } WITH * WHERE nac_matches0=0 AND B.type = $p_1 AND aToB.type = $p_2 RETURN A, B, C, aToB, bToC',
+				'MATCH (`A`:`GRS_Node`), (`B`:`GRS_Node`), (`C`:`GRS_Node`), (A)-[`aToB`:GRS_Relationship]->(B), (B)-[`bToC`:GRS_Relationship]->(C) WITH * call { WITH * MATCH (`C`:`GRS_Node` {test:"value"})  RETURN COUNT(*) as nac_matches0 } WITH * WHERE nac_matches0=0 AND B.type = $p_1 AND aToB.type = $p_2 RETURN A, B, C, aToB, bToC',
 				{ p_1: 'BType', p_2: 'edge connector' }
 			);
 		});

@@ -30,6 +30,7 @@ import {
 } from './cypher/rewrite';
 import { createNodeQuery, updateNodeQuery } from './cypher/base';
 import { PatternNodeSchema } from '../../../types/patterngraph.schema';
+import { DEFAULT_NODE_LABEL, DEFAULT_RELATIONSHIP_LABEL } from './constants';
 
 type Neo4jNode = Node<Integer, DBGraphNodeProperties>;
 type Neo4jRelationship = Relationship<Integer, DBGraphEdgeProperties>;
@@ -54,8 +55,8 @@ type Neo4jGetNodesResult = Neo4jNodeResult;
 type PatternNodeMetadata = Exclude<PatternNodeSchema['attributes'], undefined>;
 
 export class Neo4jGraphService implements IDBGraphService {
-	defaultNodeLabel = `GRS_Node`;
-	defaultRelationshipLabel = `GRS_Relationship`;
+	defaultNodeLabel = DEFAULT_NODE_LABEL;
+	defaultRelationshipLabel = DEFAULT_RELATIONSHIP_LABEL;
 
 	constructor(private readonly session: Session) {}
 
@@ -369,14 +370,14 @@ export class Neo4jGraphService implements IDBGraphService {
 		nodes.forEach((node) => {
 			queryVars.push(node.key);
 
-			let nodeLabels: string[] = [];
-			if (node.attributes) {
-				nodeLabels = this.constructNodeLabelsFromAttributes(node.attributes);
-			}
-
+			// let nodeLabels: string[] = [];
+			// if (node.attributes) {
+			// 	nodeLabels = this.constructNodeLabelsFromAttributes(node.attributes);
+			// }
+			// Don't match type labels.
 			const { cypher, where, params } = computeNodeQuery(
 				node.key,
-				nodeLabels,
+				[this.defaultNodeLabel],
 				node.attributes ?? {}
 			);
 
@@ -570,9 +571,9 @@ export class Neo4jGraphService implements IDBGraphService {
 		attributes: DBGraphNodeMetadata | PatternNodeMetadata
 	) {
 		const nodeTypes = [this.defaultNodeLabel];
-		if (attributes.type) {
+		if (attributes?.type) {
 			if (!Array.isArray(attributes.type)) {
-				nodeTypes.push(attributes.type);
+				nodeTypes.push(String(attributes.type));
 			}
 		}
 
