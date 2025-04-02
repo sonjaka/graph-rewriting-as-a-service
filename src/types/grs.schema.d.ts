@@ -9,7 +9,12 @@ export interface GraphRewritingRequestSchema {
   hostgraph: GraphSchema;
   rules?: GraphRewritingRuleSchema[];
   sequence?: RewritingRuleProcessingConfigSchema[];
-  returnHistory?: boolean;
+  options?: {
+    /**
+     * If set to true, the resultset will include the exported hostgraph after each rewriting step in chronological order.
+     */
+    returnHistory?: boolean;
+  };
 }
 export interface GraphSchema {
   options: {
@@ -22,6 +27,7 @@ export interface GraphSchema {
   };
   nodes: GraphNodeSchema[];
   edges: GraphEdgeSchema[];
+  additionalProperties?: never;
 }
 export interface GraphNodeSchema {
   /**
@@ -32,16 +38,9 @@ export interface GraphNodeSchema {
    * The node's attributes.
    */
   attributes: {
-    /**
-     * If given, the type will be used as a Neo4j Node label. Allows for easier debugging.
-     */
-    type?: string;
-    /**
-     * This interface was referenced by `undefined`'s JSON-Schema definition
-     * via the `patternProperty` "^(?!type$).*".
-     */
     [k: string]: number | string | boolean;
   };
+  additionalProperties?: never;
 }
 export interface GraphEdgeSchema {
   /**
@@ -65,22 +64,17 @@ export interface GraphEdgeSchema {
      * This interface was referenced by `undefined`'s JSON-Schema definition
      * via the `patternProperty` "^(?!type$).*".
      */
-    [k: string]: number | string | boolean | GraphInstantiatedAttributeSchema;
+    [k: string]: number | string | boolean;
   };
-}
-export interface GraphInstantiatedAttributeSchema {
-  type: string;
-  args: {
-    [k: string]: unknown;
-  };
+  additionalProperties?: never;
 }
 export interface GraphRewritingRuleSchema {
   key: string;
+  patternGraph: PatternGraphSchema;
+  replacementGraph: ReplacementGraphSchema;
   options?: {
     homomorphic?: boolean;
   };
-  patternGraph: PatternGraphSchema;
-  replacementGraph: ReplacementGraphSchema;
 }
 export interface PatternGraphSchema {
   options: {
@@ -94,20 +88,13 @@ export interface PatternGraphSchema {
   nodes: PatternNodeSchema[];
   edges: GraphEdgeSchema[];
   nacs?: {
-    nodes?: PatternNodeSchema[];
-    edges?: GraphEdgeSchema[];
-    [k: string]: unknown;
+    nodes: PatternNodeSchema[];
+    edges: GraphEdgeSchema[];
   };
-  [k: string]: unknown;
 }
 export interface PatternNodeSchema {
   key: string;
   attributes?: {
-    type?: string | string[];
-    /**
-     * This interface was referenced by `undefined`'s JSON-Schema definition
-     * via the `patternProperty` "^(?!type$).*".
-     */
     [k: string]: number | string | boolean | null | (number | string | boolean)[];
   };
 }
@@ -121,31 +108,55 @@ export interface ReplacementGraphSchema {
     multi?: boolean;
   };
   nodes: ReplacementNodeSchema[];
-  edges: GraphEdgeSchema[];
-  [k: string]: unknown;
+  edges: ReplacementEdgeSchema[];
 }
 export interface ReplacementNodeSchema {
   key: string;
   attributes?: {
+    [k: string]: number | string | boolean | null | GraphInstantiatedAttributeSchema;
+  };
+  rewriteOptions?: {
     /**
-     * If given, the type will be used as a Neo4j Node label. Allows for easier debugging.
+     * Defines how the attributes are handles during rewrite. 'Modify' mode adds or updates the given attributes. Setting an attribute to null deletes it. 'Replace' mode deletes all attributes of the matched node and then sets the given attributes. 'Delete' mode deletes all attributes and doesn't add any new ones.
      */
+    attributeReplacementMode?: "modify" | "replace" | "delete";
+  };
+}
+export interface GraphInstantiatedAttributeSchema {
+  type: string;
+  args: {
+    [k: string]: unknown;
+  };
+}
+export interface ReplacementEdgeSchema {
+  /**
+   * The edge's ID
+   */
+  key: string;
+  /**
+   * The key of the node at the edge's source
+   */
+  source: string;
+  /**
+   * The key of the node at the edge's target
+   */
+  target: string;
+  /**
+   * The edges attributes & values
+   */
+  attributes: {
     type?: string;
     /**
      * This interface was referenced by `undefined`'s JSON-Schema definition
      * via the `patternProperty` "^(?!type$).*".
      */
-    [k: string]: number | string | boolean | null | GraphInstantiatedAttributeSchema;
+    [k: string]: number | string | boolean | GraphInstantiatedAttributeSchema;
   };
   rewriteOptions?: {
     /**
-     * Defines how the attributes are handles during rewrite. 'Modifiy' mode adds or updates the given attributes. Setting an attribute to null deletes it. 'Replace' mode deletes all attributes of the matched node and then sets the given attributes. 'Delete' mode deletes all attributes and doesn't add any new ones.
+     * Defines how the attributes are handles during rewrite. 'Modify' mode adds or updates the given attributes. Setting an attribute to null deletes it. 'Replace' mode deletes all attributes of the matched node and then sets the given attributes. 'Delete' mode deletes all attributes and doesn't add any new ones.
      */
     attributeReplacementMode?: "modify" | "replace" | "delete";
-    /**
-     * Allows definition of a node matches through the search pattern to be cloned. The value should be the key of the pattern node. This option clones the node with all attributes and connected edges. Given attributes modifications will be applied after cloning.
-     */
-    cloneSearchmatchNode?: string;
   };
 }
 export interface RewritingRuleProcessingConfigSchema {
@@ -160,10 +171,11 @@ export interface RewritingRuleProcessingConfigSchema {
     /**
      * Replace either 'all', only the 'first' or between x and y pattern matches
      */
-    mode?: "all" | "first" | "intervall";
-    intervall?: {
+    mode?: "all" | "first" | "interval";
+    interval?: {
       min: number;
       max: number;
     };
+    repeat?: number | [number, number];
   };
 }

@@ -5,33 +5,7 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
-export interface GraphSchema {
-  options: {
-    /**
-     * One of directed or undirected
-     */
-    type: "directed" | "undirected";
-    allowSelfLoops?: boolean;
-    multi?: boolean;
-  };
-  nodes: GraphNodeSchema[];
-  edges: GraphEdgeSchema[];
-  additionalProperties?: never;
-}
-export interface GraphNodeSchema {
-  /**
-   * The node's ID, also used as node in an edges source/target etc.
-   */
-  key: string;
-  /**
-   * The node's attributes.
-   */
-  attributes: {
-    [k: string]: number | string | boolean;
-  };
-  additionalProperties?: never;
-}
-export interface GraphEdgeSchema {
+export interface ReplacementEdgeSchema {
   /**
    * The edge's ID
    */
@@ -53,7 +27,18 @@ export interface GraphEdgeSchema {
      * This interface was referenced by `undefined`'s JSON-Schema definition
      * via the `patternProperty` "^(?!type$).*".
      */
-    [k: string]: number | string | boolean;
+    [k: string]: number | string | boolean | GraphInstantiatedAttributeSchema;
   };
-  additionalProperties?: never;
+  rewriteOptions?: {
+    /**
+     * Defines how the attributes are handles during rewrite. 'Modify' mode adds or updates the given attributes. Setting an attribute to null deletes it. 'Replace' mode deletes all attributes of the matched node and then sets the given attributes. 'Delete' mode deletes all attributes and doesn't add any new ones.
+     */
+    attributeReplacementMode?: "modify" | "replace" | "delete";
+  };
+}
+export interface GraphInstantiatedAttributeSchema {
+  type: string;
+  args: {
+    [k: string]: unknown;
+  };
 }

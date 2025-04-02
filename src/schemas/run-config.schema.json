@@ -15,32 +15,45 @@
 			"properties": {
 				"mode": {
 					"description": "Replace either 'all', only the 'first' or between x and y pattern matches",
-					"enum": ["all", "first", "intervall"]
+					"enum": ["all", "first", "interval"]
 				},
-				"intervall": {
+				"interval": {
 					"type": "object",
 					"properties": {
 						"min": {
-							"type": "number"
+							"type": "integer"
 						},
 						"max": {
-							"type": "number"
+							"type": "integer"
 						}
 					},
 					"additionalProperties": false,
 					"required": ["min", "max"]
+				},
+				"repeat": {
+					"anyOf": [
+						{ "type": "integer" },
+						{
+							"type": "array",
+							"items": {
+								"type": "integer"
+							},
+							"minItems": 2,
+							"maxItems": 2
+						}
+					]
 				}
 			},
 			"additionalProperties": false,
 			"if": {
 				"properties": {
 					"mode": {
-						"enum": ["intervall"]
+						"enum": ["interval"]
 					}
 				}
 			},
 			"then": {
-				"required": ["intervall"]
+				"required": ["interval"]
 			}
 		}
 	},

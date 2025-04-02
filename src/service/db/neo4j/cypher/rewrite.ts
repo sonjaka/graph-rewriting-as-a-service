@@ -1,5 +1,6 @@
 import { createParameterUuid } from '../../../../utils/uuid';
 import { DBGraphNACs } from '../../types';
+import { DEFAULT_NODE_LABEL } from '../constants';
 import {
 	computeAttributesString,
 	MatchQueryComputationResult,
@@ -42,7 +43,6 @@ export function computeNodeQuery(
 	};
 	matchVariable = sanitizeIdentifier(matchVariable);
 
-	// TODO: Use parameters instead of string concatenation for attributes
 	const nodeLabels = labels
 		.map((label) => `\`${sanitizeIdentifier(label)}\``)
 		.join(':');
@@ -56,8 +56,7 @@ export function computeNodeQuery(
 		result['params'] = params;
 	}
 
-	// const metadata = computeAttributesString(attributes);
-
+	// result.cypher = `(\`${matchVariable}\`)`;
 	result.cypher = `(\`${matchVariable}\`:${nodeLabels})`;
 
 	return result;
@@ -78,6 +77,34 @@ export function computeNodeQueryString(
 	const metadata = computeAttributesString(attributes);
 
 	return `(\`${matchVariable}\`:${nodeLabels}${metadata.length ? ` ${metadata}` : ''})`;
+}
+
+export function computeEdgeQuery(
+	matchVariable: string,
+	type: string,
+	attributes: Record<string, unknown>,
+	source: string,
+	target: string,
+	directed = false
+): MatchQueryComputationResult {
+	const result: MatchQueryComputationResult = {
+		cypher: '',
+	};
+
+	matchVariable = sanitizeIdentifier(matchVariable);
+
+	if (Object.keys(attributes).length) {
+		const { where, params } = computeAttributeWhereClause(
+			attributes,
+			matchVariable
+		);
+		result['where'] = where;
+		result['params'] = params;
+	}
+
+	result.cypher = `(${source})-${type ? `[\`${matchVariable}\`:${type}]` : `[\`${matchVariable}\`]`}-${directed ? '>' : ''}(${target})`;
+
+	return result;
 }
 
 export function computeEdgeQueryString(
@@ -171,7 +198,11 @@ export function computeNacClause(nacs: DBGraphNACs[], hasWhere: boolean) {
 
 		nacNodes?.forEach((node) => {
 			cypher += ` WITH * MATCH `;
-			cypher += computeNodeQueryString(node.key, ['GRS_Node'], node.attributes);
+			cypher += computeNodeQueryString(
+				node.key,
+				[DEFAULT_NODE_LABEL],
+				node.attributes ?? {}
+			);
 			cypher += ` `;
 		});
 
@@ -180,7 +211,7 @@ export function computeNacClause(nacs: DBGraphNACs[], hasWhere: boolean) {
 			// TODO: add directed edges
 			cypher += computeEdgeQueryString(
 				edge.key,
-				'GRS_Relationship',
+				'DEFAULT_RELATIONSHIP_LABEL',
 				edge.attributes,
 				edge.source,
 				edge.target

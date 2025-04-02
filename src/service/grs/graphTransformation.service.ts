@@ -1,8 +1,12 @@
 import Graph from 'graphology';
-import { GraphSchema } from '../../types/grs.schema';
+import {
+	GraphRewritingRequestSchema,
+	GraphSchema,
+} from '../../types/grs.schema';
 import { GraphRewritingRuleSchema } from '../../types/rewrite-rule.schema';
 import {
 	DBGraphEdgeMetadata,
+	DBGraphNACs,
 	DBGraphNodeMetadata,
 	DBGraphPatternMatchResult,
 	IDBGraphService,
@@ -22,6 +26,8 @@ import { PatternGraphSchema } from '../../types/patterngraph.schema';
 import { PatternNodeSchema } from '../../types/patternnode.schema';
 import { ReplacementGraphSchema } from '../../types/replacementgraph.schema';
 import { ReplacementNodeSchema } from '../../types/replacementnode.schema';
+import { ReplacementEdgeSchema } from '../../types/replacementedge.schema';
+import { getRandomIntBetween } from '../../utils/numbers';
 
 export type ResultGraphSchema = Omit<GraphSchema, 'nodes' | 'edges'> & {
 	nodes: (Omit<GraphNodeSchema, 'attributes'> & {
@@ -33,13 +39,13 @@ export type ResultGraphSchema = Omit<GraphSchema, 'nodes' | 'edges'> & {
 };
 
 type NodeMatchMap = Map<string, ReplacementNodeSchema | undefined>;
-type EdgeMatchMap = Map<string, GraphEdgeSchema | undefined>;
+type EdgeMatchMap = Map<string, ReplacementEdgeSchema | undefined>;
 interface GraphDiffResult {
 	updatedNodes: NodeMatchMap;
 	addedNodes: ReplacementNodeSchema[];
 	removedNodes: PatternNodeSchema[];
 	updatedEdges: EdgeMatchMap;
-	addedEdges: GraphEdgeSchema[];
+	addedEdges: ReplacementEdgeSchema[];
 	removedEdges: GraphEdgeSchema[];
 }
 
@@ -59,13 +65,13 @@ export class GraphTransformationService {
 		hostgraphData: GraphSchema,
 		rules: GraphRewritingRuleSchema[] = [],
 		processingConfig: RewritingRuleProcessingConfigSchema[] = [],
-		useHistory = false
+		options: GraphRewritingRequestSchema['options'] = {}
 	): Promise<ResultGraphSchema[]> {
 		this.graphService.graphType = hostgraphData.options.type;
 		await this.importHostgraph(hostgraphData);
 
 		this.history = [];
-		this.trackHistory = useHistory;
+		this.trackHistory = options?.returnHistory || false;
 		this.hostgraphOptions = hostgraphData.options;
 
 		if (processingConfig.length) {
@@ -95,55 +101,85 @@ export class GraphTransformationService {
 		ruleConfig: GraphRewritingRuleSchema,
 		sequenceConfig?: RewritingRuleProcessingConfigSchema
 	) {
-		const { patternGraph, replacementGraph } = ruleConfig;
+		const { options, patternGraph, replacementGraph } = ruleConfig;
 
-		// Handle edge case for empty pattern
-		// Additions are still possible!
-		if (!patternGraph.nodes.length && !patternGraph.edges.length) {
-			await this.performInstantiationAndReplacement(
-				{ nodes: {}, edges: {} },
-				patternGraph,
-				replacementGraph
-			);
-
-			return;
+		let repetitions = 1;
+		if (sequenceConfig?.options?.repeat) {
+			if (
+				Array.isArray(sequenceConfig.options.repeat) &&
+				sequenceConfig.options.repeat.length === 2
+			) {
+				const min = sequenceConfig.options.repeat[0];
+				const max = sequenceConfig.options.repeat[1];
+				repetitions = getRandomIntBetween(min, max);
+			} else if (typeof sequenceConfig.options.repeat === 'number') {
+				repetitions = sequenceConfig.options.repeat;
+			} else {
+				throw Error(
+					'GraphTransformationService: sequence.options.repeat is not a number or numberArray'
+				);
+			}
 		}
 
-		const matches = await this.graphService.findPatternMatch(
-			patternGraph.nodes,
-			patternGraph.edges,
-			patternGraph.options.type
-		);
-
-		// TODO: Check if match still applies after first replacements have already happened
-		// --> either we fix this, or we remove option for multiple replacements
-		// --> user can still replace all occurences by sending the request multiple times
-		if (matches.length) {
-			let max = 1;
-
-			if (sequenceConfig) {
-				if (sequenceConfig.options.mode === 'all') {
-					max = matches.length;
-				} else if (
-					sequenceConfig.options.mode === 'intervall' &&
-					sequenceConfig.options.intervall?.max
-				) {
-					max = sequenceConfig.options.intervall.max;
-				}
-			}
-
-			for (let i = 0; i < max; i++) {
-				const match = matches[i];
-
+		for (let i = 0; i < repetitions; i++) {
+			// Handle edge case for empty pattern
+			// Additions are still possible!
+			if (!patternGraph.nodes.length && !patternGraph.edges.length) {
 				await this.performInstantiationAndReplacement(
-					match,
+					{ nodes: {}, edges: {} },
 					patternGraph,
 					replacementGraph
 				);
 
-				if (this.trackHistory) {
-					const currentHostgraph = await this.exportHostgraph();
-					this.history.push(currentHostgraph);
+				return;
+			}
+
+			let homomorphic = true;
+			if (options && 'homomorphic' in options) {
+				homomorphic = options.homomorphic ? true : false;
+			}
+
+			let nacs: DBGraphNACs[] = [];
+			if (patternGraph.nacs) {
+				nacs = [patternGraph.nacs];
+			}
+			const matches = await this.graphService.findPatternMatch(
+				patternGraph.nodes,
+				patternGraph.edges,
+				patternGraph.options.type,
+				homomorphic,
+				nacs
+			);
+
+			// --> either we fix this, or we remove option for multiple replacements
+			// --> user can still replace all occurences by sending the request multiple times
+			if (matches.length) {
+				let max = 1;
+
+				if (sequenceConfig) {
+					if (sequenceConfig.options.mode === 'all') {
+						max = matches.length;
+					} else if (
+						sequenceConfig.options.mode === 'interval' &&
+						sequenceConfig.options?.interval?.max
+					) {
+						max = Math.min(sequenceConfig.options.interval.max, matches.length);
+					}
+				}
+
+				for (let i = 0; i < max; i++) {
+					const match = matches[i];
+
+					await this.performInstantiationAndReplacement(
+						match,
+						patternGraph,
+						replacementGraph
+					);
+
+					if (this.trackHistory) {
+						const currentHostgraph = await this.exportHostgraph();
+						this.history.push(currentHostgraph);
+					}
 				}
 			}
 		}
@@ -279,11 +315,17 @@ export class GraphTransformationService {
 					const sourceInternalId = preservedNodes[rhsEdge.source];
 					const targetInternalId = preservedNodes[rhsEdge.target];
 
+					let options = {};
+					if (rhsEdge?.rewriteOptions) {
+						options = rhsEdge.rewriteOptions;
+					}
+
 					await this.graphService.updateEdge(
 						sourceInternalId,
 						targetInternalId,
 						internalId,
-						rhsEdge.attributes ?? []
+						rhsEdge.attributes ?? [],
+						options
 					);
 
 					preservedNodes[key] = internalId;
@@ -326,7 +368,7 @@ export class GraphTransformationService {
 
 		const updatedEdges: EdgeMatchMap = new Map();
 		const removedEdges: GraphEdgeSchema[] = [];
-		const addedEdges: GraphEdgeSchema[] = [];
+		const addedEdges: ReplacementEdgeSchema[] = [];
 
 		// All nodes in search graph that are also in replacement are "updated"
 		// All nodes in search graph that are not in replacement are "deleted"
@@ -403,20 +445,24 @@ export class GraphTransformationService {
 			edges: [],
 		};
 
-		for (const [key, node] of Object.entries(match.nodes)) {
-			const formattedNode = { ...node };
-			formattedNode.key = key;
-			formattedMatch.nodes.push(formattedNode as GraphNodeSchema);
+		if (match?.nodes) {
+			for (const [key, node] of Object.entries(match.nodes)) {
+				const formattedNode = { ...node };
+				formattedNode.key = key;
+				formattedMatch.nodes.push(formattedNode as GraphNodeSchema);
+			}
 		}
 
-		for (const [key, edge] of Object.entries(match.edges)) {
-			const formattedEdge = { ...edge };
-			formattedEdge.key = key;
-			formattedMatch.edges.push(formattedEdge as GraphEdgeSchema);
+		if (match?.edges) {
+			for (const [key, edge] of Object.entries(match.edges)) {
+				const formattedEdge = { ...edge };
+				formattedEdge.key = key;
+				formattedMatch.edges.push(formattedEdge as GraphEdgeSchema);
+			}
 		}
 
 		instantiatedGraph.nodes.map((node) => {
-			if (node.attributes) {
+			if (node?.attributes) {
 				for (const [key, attribute] of Object.entries(node.attributes)) {
 					if (attribute === null) continue;
 					if (typeof attribute === 'object') {

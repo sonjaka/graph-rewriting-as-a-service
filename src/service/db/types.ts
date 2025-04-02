@@ -1,4 +1,6 @@
 import { PatternNodeSchema } from '../../types/patternnode.schema';
+import { ReplacementEdgeSchema } from '../../types/replacementedge.schema';
+import { ReplacementNodeSchema } from '../../types/replacementnode.schema';
 
 export type DBGraphNodeInternalId = string;
 export type DBGraphEdgeInternalId = string;
@@ -55,6 +57,9 @@ export interface DBGraphPatternMatchResult {
 	edges: Record<string, DBGraphEdgeResult>;
 }
 
+export type NodeUpdateRewriteOptions = ReplacementNodeSchema['rewriteOptions'];
+export type EdgeUpdateRewriteOptions = ReplacementEdgeSchema['rewriteOptions'];
+
 export interface IDBGraphService {
 	graphType: DBGraphType;
 	createNode(
@@ -65,7 +70,7 @@ export interface IDBGraphService {
 		metadata: DBGraphNodeMetadata,
 		internalId: DBGraphNodeInternalId,
 		oldTypes: string[],
-		options: Record<string, unknown>
+		options: NodeUpdateRewriteOptions
 	): Promise<DBGraphNodeResult>;
 	getNode(
 		internalId: DBGraphNodeInternalId
@@ -88,7 +93,8 @@ export interface IDBGraphService {
 		internalIdSource: DBGraphNodeInternalId,
 		internalIdTarget: DBGraphNodeInternalId,
 		internalId: DBGraphEdgeInternalId,
-		metadata: DBGraphEdgeMetadata
+		metadata: DBGraphEdgeMetadata,
+		options: EdgeUpdateRewriteOptions
 	): Promise<DBGraphEdgeResult>;
 	getEdge(
 		internalId: DBGraphEdgeInternalId
@@ -101,6 +107,8 @@ export interface IDBGraphService {
 	findPatternMatch(
 		nodes: PatternNodeSchema[],
 		edges: DBGraphEdge[],
-		type: DBGraphType
+		type: DBGraphType,
+		homo: boolean,
+		nacs: DBGraphNACs[]
 	): Promise<DBGraphPatternMatchResult[] | []>;
 }

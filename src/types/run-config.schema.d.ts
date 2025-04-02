@@ -17,10 +17,11 @@ export interface RewritingRuleProcessingConfigSchema {
     /**
      * Replace either 'all', only the 'first' or between x and y pattern matches
      */
-    mode?: "all" | "first" | "intervall";
-    intervall?: {
+    mode?: "all" | "first" | "interval";
+    interval?: {
       min: number;
       max: number;
     };
+    repeat?: number | [number, number];
   };
 }

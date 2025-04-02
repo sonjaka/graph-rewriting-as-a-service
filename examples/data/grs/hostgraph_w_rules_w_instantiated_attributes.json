@@ -201,8 +201,8 @@
 		{
 			"rule": "add_triangle",
 			"options": {
-				"mode": "intervall",
-				"intervall": {
+				"mode": "interval",
+				"interval": {
 					"min": "1",
 					"max": "2"
 				}

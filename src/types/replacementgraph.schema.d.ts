@@ -15,31 +15,18 @@ export interface ReplacementGraphSchema {
     multi?: boolean;
   };
   nodes: ReplacementNodeSchema[];
-  edges: GraphEdgeSchema[];
-  [k: string]: unknown;
+  edges: ReplacementEdgeSchema[];
 }
 export interface ReplacementNodeSchema {
   key: string;
   attributes?: {
-    /**
-     * If given, the type will be used as a Neo4j Node label. Allows for easier debugging.
-     */
-    type?: string;
-    /**
-     * This interface was referenced by `undefined`'s JSON-Schema definition
-     * via the `patternProperty` "^(?!type$).*".
-     */
     [k: string]: number | string | boolean | null | GraphInstantiatedAttributeSchema;
   };
   rewriteOptions?: {
     /**
-     * Defines how the attributes are handles during rewrite. 'Modifiy' mode adds or updates the given attributes. Setting an attribute to null deletes it. 'Replace' mode deletes all attributes of the matched node and then sets the given attributes. 'Delete' mode deletes all attributes and doesn't add any new ones.
+     * Defines how the attributes are handles during rewrite. 'Modify' mode adds or updates the given attributes. Setting an attribute to null deletes it. 'Replace' mode deletes all attributes of the matched node and then sets the given attributes. 'Delete' mode deletes all attributes and doesn't add any new ones.
      */
     attributeReplacementMode?: "modify" | "replace" | "delete";
-    /**
-     * Allows definition of a node matches through the search pattern to be cloned. The value should be the key of the pattern node. This option clones the node with all attributes and connected edges. Given attributes modifications will be applied after cloning.
-     */
-    cloneSearchmatchNode?: string;
   };
 }
 export interface GraphInstantiatedAttributeSchema {
@@ -48,7 +35,7 @@ export interface GraphInstantiatedAttributeSchema {
     [k: string]: unknown;
   };
 }
-export interface GraphEdgeSchema {
+export interface ReplacementEdgeSchema {
   /**
    * The edge's ID
    */
@@ -71,5 +58,11 @@ export interface GraphEdgeSchema {
      * via the `patternProperty` "^(?!type$).*".
      */
     [k: string]: number | string | boolean | GraphInstantiatedAttributeSchema;
+  };
+  rewriteOptions?: {
+    /**
+     * Defines how the attributes are handles during rewrite. 'Modify' mode adds or updates the given attributes. Setting an attribute to null deletes it. 'Replace' mode deletes all attributes of the matched node and then sets the given attributes. 'Delete' mode deletes all attributes and doesn't add any new ones.
+     */
+    attributeReplacementMode?: "modify" | "replace" | "delete";
   };
 }

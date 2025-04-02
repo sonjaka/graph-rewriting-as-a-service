@@ -7,12 +7,14 @@
 			{
 				"key": "Start",
 				"attributes": {
+					"label": "Start",
 					"type": "Event"
 				}
 			},
 			{
 				"key": "Ende",
 				"attributes": {
+					"label": "Ende",
 					"type": "Event"
 				}
 			}
@@ -29,7 +31,9 @@
 	"rules": [
 		{
 			"key": "add_pattern",
-			"homomorphic": false,
+			"options": {
+				"homomorphic": false
+			},
 			"patternGraph": {
 				"options": {
 					"type": "directed"
@@ -98,7 +102,9 @@
 		},
 		{
 			"key": "replace_pattern_with_gate_sequence",
-			"homomorphic": false,
+			"options": {
+				"homomorphic": false
+			},
 			"patternGraph": {
 				"options": {
 					"type": "directed"
@@ -286,7 +292,9 @@
 		},
 		{
 			"key": "add_branches_to_gates",
-			"homomorphic": false,
+			"options": {
+				"homomorphic": false
+			},
 			"patternGraph": {
 				"options": {
 					"type": "directed"
@@ -383,6 +391,339 @@
 					}
 				]
 			}
+		},
+		{
+			"key": "replace_middle_sequences",
+			"options": {
+				"homomorphic": false
+			},
+			"patternGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "GateA",
+						"attributes": {
+							"type": "Gate"
+						}
+					},
+					{
+						"key": "Sequence",
+						"attributes": {
+							"type": "Sequence"
+						}
+					},
+					{
+						"key": "GateB",
+						"attributes": {
+							"type": "Gate"
+						}
+					}
+				],
+				"edges": [
+					{
+						"key": "GateAToSequence",
+						"source": "GateA",
+						"target": "Sequence",
+						"attributes": {}
+					},
+					{
+						"key": "SequenceToGateB",
+						"source": "Sequence",
+						"target": "GateB",
+						"attributes": {}
+					}
+				]
+			},
+			"replacementGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "GateA",
+						"attributes": {
+							"type": "Gate"
+						}
+					},
+					{
+						"key": "Sequence",
+						"attributes": {
+							"type": "Event"
+						}
+					},
+					{
+						"key": "GateB",
+						"attributes": {
+							"type": "Gate"
+						}
+					}
+				],
+				"edges": [
+					{
+						"key": "GateAToSequence",
+						"source": "GateA",
+						"target": "Sequence",
+						"attributes": {}
+					},
+					{
+						"key": "SequenceToGateB",
+						"source": "Sequence",
+						"target": "GateB",
+						"attributes": {}
+					}
+				]
+			}
+		},
+		{
+			"key": "expand_event",
+			"options": {
+				"homomorphic": false
+			},
+			"patternGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "Event",
+						"attributes": {
+							"type": "Event"
+						}
+					},
+					{
+						"key": "B",
+						"attributes": {}
+					}
+				],
+				"edges": [
+					{
+						"key": "eventToB",
+						"source": "Event",
+						"target": "B",
+						"attributes": {}
+					}
+				],
+				"nacs": {
+					"nodes": [
+						{
+							"key": "Event",
+							"attributes": {
+								"label": "Start"
+							}
+						}
+					],
+					"edges": []
+				}
+			},
+			"replacementGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "Event",
+						"attributes": {
+							"type": "Event"
+						}
+					},
+					{
+						"key": "Function",
+						"attributes": {
+							"type": "Function"
+						}
+					},
+					{
+						"key": "Event2",
+						"attributes": {
+							"type": "Event"
+						}
+					},
+					{
+						"key": "B",
+						"attributes": {}
+					}
+				],
+				"edges": [
+					{
+						"key": "EventToFunction",
+						"source": "Event",
+						"target": "Function",
+						"attributes": {}
+					},
+					{
+						"key": "FunctionToEvent2",
+						"source": "Function",
+						"target": "Event2",
+						"attributes": {}
+					},
+					{
+						"key": "Event2",
+						"source": "Event2",
+						"target": "B",
+						"attributes": {}
+					}
+				]
+			}
+		},
+		{
+			"key": "replace_outer_sequences",
+			"options": {
+				"homomorphic": false
+			},
+			"patternGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "Before",
+						"attributes": {
+							"type": ["Event", "Gate"]
+						}
+					},
+					{
+						"key": "Function",
+						"attributes": {
+							"type": "Sequence"
+						}
+					},
+					{
+						"key": "After",
+						"attributes": {
+							"type": ["Event", "Gate"]
+						}
+					}
+				],
+				"edges": [
+					{
+						"key": "BeforeToFunction",
+						"source": "Before",
+						"target": "Function",
+						"attributes": {}
+					},
+					{
+						"key": "FunctionToAfter",
+						"source": "Function",
+						"target": "After",
+						"attributes": {}
+					}
+				]
+			},
+			"replacementGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "Before"
+					},
+					{
+						"key": "Function",
+						"attributes": {
+							"type": "Function"
+						}
+					},
+					{
+						"key": "After"
+					}
+				],
+				"edges": [
+					{
+						"key": "BeforeToFunction",
+						"source": "Before",
+						"target": "Function",
+						"attributes": {}
+					},
+					{
+						"key": "FunctionToAfter",
+						"source": "Function",
+						"target": "After",
+						"attributes": {}
+					}
+				]
+			}
+		},
+		{
+			"key": "expand_function",
+			"options": {
+				"homomorphic": false
+			},
+			"patternGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "Function",
+						"attributes": {
+							"type": "Function"
+						}
+					},
+					{
+						"key": "B",
+						"attributes": {}
+					}
+				],
+				"edges": [
+					{
+						"key": "FunctionToB",
+						"source": "Function",
+						"target": "B",
+						"attributes": {}
+					}
+				]
+			},
+			"replacementGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "Function",
+						"attributes": {
+							"type": "Function"
+						}
+					},
+					{
+						"key": "Event",
+						"attributes": {
+							"type": "Event"
+						}
+					},
+					{
+						"key": "Function2",
+						"attributes": {
+							"type": "Function"
+						}
+					},
+					{
+						"key": "B",
+						"attributes": {}
+					}
+				],
+				"edges": [
+					{
+						"key": "FunctionToEvent",
+						"source": "Function",
+						"target": "Event",
+						"attributes": {}
+					},
+					{
+						"key": "EventToFunction2",
+						"source": "Event",
+						"target": "Function2",
+						"attributes": {}
+					},
+					{
+						"key": "Function2",
+						"source": "Function2",
+						"target": "B",
+						"attributes": {}
+					}
+				]
+			}
 		}
 	],
 	"sequence": [
@@ -402,6 +743,51 @@
 			"rule": "add_branches_to_gates",
 			"options": {
 				"mode": "all"
+			}
+		},
+		{
+			"rule": "add_branches_to_gates",
+			"options": {
+				"mode": "interval",
+				"interval": {
+					"min": 1,
+					"max": 1
+				},
+				"repeat": [0, 4]
+			}
+		},
+		{
+			"rule": "replace_middle_sequences",
+			"options": {
+				"mode": "all"
+			}
+		},
+		{
+			"rule": "replace_outer_sequences",
+			"options": {
+				"mode": "all"
+			}
+		},
+		{
+			"rule": "expand_event",
+			"options": {
+				"mode": "interval",
+				"interval": {
+					"min": 0,
+					"max": 2
+				},
+				"repeat": 2
+			}
+		},
+		{
+			"rule": "expand_function",
+			"options": {
+				"mode": "interval",
+				"interval": {
+					"min": 0,
+					"max": 3
+				},
+				"repeat": 2
 			}
 		}
 	],

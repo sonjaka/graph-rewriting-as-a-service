@@ -109,7 +109,6 @@
 				"source": "Decision1",
 				"target": "Merge1",
 				"attributes": {
-					"type": "Reject Order",
 					"label": "Reject Order"
 				}
 			},
@@ -118,7 +117,6 @@
 				"source": "Decision1",
 				"target": "PrepareOrder",
 				"attributes": {
-					"type": "Accept Order",
 					"label": "Accept Order"
 				}
 			},
@@ -239,7 +237,19 @@
 						"key": "aToC",
 						"source": "A",
 						"target": "C",
-						"attributes": {}
+						"attributes": {
+							"label": {
+								"type": "jsonLogic",
+								"args": {
+									"rule": {
+										"var": "a"
+									},
+									"data": {
+										"a": "$.edges.[?(@.key === 'aToB')].attributes.label"
+									}
+								}
+							}
+						}
 					},
 					{
 						"key": "CtoB",

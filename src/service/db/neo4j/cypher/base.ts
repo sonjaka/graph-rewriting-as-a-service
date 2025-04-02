@@ -1,9 +1,10 @@
-import { ReplacementNodeSchema } from '../../../../types/replacementnode.schema';
-import { DBGraphNodeInternalId, DBGraphNodeMetadata } from '../../types';
+import {
+	DBGraphNodeInternalId,
+	DBGraphNodeMetadata,
+	NodeUpdateRewriteOptions,
+} from '../../types';
 
 import { QueryComputationResult, sanitizeIdentifier } from './utils';
-
-type NodeUpdateRewriteOptions = ReplacementNodeSchema['rewriteOptions'];
 
 export function createNodeQuery(
 	matchVariable: string,

@@ -46,6 +46,94 @@
 	},
 	"rules": [
 		{
+			"key": "initialize",
+			"homomorphic": false,
+			"patternGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "A",
+						"attributes": {}
+					},
+					{
+						"key": "B",
+						"attributes": {}
+					},
+					{
+						"key": "C",
+						"attributes": {}
+					}
+				],
+				"edges": [
+					{
+						"key": "aToB",
+						"source": "A",
+						"target": "B",
+						"attributes": {}
+					},
+					{
+						"key": "bToC",
+						"source": "B",
+						"target": "C",
+						"attributes": {}
+					},
+					{
+						"key": "cToA",
+						"source": "C",
+						"target": "A",
+						"attributes": {}
+					}
+				]
+			},
+			"replacementGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "A",
+						"attributes": {
+							"added": "yes"
+						}
+					},
+					{
+						"key": "B",
+						"attributes": {
+							"added": "yes"
+						}
+					},
+					{
+						"key": "C",
+						"attributes": {
+							"added": "no"
+						}
+					}
+				],
+				"edges": [
+					{
+						"key": "aToB",
+						"source": "A",
+						"target": "B",
+						"attributes": {}
+					},
+					{
+						"key": "bToC",
+						"source": "B",
+						"target": "C",
+						"attributes": {}
+					},
+					{
+						"key": "cToA",
+						"source": "C",
+						"target": "A",
+						"attributes": {}
+					}
+				]
+			}
+		},
+		{
 			"key": "add_generation",
 			"homomorphic": false,
 			"patternGraph": {
@@ -196,17 +284,7 @@
 	],
 	"sequence": [
 		{
-			"rule": "add_generation",
-			"options": {
-				"mode": "intervall",
-				"intervall": {
-					"min": 1,
-					"max": 1
-				}
-			}
-		},
-		{
-			"rule": "add_generation",
+			"rule": "initialize",
 			"options": {
 				"mode": "all"
 			}
@@ -214,7 +292,8 @@
 		{
 			"rule": "add_generation",
 			"options": {
-				"mode": "all"
+				"mode": "all",
+				"repeat": 3
 			}
 		}
 	],

@@ -3,6 +3,7 @@
 	"$id": "replacementgraph.schema.json",
 	"title": "Replacement Graph Schema",
 	"type": "object",
+	"additionalProperties": false,
 	"properties": {
 		"options": {
 			"type": "object",
@@ -30,7 +31,7 @@
 		"edges": {
 			"type": "array",
 			"items": {
-				"$ref": "edge.schema.json"
+				"$ref": "replacementedge.schema.json"
 			}
 		}
 	},

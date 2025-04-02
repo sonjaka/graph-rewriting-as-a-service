@@ -27,12 +27,7 @@ export interface GraphEdgeSchema {
      * This interface was referenced by `undefined`'s JSON-Schema definition
      * via the `patternProperty` "^(?!type$).*".
      */
-    [k: string]: number | string | boolean | GraphInstantiatedAttributeSchema;
+    [k: string]: number | string | boolean;
   };
-}
-export interface GraphInstantiatedAttributeSchema {
-  type: string;
-  args: {
-    [k: string]: unknown;
-  };
+  additionalProperties?: never;
 }

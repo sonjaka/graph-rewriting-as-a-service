@@ -20,15 +20,17 @@ import {
 	DBGraphEdge,
 	DBGraphPatternMatchResult,
 	DBGraphNACs,
+	EdgeUpdateRewriteOptions,
 } from '../types';
 import {
-	computeEdgeQueryString,
+	computeEdgeQuery,
 	computeInjectivityClause,
 	computeNacClause,
 	computeNodeQuery,
 } from './cypher/rewrite';
 import { createNodeQuery, updateNodeQuery } from './cypher/base';
 import { PatternNodeSchema } from '../../../types/patterngraph.schema';
+import { DEFAULT_NODE_LABEL, DEFAULT_RELATIONSHIP_LABEL } from './constants';
 
 type Neo4jNode = Node<Integer, DBGraphNodeProperties>;
 type Neo4jRelationship = Relationship<Integer, DBGraphEdgeProperties>;
@@ -53,8 +55,8 @@ type Neo4jGetNodesResult = Neo4jNodeResult;
 type PatternNodeMetadata = Exclude<PatternNodeSchema['attributes'], undefined>;
 
 export class Neo4jGraphService implements IDBGraphService {
-	defaultNodeLabel = `GRS_Node`;
-	defaultRelationshipLabel = `GRS_Relationship`;
+	defaultNodeLabel = DEFAULT_NODE_LABEL;
+	defaultRelationshipLabel = DEFAULT_RELATIONSHIP_LABEL;
 
 	constructor(private readonly session: Session) {}
 
@@ -241,15 +243,38 @@ export class Neo4jGraphService implements IDBGraphService {
 		internalIdSource: DBGraphNodeInternalId,
 		internalIdTarget: DBGraphNodeInternalId,
 		internalId: DBGraphNodeInternalId,
-		metadata: DBGraphEdgeMetadata
+		metadata: DBGraphEdgeMetadata,
+		options: EdgeUpdateRewriteOptions = {}
 	) {
+		if (!internalId) {
+			throw new Error(
+				'Neo4jGraphService: no internalId given in updateEdge clause'
+			);
+		}
+		const oldEdge = await this.getEdge(internalId);
+
 		await this.deleteEdge(internalId);
+
+		let attributes = {};
+
+		if (options?.attributeReplacementMode === 'delete') {
+			attributes = {};
+		} else if (options?.attributeReplacementMode === 'replace') {
+			attributes = {
+				...metadata,
+			};
+		} else if (oldEdge) {
+			attributes = {
+				...oldEdge.attributes,
+				...metadata,
+			};
+		}
 
 		const edge = await this.createEdge(
 			internalIdSource,
 			internalIdTarget,
 			internalId,
-			metadata
+			attributes
 		);
 
 		return edge;
@@ -345,14 +370,14 @@ export class Neo4jGraphService implements IDBGraphService {
 		nodes.forEach((node) => {
 			queryVars.push(node.key);
 
-			let nodeLabels: string[] = [];
-			if (node.attributes) {
-				nodeLabels = this.constructNodeLabelsFromAttributes(node.attributes);
-			}
-
+			// let nodeLabels: string[] = [];
+			// if (node.attributes) {
+			// 	nodeLabels = this.constructNodeLabelsFromAttributes(node.attributes);
+			// }
+			// Don't match type labels.
 			const { cypher, where, params } = computeNodeQuery(
 				node.key,
-				nodeLabels,
+				[this.defaultNodeLabel],
 				node.attributes ?? {}
 			);
 
@@ -367,21 +392,24 @@ export class Neo4jGraphService implements IDBGraphService {
 		edges.forEach((edge) => {
 			queryVars.push(edge.key);
 
-			edgesQueries.push(
-				computeEdgeQueryString(
-					edge.key,
-					this.defaultRelationshipLabel,
-					edge.attributes,
-					edge.source,
-					edge.target,
-					type === 'directed'
-				)
+			const { cypher, where, params } = computeEdgeQuery(
+				edge.key,
+				this.defaultRelationshipLabel,
+				edge.attributes,
+				edge.source,
+				edge.target,
+				type === 'directed'
 			);
+
+			if (where) whereClauses.push(where);
+			if (params) parameters = { ...parameters, ...params };
+
+			edgesQueries.push(cypher);
 		});
 		if (nodesQueries.length && edgesQueries.length) query += ', ';
 		query += edgesQueries.join(', ');
 
-		if (nacs) {
+		if (nacs && nacs.length) {
 			const nacResult = computeNacClause(nacs, hasWhere);
 			query += nacResult.cypher;
 			hasWhere = nacResult.hasWhere;
@@ -543,9 +571,9 @@ export class Neo4jGraphService implements IDBGraphService {
 		attributes: DBGraphNodeMetadata | PatternNodeMetadata
 	) {
 		const nodeTypes = [this.defaultNodeLabel];
-		if (attributes.type) {
+		if (attributes?.type) {
 			if (!Array.isArray(attributes.type)) {
-				nodeTypes.push(attributes.type);
+				nodeTypes.push(String(attributes.type));
 			}
 		}
 

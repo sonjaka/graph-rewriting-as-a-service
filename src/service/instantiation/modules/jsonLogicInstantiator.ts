@@ -71,6 +71,21 @@ export class JsonLogicInstantiator
 			}
 		}
 
+		if (data && typeof data === 'object') {
+			for (const [key, value] of Object.entries(data)) {
+				if (Array.isArray(value)) {
+					(data as AdditionalOperation)[key] = value.map((item) =>
+						this.resolveSearchGraphValue(item, graph)
+					);
+				} else if (typeof value === 'string') {
+					(data as AdditionalOperation)[key] = this.resolveSearchGraphValue(
+						value,
+						graph
+					);
+				}
+			}
+		}
+
 		try {
 			// since JsonLogic results can be different data types (e.g. arrays)
 			// we need to turn these into strings if not primary data type

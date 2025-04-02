@@ -1,7 +1,7 @@
 {
 	"$schema": "http://json-schema.org/draft-07/schema#",
-	"$id": "edge.schema.json",
-	"title": "Graph Edge Schema",
+	"$id": "replacementedge.schema.json",
+	"title": "Replacement Edge Schema",
 	"type": "object",
 	"additionalProperties": false,
 	"properties": {
@@ -30,12 +30,23 @@
 					"oneOf": [
 						{ "type": "number" },
 						{ "type": "string" },
-						{ "type": "boolean" }
+						{ "type": "boolean" },
+						{ "$ref": "instantiated-attribute.schema.json" }
 					]
 				}
 			}
 		},
-		"additionalProperties": false
+		"rewriteOptions": {
+			"type": "object",
+			"properties": {
+				"attributeReplacementMode": {
+					"description": "Defines how the attributes are handles during rewrite. 'Modify' mode adds or updates the given attributes. Setting an attribute to null deletes it. 'Replace' mode deletes all attributes of the matched node and then sets the given attributes. 'Delete' mode deletes all attributes and doesn't add any new ones.",
+					"enum": ["modify", "replace", "delete"],
+					"default": "modify"
+				}
+			},
+			"additionalProperties": false
+		}
 	},
 	"required": ["key", "source", "target", "attributes"]
 }
