@@ -1,5 +1,8 @@
 import Graph from 'graphology';
-import { GraphSchema } from '../../types/grs.schema';
+import {
+	GraphRewritingRequestSchema,
+	GraphSchema,
+} from '../../types/grs.schema';
 import { GraphRewritingRuleSchema } from '../../types/rewrite-rule.schema';
 import {
 	DBGraphEdgeMetadata,
@@ -62,13 +65,13 @@ export class GraphTransformationService {
 		hostgraphData: GraphSchema,
 		rules: GraphRewritingRuleSchema[] = [],
 		processingConfig: RewritingRuleProcessingConfigSchema[] = [],
-		useHistory = false
+		options: GraphRewritingRequestSchema['options'] = {}
 	): Promise<ResultGraphSchema[]> {
 		this.graphService.graphType = hostgraphData.options.type;
 		await this.importHostgraph(hostgraphData);
 
 		this.history = [];
-		this.trackHistory = useHistory;
+		this.trackHistory = options?.returnHistory || false;
 		this.hostgraphOptions = hostgraphData.options;
 
 		if (processingConfig.length) {
@@ -148,7 +151,6 @@ export class GraphTransformationService {
 				nacs
 			);
 
-			// TODO: Check if match still applies after first replacements have already happened
 			// --> either we fix this, or we remove option for multiple replacements
 			// --> user can still replace all occurences by sending the request multiple times
 			if (matches.length) {
