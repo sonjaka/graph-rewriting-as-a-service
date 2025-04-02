@@ -71,7 +71,7 @@ export interface GraphEdgeSchema {
 export interface GraphRewritingRuleSchema {
   key: string;
   patternGraph: PatternGraphSchema;
-  replacementGraph: ReplacementGraphSchema;
+  replacementGraph: ReplacementGraphSchema | ExternalReplacementGraphConfig;
   options?: {
     homomorphic?: boolean;
   };
@@ -157,6 +157,13 @@ export interface ReplacementEdgeSchema {
      * Defines how the attributes are handles during rewrite. 'Modify' mode adds or updates the given attributes. Setting an attribute to null deletes it. 'Replace' mode deletes all attributes of the matched node and then sets the given attributes. 'Delete' mode deletes all attributes and doesn't add any new ones.
      */
     attributeReplacementMode?: "modify" | "replace" | "delete";
+  };
+}
+export interface ExternalReplacementGraphConfig {
+  useExternalInstantiation: boolean;
+  endpoint: string;
+  additionalRequestBodyParameters?: {
+    [k: string]: unknown;
   };
 }
 export interface RewritingRuleProcessingConfigSchema {

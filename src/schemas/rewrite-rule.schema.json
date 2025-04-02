@@ -12,7 +12,10 @@
 			"$ref": "patterngraph.schema.json"
 		},
 		"replacementGraph": {
-			"$ref": "replacementgraph.schema.json"
+			"anyOf": [
+				{ "$ref": "replacementgraph.schema.json" },
+				{ "$ref": "#/$defs/externalReplacementGraphConfig" }
+			]
 		},
 		"options": {
 			"type": "object",
@@ -24,5 +27,23 @@
 			"additionalProperties": false
 		}
 	},
-	"required": ["key", "patternGraph", "replacementGraph"]
+	"required": ["key", "patternGraph", "replacementGraph"],
+	"$defs": {
+		"externalReplacementGraphConfig": {
+			"type": "object",
+			"properties": {
+				"useExternalInstantiation": {
+					"type": "boolean"
+				},
+				"endpoint": {
+					"type": "string"
+				},
+				"additionalRequestBodyParameters": {
+					"type": "object"
+				}
+			},
+			"required": ["useExternalInstantiation", "endpoint"],
+			"additionalProperties": false
+		}
+	}
 }
