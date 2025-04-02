@@ -20,12 +20,17 @@
 				"$ref": "run-config.schema.json"
 			}
 		},
-		"returnHistory": {
-			"description": "If set to true, the resultset will include the exported hostgraph after each rewriting step in chronological order.",
-			"type": "boolean",
-			"default": false
-		},
-		"additionalProperties": false
+		"options": {
+			"type": "object",
+			"properties": {
+				"returnHistory": {
+					"description": "If set to true, the resultset will include the exported hostgraph after each rewriting step in chronological order.",
+					"type": "boolean",
+					"default": false
+				}
+			},
+			"additionalProperties": false
+		}
 	},
 	"required": ["hostgraph"]
 }

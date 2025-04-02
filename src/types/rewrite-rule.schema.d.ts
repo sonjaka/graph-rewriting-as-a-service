@@ -7,11 +7,11 @@
 
 export interface GraphRewritingRuleSchema {
   key: string;
+  patternGraph: PatternGraphSchema;
+  replacementGraph: ReplacementGraphSchema;
   options?: {
     homomorphic?: boolean;
   };
-  patternGraph: PatternGraphSchema;
-  replacementGraph: ReplacementGraphSchema;
 }
 export interface PatternGraphSchema {
   options: {

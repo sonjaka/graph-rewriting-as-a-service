@@ -9,11 +9,12 @@ export interface GraphRewritingRequestSchema {
   hostgraph: GraphSchema;
   rules?: GraphRewritingRuleSchema[];
   sequence?: RewritingRuleProcessingConfigSchema[];
-  /**
-   * If set to true, the resultset will include the exported hostgraph after each rewriting step in chronological order.
-   */
-  returnHistory?: boolean;
-  additionalProperties?: never;
+  options?: {
+    /**
+     * If set to true, the resultset will include the exported hostgraph after each rewriting step in chronological order.
+     */
+    returnHistory?: boolean;
+  };
 }
 export interface GraphSchema {
   options: {
@@ -69,11 +70,11 @@ export interface GraphEdgeSchema {
 }
 export interface GraphRewritingRuleSchema {
   key: string;
+  patternGraph: PatternGraphSchema;
+  replacementGraph: ReplacementGraphSchema;
   options?: {
     homomorphic?: boolean;
   };
-  patternGraph: PatternGraphSchema;
-  replacementGraph: ReplacementGraphSchema;
 }
 export interface PatternGraphSchema {
   options: {

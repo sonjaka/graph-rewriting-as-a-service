@@ -8,6 +8,12 @@
 		"key": {
 			"type": "string"
 		},
+		"patternGraph": {
+			"$ref": "patterngraph.schema.json"
+		},
+		"replacementGraph": {
+			"$ref": "replacementgraph.schema.json"
+		},
 		"options": {
 			"type": "object",
 			"properties": {
@@ -16,12 +22,6 @@
 				}
 			},
 			"additionalProperties": false
-		},
-		"patternGraph": {
-			"$ref": "patterngraph.schema.json"
-		},
-		"replacementGraph": {
-			"$ref": "replacementgraph.schema.json"
 		}
 	},
 	"required": ["key", "patternGraph", "replacementGraph"]
