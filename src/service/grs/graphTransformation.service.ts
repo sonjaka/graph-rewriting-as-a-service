@@ -135,18 +135,15 @@ export class GraphTransformationService {
 		for (let i = 0; i < repetitions; i++) {
 			// Handle edge case for empty pattern
 			// Additions are still possible!
+			const match = { nodes: {}, edges: {} };
 			if (!patternGraph.nodes.length && !patternGraph.edges.length) {
-				if ('useExternalInstantiation' in replacementGraph) {
-					const result = await this.fetchExternalReplacementGraph(
-						{ nodes: {}, edges: {} },
-						replacementGraph
-					);
-
-					replacementGraph = result;
-				}
+				replacementGraph = await this.handleExternalInstantiation(
+					match,
+					replacementGraph
+				);
 
 				await this.performInstantiationAndReplacement(
-					{ nodes: {}, edges: {} },
+					match,
 					patternGraph,
 					replacementGraph
 				);
@@ -190,14 +187,10 @@ export class GraphTransformationService {
 				for (let i = 0; i < max; i++) {
 					const match = matches[i];
 
-					if ('useExternalInstantiation' in replacementGraph) {
-						const result = await this.fetchExternalReplacementGraph(
-							match,
-							replacementGraph
-						);
-
-						replacementGraph = result;
-					}
+					replacementGraph = await this.handleExternalInstantiation(
+						match,
+						replacementGraph
+					);
 
 					await this.performInstantiationAndReplacement(
 						match,
@@ -212,6 +205,17 @@ export class GraphTransformationService {
 				}
 			}
 		}
+	}
+
+	private async handleExternalInstantiation(
+		match: DBGraphPatternMatchResult,
+		replacementGraph: ReplacementGraphSchema | ExternalReplacementGraphConfig
+	): Promise<ReplacementGraphSchema> {
+		if ('useExternalInstantiation' in replacementGraph) {
+			return await this.fetchExternalReplacementGraph(match, replacementGraph);
+		}
+
+		return replacementGraph;
 	}
 
 	private async fetchExternalReplacementGraph(
