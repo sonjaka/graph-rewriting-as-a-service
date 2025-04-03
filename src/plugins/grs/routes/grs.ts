@@ -55,6 +55,42 @@ const grsHandler = async (
 	return notFoundReply(reply, 'Not found');
 };
 
+const externalApiExampleHandler = async (
+	request: FastifyRequest,
+	reply: FastifyReply
+) => {
+	const result = {
+		options: {
+			type: 'directed',
+		},
+		nodes: [
+			{
+				key: 'A',
+				attributes: {
+					label: "This is A's new label!",
+				},
+			},
+			{
+				key: 'B',
+				attributes: {
+					label: "This is B's new label!",
+				},
+			},
+		],
+		edges: [
+			{
+				key: 'aToB',
+				source: 'A',
+				target: 'B',
+				attributes: {
+					label: 'This is the new edge label! :)',
+				},
+			},
+		],
+	};
+	return okReply(reply, result);
+};
+
 export default async function routes(fastify: FastifyInstance) {
 	fastify.post<{ Body: GrsSchemaInterface }>(
 		'/hostgraph',
@@ -66,4 +102,6 @@ export default async function routes(fastify: FastifyInstance) {
 		Body: GrsSchemaInterface;
 		Reply: IReply<GraphSchemaInterface>;
 	}>('/grs', { schema: { body: GrsSchema } }, grsHandler);
+
+	fastify.post('/example-external-api-result', externalApiExampleHandler);
 }

@@ -1,5 +1,6 @@
 import Graph from 'graphology';
 import {
+	ExternalReplacementGraphConfig,
 	GraphRewritingRequestSchema,
 	GraphSchema,
 } from '../../types/grs.schema';
@@ -47,6 +48,15 @@ interface GraphDiffResult {
 	updatedEdges: EdgeMatchMap;
 	addedEdges: ReplacementEdgeSchema[];
 	removedEdges: GraphEdgeSchema[];
+}
+interface ExternalAPIPostRequest {
+	method: 'POST';
+	headers: Record<string, string>;
+	body: string;
+}
+
+interface ExternalAPIJSONResult {
+	data: ReplacementGraphSchema;
 }
 
 export class GraphTransformationService {
@@ -101,7 +111,8 @@ export class GraphTransformationService {
 		ruleConfig: GraphRewritingRuleSchema,
 		sequenceConfig?: RewritingRuleProcessingConfigSchema
 	) {
-		const { options, patternGraph, replacementGraph } = ruleConfig;
+		const { options, patternGraph } = ruleConfig;
+		let replacementGraph = ruleConfig.replacementGraph;
 
 		let repetitions = 1;
 		if (sequenceConfig?.options?.repeat) {
@@ -124,9 +135,15 @@ export class GraphTransformationService {
 		for (let i = 0; i < repetitions; i++) {
 			// Handle edge case for empty pattern
 			// Additions are still possible!
+			const match = { nodes: {}, edges: {} };
 			if (!patternGraph.nodes.length && !patternGraph.edges.length) {
+				replacementGraph = await this.handleExternalInstantiation(
+					match,
+					replacementGraph
+				);
+
 				await this.performInstantiationAndReplacement(
-					{ nodes: {}, edges: {} },
+					match,
 					patternGraph,
 					replacementGraph
 				);
@@ -170,6 +187,11 @@ export class GraphTransformationService {
 				for (let i = 0; i < max; i++) {
 					const match = matches[i];
 
+					replacementGraph = await this.handleExternalInstantiation(
+						match,
+						replacementGraph
+					);
+
 					await this.performInstantiationAndReplacement(
 						match,
 						patternGraph,
@@ -182,6 +204,75 @@ export class GraphTransformationService {
 					}
 				}
 			}
+		}
+	}
+
+	private async handleExternalInstantiation(
+		match: DBGraphPatternMatchResult,
+		replacementGraph: ReplacementGraphSchema | ExternalReplacementGraphConfig
+	): Promise<ReplacementGraphSchema> {
+		if ('useExternalInstantiation' in replacementGraph) {
+			return await this.fetchExternalReplacementGraph(match, replacementGraph);
+		}
+
+		return replacementGraph;
+	}
+
+	private async fetchExternalReplacementGraph(
+		searchMatch: DBGraphPatternMatchResult,
+		replacementGraph: ExternalReplacementGraphConfig
+	): Promise<ReplacementGraphSchema> {
+		if (!replacementGraph.endpoint) {
+			throw new Error(
+				'GraphTransformationService: external api endpoint not passed for instantiation of replacement graph'
+			);
+		}
+
+		const params: ExternalAPIPostRequest = {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: '',
+		};
+
+		let body = {
+			searchMatch: searchMatch,
+		};
+
+		if (replacementGraph.additionalRequestBodyParameters) {
+			body = {
+				...body,
+				...replacementGraph.additionalRequestBodyParameters,
+			};
+		}
+
+		params.body = JSON.stringify(body);
+
+		try {
+			const response = await fetch(replacementGraph.endpoint, params);
+			if (!response.ok) {
+				throw new Error(
+					`GraphTransformationService: fetch to external api endpoint failed with response ${response.status}`
+				);
+			}
+			const { data } = (await response.json()) as ExternalAPIJSONResult;
+
+			if (!data || (!data?.nodes && !data?.edges)) {
+				return Promise.reject(
+					new Error(
+						'GraphTransformationService: external API instantiation did not yield graph schema with nodes and edges'
+					)
+				);
+			}
+
+			if (data.nodes && !data.edges) {
+				data.edges = [];
+			} else if (!data.nodes && data.edges) {
+				data.nodes = [];
+			}
+
+			return data;
+		} catch (error) {
+			return Promise.reject(error);
 		}
 	}
 
