@@ -267,8 +267,6 @@ describe('Integration tests for grs service against testcontainers', () => {
 			updateEdgeExpectedOutput
 		);
 	}, 10000);
-	test.todo('Test replacement of connected nodes');
-	test.todo('Test replacement of connected nodes');
 	// // REAL WORLD Examples
 	// test.todo('Test transformation of UML to petrinet');
 	// test.todo('Test transformation of UML to petrinet');

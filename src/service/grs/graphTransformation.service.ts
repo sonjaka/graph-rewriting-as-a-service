@@ -49,15 +49,6 @@ interface GraphDiffResult {
 	addedEdges: ReplacementEdgeSchema[];
 	removedEdges: GraphEdgeSchema[];
 }
-interface ExternalAPIPostRequest {
-	method: 'POST';
-	headers: Record<string, string>;
-	body: string;
-}
-
-interface ExternalAPIJSONResult {
-	data: ReplacementGraphSchema;
-}
 
 export class GraphTransformationService {
 	private instantiatorService;
@@ -212,68 +203,12 @@ export class GraphTransformationService {
 		replacementGraph: ReplacementGraphSchema | ExternalReplacementGraphConfig
 	): Promise<ReplacementGraphSchema> {
 		if ('useExternalInstantiation' in replacementGraph) {
-			return await this.fetchExternalReplacementGraph(match, replacementGraph);
+			const instantiatorPlugin =
+				this.instantiatorService.getGraphInstantiator('externalApi');
+			return await instantiatorPlugin.instantiate({ match, replacementGraph });
 		}
 
 		return replacementGraph;
-	}
-
-	private async fetchExternalReplacementGraph(
-		searchMatch: DBGraphPatternMatchResult,
-		replacementGraph: ExternalReplacementGraphConfig
-	): Promise<ReplacementGraphSchema> {
-		if (!replacementGraph.endpoint) {
-			throw new Error(
-				'GraphTransformationService: external api endpoint not passed for instantiation of replacement graph'
-			);
-		}
-
-		const params: ExternalAPIPostRequest = {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: '',
-		};
-
-		let body = {
-			searchMatch: searchMatch,
-		};
-
-		if (replacementGraph.additionalRequestBodyParameters) {
-			body = {
-				...body,
-				...replacementGraph.additionalRequestBodyParameters,
-			};
-		}
-
-		params.body = JSON.stringify(body);
-
-		try {
-			const response = await fetch(replacementGraph.endpoint, params);
-			if (!response.ok) {
-				throw new Error(
-					`GraphTransformationService: fetch to external api endpoint failed with response ${response.status}`
-				);
-			}
-			const { data } = (await response.json()) as ExternalAPIJSONResult;
-
-			if (!data || (!data?.nodes && !data?.edges)) {
-				return Promise.reject(
-					new Error(
-						'GraphTransformationService: external API instantiation did not yield graph schema with nodes and edges'
-					)
-				);
-			}
-
-			if (data.nodes && !data.edges) {
-				data.edges = [];
-			} else if (!data.nodes && data.edges) {
-				data.nodes = [];
-			}
-
-			return data;
-		} catch (error) {
-			return Promise.reject(error);
-		}
 	}
 
 	private async performInstantiationAndReplacement(
@@ -553,29 +488,38 @@ export class GraphTransformationService {
 		}
 
 		instantiatedGraph.nodes.map((node) => {
-			if (node?.attributes) {
-				for (const [key, attribute] of Object.entries(node.attributes)) {
-					if (attribute === null) continue;
-					if (typeof attribute === 'object') {
-						node.attributes[key] = this.instantiatorService.instantiate(
-							attribute.type,
-							{ ...attribute.args, match: formattedMatch }
-						);
-					}
-				}
-			}
+			return this.handleAttributeInstantiationForEdgeOrNodeItem(
+				node,
+				formattedMatch
+			);
 		});
 		instantiatedGraph.edges.map((edge) => {
-			for (const [key, attribute] of Object.entries(edge.attributes)) {
-				if (typeof attribute === 'object') {
-					edge.attributes[key] = this.instantiatorService.instantiate(
-						attribute.type,
-						{ ...attribute.args, match: formattedMatch }
-					);
-				}
-			}
+			return this.handleAttributeInstantiationForEdgeOrNodeItem(
+				edge,
+				formattedMatch
+			);
 		});
 
 		return instantiatedGraph;
+	}
+
+	private handleAttributeInstantiationForEdgeOrNodeItem(
+		item: ReplacementEdgeSchema | ReplacementNodeSchema,
+		match: GraphSchema
+	) {
+		if (item?.attributes) {
+			for (const [key, attribute] of Object.entries(item.attributes)) {
+				if (attribute === null) continue;
+				if (typeof attribute === 'object') {
+					const instantiatorPlugin =
+						this.instantiatorService.getValueInstantiator(attribute.type);
+					item.attributes[key] = instantiatorPlugin.instantiate({
+						...attribute.args,
+						match,
+					});
+				}
+			}
+		}
+		return item;
 	}
 }

@@ -1,7 +1,7 @@
 import RandExp from 'randexp';
-import { IValueInstantiator, IValueInstantiatorOptions } from '../types';
+import { IValueInstantiator, IInstantiatorOptions } from '../types';
 
-interface RandExpInstantiatorOptions extends IValueInstantiatorOptions {
+interface RandExpInstantiatorOptions extends IInstantiatorOptions {
 	pattern: string;
 	flags?: 'i' | 'm';
 }
@@ -19,7 +19,7 @@ export class RandExpInstantiator
 		return this._instantiatorKey;
 	}
 
-	public instantiate(args: RandExpInstantiatorOptions) {
+	public instantiateValue(args: RandExpInstantiatorOptions) {
 		const { pattern, flags } = args;
 
 		if (!pattern) {
@@ -29,5 +29,9 @@ export class RandExpInstantiator
 		if (flags) return new RandExp(pattern, flags).gen();
 
 		return new RandExp(pattern).gen();
+	}
+
+	public instantiate(args: RandExpInstantiatorOptions) {
+		return this.instantiateValue(args);
 	}
 }
