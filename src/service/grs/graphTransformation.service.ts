@@ -27,7 +27,7 @@ import { ReplacementGraphSchema } from '../../types/replacementgraph.schema';
 import { ReplacementNodeSchema } from '../../types/replacementnode.schema';
 import { ReplacementEdgeSchema } from '../../types/replacementedge.schema';
 import { getRandomIntBetween } from '../../utils/numbers';
-import { SpoRewriteService } from './spo-rewrite.service';
+import { SpoRewriteService } from './spoRewrite.service';
 
 export type ResultGraphSchema = Omit<GraphSchema, 'nodes' | 'edges'> & {
 	nodes: (Omit<GraphNodeSchema, 'attributes'> & {
@@ -91,57 +91,22 @@ export class GraphTransformationService {
 		sequenceConfig?: RewritingRuleProcessingConfigSchema
 	) {
 		const { options, patternGraph } = ruleConfig;
-		let replacementGraph = ruleConfig.replacementGraph;
+		const replacementGraph = ruleConfig.replacementGraph;
 
-		let repetitions = 1;
-		if (sequenceConfig?.options?.repeat) {
-			if (
-				Array.isArray(sequenceConfig.options.repeat) &&
-				sequenceConfig.options.repeat.length === 2
-			) {
-				const min = sequenceConfig.options.repeat[0];
-				const max = sequenceConfig.options.repeat[1];
-				repetitions = getRandomIntBetween(min, max);
-			} else if (typeof sequenceConfig.options.repeat === 'number') {
-				repetitions = sequenceConfig.options.repeat;
-			} else {
-				throw Error(
-					'GraphTransformationService: sequence.options.repeat is not a number or numberArray'
-				);
-			}
-		}
+		const repetitions = this.getRepetitionOption(sequenceConfig);
 
 		for (let i = 0; i < repetitions; i++) {
 			// Handle edge case for empty pattern
 			// Additions are still possible!
 			const match = { nodes: {}, edges: {} };
 			if (!patternGraph.nodes.length && !patternGraph.edges.length) {
-				replacementGraph = await this.handleExternalInstantiation(
-					match,
-					replacementGraph
-				);
-
-				await this.performInstantiationAndReplacement(
-					match,
-					patternGraph,
-					replacementGraph
-				);
-
-				this.updateHistory();
-
+				await this.handleMatch(match, patternGraph, replacementGraph);
 				return;
 			}
 
-			let homomorphic = true;
+			const homomorphic = this.getHomomorphicOption(options);
+			const nacs: DBGraphNACs[] = this.getNACs(patternGraph);
 
-			if (options && 'homomorphic' in options) {
-				homomorphic = options.homomorphic ? true : false;
-			}
-
-			let nacs: DBGraphNACs[] = [];
-			if (patternGraph.nacs) {
-				nacs = [patternGraph.nacs];
-			}
 			const matches = await this.graphService.findPatternMatch(
 				patternGraph.nodes,
 				patternGraph.edges,
@@ -150,42 +115,65 @@ export class GraphTransformationService {
 				nacs
 			);
 
-			console.log('MATCHES:', matches);
-
-			// --> either we fix this, or we remove option for multiple replacements
-			// --> user can still replace all occurences by sending the request multiple times
 			if (matches.length) {
-				let max = 1;
-
-				if (sequenceConfig) {
-					if (sequenceConfig.options.mode === 'all') {
-						max = matches.length;
-					} else if (
-						sequenceConfig.options.mode === 'interval' &&
-						sequenceConfig.options?.interval?.max
-					) {
-						max = Math.min(sequenceConfig.options.interval.max, matches.length);
-					}
-				}
+				const max = this.calcMaxReplacements(matches.length, sequenceConfig);
 
 				for (let i = 0; i < max; i++) {
 					const match = matches[i];
 
-					replacementGraph = await this.handleExternalInstantiation(
-						match,
-						replacementGraph
-					);
-
-					await this.performInstantiationAndReplacement(
-						match,
-						patternGraph,
-						replacementGraph
-					);
-
-					this.updateHistory();
+					await this.handleMatch(match, patternGraph, replacementGraph);
 				}
 			}
 		}
+	}
+
+	private calcMaxReplacements(
+		matchesCount: number,
+		sequenceConfig?: RewritingRuleProcessingConfigSchema
+	) {
+		if (!sequenceConfig) return 1;
+		if (sequenceConfig.options.mode === 'all') {
+			return matchesCount;
+		} else if (
+			sequenceConfig.options.mode === 'interval' &&
+			sequenceConfig.options?.interval?.max
+		) {
+			return Math.min(sequenceConfig.options.interval.max, matchesCount);
+		}
+		return 1;
+	}
+
+	private getRepetitionOption(
+		sequenceConfig?: RewritingRuleProcessingConfigSchema
+	) {
+		if (!sequenceConfig) return 1;
+		if (!sequenceConfig.options) return 1;
+		if (!sequenceConfig.options.repeat) return 1;
+
+		if (
+			Array.isArray(sequenceConfig.options.repeat) &&
+			sequenceConfig.options.repeat.length === 2
+		) {
+			const min = sequenceConfig.options.repeat[0];
+			const max = sequenceConfig.options.repeat[1];
+			return getRandomIntBetween(min, max);
+		} else if (typeof sequenceConfig.options.repeat === 'number') {
+			return sequenceConfig.options.repeat;
+		} else {
+			throw Error(
+				'GraphTransformationService: sequence.options.repeat is not a number or numberArray'
+			);
+		}
+	}
+
+	private getHomomorphicOption(options: GraphRewritingRuleSchema['options']) {
+		return options?.homomorphic ?? true;
+	}
+
+	private getNACs(
+		patternGraph: GraphRewritingRuleSchema['patternGraph']
+	): DBGraphNACs[] {
+		return patternGraph.nacs ? [patternGraph.nacs] : [];
 	}
 
 	private async handleExternalInstantiation(
@@ -199,6 +187,25 @@ export class GraphTransformationService {
 		}
 
 		return replacementGraph;
+	}
+
+	private async handleMatch(
+		match: DBGraphPatternMatchResult,
+		patternGraph: PatternGraphSchema,
+		replacementGraph: ReplacementGraphSchema | ExternalReplacementGraphConfig
+	) {
+		replacementGraph = await this.handleExternalInstantiation(
+			match,
+			replacementGraph
+		);
+
+		await this.performInstantiationAndReplacement(
+			match,
+			patternGraph,
+			replacementGraph
+		);
+
+		this.updateHistory();
 	}
 
 	private async performInstantiationAndReplacement(
