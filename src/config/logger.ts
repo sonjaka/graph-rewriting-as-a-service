@@ -13,6 +13,7 @@ export const loggerConfig: Record<
 			target: 'pino-pretty',
 			options: {
 				colorize: true,
+				singleLine: true,
 				translateTime: 'HH:MM:ss Z',
 				ignore: 'pid,hostname',
 			},

@@ -622,7 +622,14 @@
 					{
 						"key": "Function",
 						"attributes": {
-							"type": "Function"
+							"type": "Function",
+							"label": {
+								"type": "faker",
+								"args": {
+									"module": "company",
+									"method": "buzzVerb"
+								}
+							}
 						}
 					},
 					{
@@ -695,7 +702,14 @@
 					{
 						"key": "Function2",
 						"attributes": {
-							"type": "Function"
+							"type": "Function",
+							"label": {
+								"type": "faker",
+								"args": {
+									"module": "word",
+									"method": "verb"
+								}
+							}
 						}
 					},
 					{

@@ -11,12 +11,9 @@ export interface GraphSchema {
      * One of directed or undirected
      */
     type: "directed" | "undirected";
-    allowSelfLoops?: boolean;
-    multi?: boolean;
   };
   nodes: GraphNodeSchema[];
   edges: GraphEdgeSchema[];
-  additionalProperties?: never;
 }
 export interface GraphNodeSchema {
   /**

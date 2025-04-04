@@ -212,10 +212,14 @@ export class GraphTransformationService {
 		match: DBGraphPatternMatchResult,
 		replacementGraph: ReplacementGraphSchema | ExternalReplacementGraphConfig
 	): Promise<ReplacementGraphSchema> {
-		if ('useExternalInstantiation' in replacementGraph) {
-			const instantiatorPlugin =
-				this.instantiatorService.getGraphInstantiator('externalApi');
-			return await instantiatorPlugin.instantiate({ match, replacementGraph });
+		if ('type' in replacementGraph) {
+			const instantiatorPlugin = this.instantiatorService.getGraphInstantiator(
+				replacementGraph.type
+			);
+			return await instantiatorPlugin.instantiate({
+				match,
+				...replacementGraph.args,
+			});
 		}
 
 		return replacementGraph;

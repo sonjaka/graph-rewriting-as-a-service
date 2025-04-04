@@ -11,8 +11,6 @@ export interface ReplacementGraphSchema {
      * One of directed or undirected
      */
     type: "directed" | "undirected";
-    allowSelfLoops?: boolean;
-    multi?: boolean;
   };
   nodes: ReplacementNodeSchema[];
   edges: ReplacementEdgeSchema[];
@@ -30,7 +28,7 @@ export interface ReplacementNodeSchema {
   };
 }
 export interface GraphInstantiatedAttributeSchema {
-  type: string;
+  type: "randexp" | "jsonLogic" | "faker";
   args: {
     [k: string]: unknown;
   };
