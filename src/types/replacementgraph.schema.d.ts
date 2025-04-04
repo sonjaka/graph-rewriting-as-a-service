@@ -11,8 +11,6 @@ export interface ReplacementGraphSchema {
      * One of directed or undirected
      */
     type: "directed" | "undirected";
-    allowSelfLoops?: boolean;
-    multi?: boolean;
   };
   nodes: ReplacementNodeSchema[];
   edges: ReplacementEdgeSchema[];

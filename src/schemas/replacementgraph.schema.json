@@ -11,12 +11,6 @@
 				"type": {
 					"description": "One of directed or undirected",
 					"enum": ["directed", "undirected"]
-				},
-				"allowSelfLoops": {
-					"type": "boolean"
-				},
-				"multi": {
-					"type": "boolean"
 				}
 			},
 			"required": ["type"],

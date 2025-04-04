@@ -11,8 +11,6 @@ export interface PatternGraphSchema {
      * One of directed or undirected
      */
     type: "directed" | "undirected";
-    allowSelfLoops?: boolean;
-    multi?: boolean;
   };
   nodes: PatternNodeSchema[];
   edges: GraphEdgeSchema[];
