@@ -9,7 +9,7 @@
 			"type": "object",
 			"properties": {
 				"type": {
-					"description": "One of directed or undirected",
+					"description": "Type of the graph: either directed or undirected",
 					"enum": ["directed", "undirected"]
 				}
 			},
