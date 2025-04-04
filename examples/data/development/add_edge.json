@@ -14,7 +14,8 @@
 			{
 				"key": "B",
 				"attributes": {
-					"label": "B"
+					"label": "B",
+					"type": "Function"
 				}
 			}
 		],
@@ -45,8 +46,7 @@
 					{
 						"key": "B",
 						"attributes": {
-							"label": "B",
-							"type": "Function"
+							"label": "B"
 						}
 					}
 				],

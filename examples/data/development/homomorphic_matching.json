@@ -7,18 +7,21 @@
 			{
 				"key": "A",
 				"attributes": {
+					"originalKey": "A",
 					"label": "Match me!"
 				}
 			},
 			{
 				"key": "B",
 				"attributes": {
+					"originalKey": "B",
 					"label": "Match me!"
 				}
 			},
 			{
 				"key": "C",
 				"attributes": {
+					"originalKey": "C",
 					"label": "Don't Match me!"
 				}
 			}

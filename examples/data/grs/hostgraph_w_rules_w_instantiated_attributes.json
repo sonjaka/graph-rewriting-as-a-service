@@ -196,17 +196,5 @@
 				]
 			}
 		}
-	],
-	"run": [
-		{
-			"rule": "add_triangle",
-			"options": {
-				"mode": "interval",
-				"interval": {
-					"min": "1",
-					"max": "2"
-				}
-			}
-		}
 	]
 }
