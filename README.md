@@ -21,6 +21,10 @@ You may start the project by running the tasks `docker compose up` and `npm run 
 
 If using VSCode you can instead run the VSCode-Task `Start dev environment` as a shortcut.
 
+## Documentation
+
+For documentation of the rewrite and instantiation rules, please refer to the [Wiki](https://github.com/sonjaka/graph-rewriting-as-a-service/wiki).
+
 ## API Collection
 
 This repository contains a collection of usage examples for the API endpoints.
