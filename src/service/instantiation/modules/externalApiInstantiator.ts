@@ -1,11 +1,11 @@
-import { IGraphInstantiator, IInstantiatorOptions } from '../types';
+import { IGraphInstantiator } from '../types';
 import { ReplacementGraphSchema } from '../../../types/replacementgraph.schema';
-import { ExternalReplacementGraphConfig } from '../../../types/grs.schema';
+import { ExternalApiInstantiationOptions } from '../../../types/grs.schema';
 import { DBGraphPatternMatchResult } from '../../db/types';
 
-interface ExternalApiInstantiatorOptions extends IInstantiatorOptions {
+interface ExternalApiInstantiatorOptions
+	extends ExternalApiInstantiationOptions {
 	match: DBGraphPatternMatchResult;
-	replacementGraph: ExternalReplacementGraphConfig;
 }
 
 export enum ExternalApiInstantiatorErrors {
@@ -38,36 +38,27 @@ export class ExternalApiInstantiator
 	}
 
 	public async instantiateGraph(args: ExternalApiInstantiatorOptions) {
-		const { match, replacementGraph } = args;
+		const result = await this.fetchExternalReplacementGraph(args);
 
-		if (!replacementGraph.endpoint) {
-			throw new Error(ExternalApiInstantiatorErrors.NoEndpoint);
-		}
-
-		try {
-			const result = await this.fetchExternalReplacementGraph(
-				match,
-				replacementGraph
-			);
-
-			return result;
-		} catch (error) {
-			throw new Error(error);
-		}
+		return result;
 	}
 
 	private async fetchExternalReplacementGraph(
-		searchMatch: DBGraphPatternMatchResult,
-		replacementGraph: ExternalReplacementGraphConfig
+		args: ExternalApiInstantiatorOptions
 	): Promise<ReplacementGraphSchema> {
+		const { match, endpoint, additionalRequestBodyParameters } = args;
+		if (!endpoint) {
+			throw new Error(ExternalApiInstantiatorErrors.NoEndpoint);
+		}
+
 		const params: ExternalAPIPostRequest = {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
-			body: this.buildRequestBody(searchMatch, replacementGraph),
+			body: this.buildRequestBody(match, additionalRequestBodyParameters),
 		};
 
 		try {
-			const response = await fetch(replacementGraph.endpoint, params);
+			const response = await fetch(endpoint, params);
 			if (!response.ok) {
 				throw new Error(
 					`${ExternalApiInstantiatorErrors.FailedFetch} ${response.status}`
@@ -85,11 +76,11 @@ export class ExternalApiInstantiator
 
 	private buildRequestBody(
 		searchMatch: DBGraphPatternMatchResult,
-		replacementGraph: ExternalReplacementGraphConfig
+		additionalRequestBodyParameters: ExternalApiInstantiatorOptions['additionalRequestBodyParameters']
 	): string {
 		const body = {
 			searchMatch,
-			...(replacementGraph.additionalRequestBodyParameters || {}),
+			...(additionalRequestBodyParameters || {}),
 		};
 		return JSON.stringify(body);
 	}

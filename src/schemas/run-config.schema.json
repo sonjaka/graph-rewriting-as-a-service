@@ -15,7 +15,8 @@
 			"properties": {
 				"mode": {
 					"description": "Replace either 'all', only the 'first' or between x and y pattern matches",
-					"enum": ["all", "first", "interval"]
+					"enum": ["all", "first", "interval"],
+					"default": "first"
 				},
 				"interval": {
 					"type": "object",

@@ -35,11 +35,6 @@ describe('Test externalApi instantiator', () => {
 			edges: {},
 		};
 
-		const replacementGraph = {
-			useExternalInstantiation: true,
-			endpoint: 'http://localhost:8080/example-external-api-result',
-		};
-
 		const data = {
 			nodes: [
 				{
@@ -56,7 +51,7 @@ describe('Test externalApi instantiator', () => {
 		try {
 			await instantiator.instantiate({
 				match,
-				replacementGraph,
+				endpoint: 'http://localhost:8080/example-external-api-result',
 			});
 		} catch {
 			// console.log('caught error');
@@ -90,19 +85,14 @@ describe('Test externalApi instantiator', () => {
 			edges: {},
 		};
 
-		const replacementGraph = {
-			useExternalInstantiation: true,
-			endpoint: 'http://localhost:8080/example-external-api-result',
-			additionalRequestBodyParameters: {
-				param1: 'hello',
-				param2: 'world',
-			},
-		};
-
 		try {
 			await instantiator.instantiate({
 				match,
-				replacementGraph,
+				endpoint: 'http://localhost:8080/example-external-api-result',
+				additionalRequestBodyParameters: {
+					param1: 'hello',
+					param2: 'world',
+				},
 			});
 		} catch {
 			// do nothing
@@ -140,15 +130,6 @@ describe('Test externalApi instantiator', () => {
 			edges: {},
 		};
 
-		const replacementGraph = {
-			useExternalInstantiation: true,
-			endpoint: 'http://localhost:8080/example-external-api-result',
-			additionalRequestBodyParameters: {
-				param1: 'hello',
-				param2: 'world',
-			},
-		};
-
 		vi.mocked(fetch).mockReturnValue({
 			// @ts-expect-error: incorrectly typed
 			ok: true,
@@ -157,7 +138,11 @@ describe('Test externalApi instantiator', () => {
 
 		const result = await instantiator.instantiate({
 			match,
-			replacementGraph,
+			endpoint: 'http://localhost:8080/example-external-api-result',
+			additionalRequestBodyParameters: {
+				param1: 'hello',
+				param2: 'world',
+			},
 		});
 		expect(result).toStrictEqual({ nodes: [], edges: [] });
 
@@ -168,7 +153,11 @@ describe('Test externalApi instantiator', () => {
 		});
 		const result2 = await instantiator.instantiate({
 			match,
-			replacementGraph,
+			endpoint: 'http://localhost:8080/example-external-api-result',
+			additionalRequestBodyParameters: {
+				param1: 'hello',
+				param2: 'world',
+			},
 		});
 		expect(result2).toStrictEqual({ nodes: [], edges: [] });
 	});
@@ -179,11 +168,6 @@ describe('Test externalApi instantiator', () => {
 		const match: DBGraphPatternMatchResult = {
 			nodes: {},
 			edges: {},
-		};
-
-		const replacementGraph = {
-			useExternalInstantiation: true,
-			endpoint: 'http://localhost:8080/example-external-api-result',
 		};
 
 		const data = {
@@ -198,7 +182,7 @@ describe('Test externalApi instantiator', () => {
 		await expect(() =>
 			instantiator.instantiate({
 				match,
-				replacementGraph,
+				endpoint: 'http://localhost:8080/example-external-api-result',
 			})
 		).rejects.toThrowError(`${ExternalApiInstantiatorErrors.FailedFetch} 500`);
 	});
@@ -220,15 +204,6 @@ describe('Test externalApi instantiator', () => {
 			edges: {},
 		};
 
-		const replacementGraph = {
-			useExternalInstantiation: true,
-			endpoint: 'http://localhost:8080/example-external-api-result',
-			additionalRequestBodyParameters: {
-				param1: 'hello',
-				param2: 'world',
-			},
-		};
-
 		vi.mocked(fetch).mockReturnValueOnce({
 			// @ts-expect-error: incorrectly typed
 			ok: true,
@@ -238,7 +213,11 @@ describe('Test externalApi instantiator', () => {
 		await expect(() =>
 			instantiator.instantiate({
 				match,
-				replacementGraph,
+				endpoint: 'http://localhost:8080/example-external-api-result',
+				additionalRequestBodyParameters: {
+					param1: 'hello',
+					param2: 'world',
+				},
 			})
 		).rejects.toThrowError(ExternalApiInstantiatorErrors.InvalidResult);
 	});
@@ -253,20 +232,17 @@ describe('Test externalApi instantiator', () => {
 			edges: {},
 		};
 
-		const replacementGraph = {
-			useExternalInstantiation: true,
-			additionalRequestBodyParameters: {
-				param1: 'hello',
-				param2: 'world',
-			},
-		};
-
 		await expect(() =>
-			instantiator.instantiate({
-				match,
+			instantiator.instantiate(
 				// @ts-expect-error: Parameters are not as typed
-				replacementGraph,
-			})
+				{
+					match,
+					additionalRequestBodyParameters: {
+						param1: 'hello',
+						param2: 'world',
+					},
+				}
+			)
 		).rejects.toThrowError(ExternalApiInstantiatorErrors.NoEndpoint);
 	});
 
@@ -287,21 +263,16 @@ describe('Test externalApi instantiator', () => {
 			edges: {},
 		};
 
-		const replacementGraph = {
-			useExternalInstantiation: true,
-			endpoint: 'http://localhost:8080/example-external-api-result',
-			additionalRequestBodyParameters: {
-				param1: 'hello',
-				param2: 'world',
-			},
-		};
-
 		vi.mocked(fetch).mockRejectedValue('Api unreachable');
 
 		await expect(() =>
 			instantiator.instantiate({
 				match,
-				replacementGraph,
+				endpoint: 'http://localhost:8080/example-external-api-result',
+				additionalRequestBodyParameters: {
+					param1: 'hello',
+					param2: 'world',
+				},
 			})
 		).rejects.toThrowError('Api unreachable');
 	});

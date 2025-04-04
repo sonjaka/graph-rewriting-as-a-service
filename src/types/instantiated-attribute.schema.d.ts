@@ -6,7 +6,7 @@
  */
 
 export interface GraphInstantiatedAttributeSchema {
-  type: string;
+  type: "randexp" | "jsonLogic" | "faker";
   args: {
     [k: string]: unknown;
   };

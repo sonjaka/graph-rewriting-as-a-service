@@ -32,9 +32,19 @@
 		"externalReplacementGraphConfig": {
 			"type": "object",
 			"properties": {
-				"useExternalInstantiation": {
-					"type": "boolean"
+				"type": {
+					"enum": ["externalApi"]
 				},
+				"args": {
+					"$ref": "#/$defs/externalApiInstantiationOptions"
+				}
+			},
+			"required": ["type"],
+			"additionalProperties": false
+		},
+		"externalApiInstantiationOptions": {
+			"type": "object",
+			"properties": {
 				"endpoint": {
 					"type": "string"
 				},
@@ -42,7 +52,7 @@
 					"type": "object"
 				}
 			},
-			"required": ["useExternalInstantiation", "endpoint"],
+			"required": ["endpoint"],
 			"additionalProperties": false
 		}
 	}

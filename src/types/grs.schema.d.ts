@@ -123,7 +123,7 @@ export interface ReplacementNodeSchema {
   };
 }
 export interface GraphInstantiatedAttributeSchema {
-  type: string;
+  type: "randexp" | "jsonLogic" | "faker";
   args: {
     [k: string]: unknown;
   };
@@ -160,7 +160,10 @@ export interface ReplacementEdgeSchema {
   };
 }
 export interface ExternalReplacementGraphConfig {
-  useExternalInstantiation: boolean;
+  type: "externalApi";
+  args?: ExternalApiInstantiationOptions;
+}
+export interface ExternalApiInstantiationOptions {
   endpoint: string;
   additionalRequestBodyParameters?: {
     [k: string]: unknown;

@@ -6,7 +6,7 @@
 	"additionalProperties": false,
 	"properties": {
 		"type": {
-			"type": "string"
+			"enum": ["randexp", "jsonLogic", "faker"]
 		},
 		"args": {
 			"type": "object",

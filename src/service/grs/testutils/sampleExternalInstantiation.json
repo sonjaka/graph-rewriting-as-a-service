@@ -46,24 +46,22 @@
 	},
 	"rules": [
 		{
-			"key": "add_triangle",
+			"key": "rule1",
 			"patternGraph": {
 				"options": {
 					"type": "directed"
 				},
 				"nodes": [
 					{
-						"key": "B",
+						"key": "Node",
 						"attributes": {}
 					}
 				],
 				"edges": []
 			},
 			"replacementGraph": {
-				"type": "externalApi",
-				"args": {
-					"endpoint": "http://localhost:8080/example-external-api-result"
-				}
+				"useExternalInstantiation": true,
+				"endpoint": "http://www.test.de/example/api"
 			}
 		}
 	]
