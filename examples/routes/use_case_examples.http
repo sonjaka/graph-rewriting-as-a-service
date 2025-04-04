@@ -5,7 +5,9 @@ Content-Type: application/json
 < ../data/usecases/sierpinsky_triangles.json
 
 
-// Example: EPK Instantiation with jsonLogic instantiated attributes
+// Example: EPK Instantiation
+// - with jsonLogic instantiated attributes
+// - with faker generated function labels
 POST http://localhost:8080/grs
 Content-Type: application/json
 
