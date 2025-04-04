@@ -1,4 +1,4 @@
-import { describe, test, expect } from 'vitest';
+import { describe, test, expect, vi, beforeEach } from 'vitest';
 import {
 	JsonLogicInstantiator,
 	JsonLogicErrors,
@@ -7,8 +7,15 @@ import {
 } from './jsonLogicInstantiator';
 import { RulesLogic } from 'json-logic-js';
 import { GraphSchema } from '../../../types/grs.schema';
+import { logger } from '../../../utils/logger';
+
+const logDebugSpy = vi.spyOn(logger, 'debug');
 
 describe('JsonLogicInstantiator', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
+
 	test('Should return the instantiator key', () => {
 		const instantiator = new JsonLogicInstantiator();
 		expect(instantiator.instantiatorKey).toBe('jsonLogic');
@@ -337,7 +344,7 @@ describe('JsonLogicInstantiator', () => {
 		).toThrowError(JsonLogicErrors.EvaluationFailed);
 	});
 
-	test('Should throw error if a referenced node attribute is not found in the matches map', () => {
+	test('Should return empty string referenced node attribute is not found in the matches map', () => {
 		const instantiator = new JsonLogicInstantiator();
 		const matchNodes = [
 			{
@@ -366,12 +373,16 @@ describe('JsonLogicInstantiator', () => {
 			],
 		};
 
-		expect(() =>
-			instantiator.instantiate({
-				rule: rule as RulesLogic,
-				match: match as GraphSchema,
-			})
-		).toThrowError(JsonPathErrors.PathUnresolvable);
+		const result = instantiator.instantiate({
+			rule: rule as RulesLogic,
+			match: match as GraphSchema,
+		});
+		expect(result).toBe('');
+
+		expect(logDebugSpy).toHaveBeenCalled();
+		expect(logDebugSpy).toHaveBeenCalledWith(
+			'JsonLogicInstantiator: JSON Path \'$.nodes.[?(@.key === "test")].attributes.attributeName\' not found in searchgraph match'
+		);
 	});
 
 	test('Should throw error if a referenced node is ambigous', () => {
@@ -408,7 +419,7 @@ describe('JsonLogicInstantiator', () => {
 		).toThrowError(JsonPathErrors.PathAmbigous);
 	});
 
-	test('Should throw error if referenced node is not formatted correctly', () => {
+	test('Should return empty string if referenced node is not formatted correctly', () => {
 		const instantiator = new JsonLogicInstantiator();
 		const matchNodes = [
 			{
@@ -430,11 +441,15 @@ describe('JsonLogicInstantiator', () => {
 			],
 		};
 
-		expect(() =>
-			instantiator.instantiate({
-				rule: rule as RulesLogic,
-				match: match as GraphSchema,
-			})
-		).toThrowError(JsonPathErrors.PathUnresolvable);
+		const result = instantiator.instantiate({
+			rule: rule as RulesLogic,
+			match: match as GraphSchema,
+		});
+		expect(result).toBe('');
+
+		expect(logDebugSpy).toHaveBeenCalled();
+		expect(logDebugSpy).toHaveBeenCalledWith(
+			"JsonLogicInstantiator: JSON Path '$.node.attributes.attributeName' not found in searchgraph match"
+		);
 	});
 });

@@ -4,6 +4,7 @@ import type { AdditionalOperation, RulesLogic } from 'json-logic-js';
 
 import { IValueInstantiator, IInstantiatorOptions } from '../types';
 import { GraphSchema } from '../../../types/graph.schema';
+import { logger } from '../../../utils/logger';
 
 type JsonLogicRule = RulesLogic<AdditionalOperation>;
 
@@ -28,7 +29,7 @@ export enum JsonPathErrors {
 export class JsonLogicInstantiator
 	implements IValueInstantiator<JsonLogicInstantiatorOptions>
 {
-	_instantiatorKey = 'jsonLogic';
+	readonly _instantiatorKey = 'jsonLogic';
 
 	get instantiatorKey() {
 		return this._instantiatorKey;
@@ -37,16 +38,9 @@ export class JsonLogicInstantiator
 	public instantiateValue(
 		args: JsonLogicInstantiatorOptions
 	): string | number | boolean {
+		this.validateArgs(args);
+
 		const { rule, data, match } = args;
-
-		if (!rule) {
-			throw new Error(JsonLogicErrors.RulesNotProvided);
-		}
-
-		if (!match) {
-			throw new Error(JsonLogicErrors.MatchNotProvided);
-		}
-
 		return this.resolveJsonLogicRule(rule, match, data);
 	}
 
@@ -54,39 +48,28 @@ export class JsonLogicInstantiator
 		return this.instantiateValue(args);
 	}
 
+	private validateArgs(args: JsonLogicInstantiatorOptions) {
+		if (!args.rule) {
+			throw new Error(JsonLogicErrors.RulesNotProvided);
+		}
+
+		if (!args.match) {
+			throw new Error(JsonLogicErrors.MatchNotProvided);
+		}
+	}
+
 	private resolveJsonLogicRule(
 		rule: RulesLogic<AdditionalOperation>,
 		graph: GraphSchema,
 		data?: unknown
 	): string | number | boolean {
+		logger.info(`JsonLogicInstantiator: Start instantiating JsonLogic Value`);
 		if (rule && typeof rule === 'object') {
-			for (const [key, value] of Object.entries(rule)) {
-				if (Array.isArray(value)) {
-					(rule as AdditionalOperation)[key] = value.map((item) =>
-						this.resolveSearchGraphValue(item, graph)
-					);
-				} else if (typeof value === 'string') {
-					(rule as AdditionalOperation)[key] = this.resolveSearchGraphValue(
-						value,
-						graph
-					);
-				}
-			}
+			rule = this.replacePlaceholderValues(rule, graph);
 		}
 
 		if (data && typeof data === 'object') {
-			for (const [key, value] of Object.entries(data)) {
-				if (Array.isArray(value)) {
-					(data as AdditionalOperation)[key] = value.map((item) =>
-						this.resolveSearchGraphValue(item, graph)
-					);
-				} else if (typeof value === 'string') {
-					(data as AdditionalOperation)[key] = this.resolveSearchGraphValue(
-						value,
-						graph
-					);
-				}
-			}
+			data = this.replacePlaceholderValues(data, graph);
 		}
 
 		try {
@@ -94,17 +77,46 @@ export class JsonLogicInstantiator
 			// we need to turn these into strings if not primary data type
 			const result = JsonLogic.apply(rule, data);
 			if (['string', 'boolean', 'number'].includes(typeof result)) {
+				logger.info(
+					{ result },
+					`JsonLogicInstantiator: JsonValue successfully instantiated.`
+				);
 				return result;
 			} else if (result === null) {
+				logger.info(
+					`JsonLogicInstantiator: JsonValue instantiation returned no result.`
+				);
 				return '';
 			} else {
+				logger.info(
+					{ result },
+					`JsonLogicInstantiator: JsonValue instantiated and transformed to string.`
+				);
 				return String(result);
 			}
 		} catch (err) {
-			// TODO: implement better logging
-			console.log(err);
+			logger.error(
+				{ err },
+				`JsonLogicInstantiator: JsonValue instantiation failed.`
+			);
 			throw new Error(JsonLogicErrors.EvaluationFailed);
 		}
+	}
+
+	private replacePlaceholderValues(data: object, graph: GraphSchema) {
+		for (const [key, value] of Object.entries(data)) {
+			if (Array.isArray(value)) {
+				(data as AdditionalOperation)[key] = value.map((item) =>
+					this.resolveSearchGraphValue(item, graph)
+				);
+			} else if (typeof value === 'string') {
+				(data as AdditionalOperation)[key] = this.resolveSearchGraphValue(
+					value,
+					graph
+				);
+			}
+		}
+		return data;
 	}
 
 	private resolveSearchGraphValue(value: JsonLogicRule, graph: GraphSchema) {
@@ -134,7 +146,11 @@ export class JsonLogicInstantiator
 			}
 
 			if (!result) {
-				throw new Error(JsonPathErrors.PathUnresolvable);
+				// No result is a valid option.
+				logger.debug(
+					`JsonLogicInstantiator: JSON Path '${value}' not found in searchgraph match`
+				);
+				return '';
 			}
 			if (result.length > 1) {
 				throw new Error(JsonPathErrors.PathAmbigous);
