@@ -13,10 +13,14 @@ import RewritingRuleProcessingConfigSchema from '../../schemas/run-config.schema
 import grsRoutes from '../grs/routes/grs';
 
 const grsPlugin: FastifyPluginAsync = async (fastify: FastifyInstance) => {
+	fastify.log.info('GraphTransformation Plugin: Setting up plugin');
 	if (fastify.hasRequestDecorator('dbGraphService')) {
 		fastify.register(grsRoutes);
+	} else {
+		fastify.log.error("GraphTransformation Plugin: Can't find datbase service");
 	}
 
+	fastify.log.debug('GraphTransformation Plugin: Adding relevant schemas');
 	fastify.addSchema(RewritingRuleProcessingConfigSchema);
 	fastify.addSchema(PatternnodeSchema);
 	fastify.addSchema(PatterngraphSchema);

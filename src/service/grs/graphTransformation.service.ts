@@ -28,6 +28,7 @@ import { ReplacementNodeSchema } from '../../types/replacementnode.schema';
 import { ReplacementEdgeSchema } from '../../types/replacementedge.schema';
 import { getRandomIntBetween } from '../../utils/numbers';
 import { SpoRewriteService } from './spoRewrite.service';
+import { logger } from '../../utils/logger';
 
 export type ResultGraphSchema = Omit<GraphSchema, 'nodes' | 'edges'> & {
 	nodes: (Omit<GraphNodeSchema, 'attributes'> & {
@@ -56,6 +57,8 @@ export class GraphTransformationService {
 		processingConfig: RewritingRuleProcessingConfigSchema[] = [],
 		options: GraphRewritingRequestSchema['options'] = {}
 	): Promise<ResultGraphSchema[]> {
+		logger.info('GraphTransformationService: Starting graph transformation.');
+
 		this.graphService.graphType = hostgraphData.options.type;
 		await this.importHostgraph(hostgraphData);
 
@@ -75,6 +78,9 @@ export class GraphTransformationService {
 			}
 		} else {
 			// If no sequence config is given, run and replace only the first match
+			logger.info(
+				'GraphTransformationService: No sequence configuration provided. Executing rules sequentially, replacing only the first match.'
+			);
 			for (const rule of rules) {
 				await this.executeRule(rule);
 			}
@@ -82,6 +88,9 @@ export class GraphTransformationService {
 
 		const finalHostgraph = await this.exportHostgraph();
 		this.history.push(finalHostgraph);
+		logger.info(
+			'GraphTransformationService: Graph transformation completed. Final host graph exported.'
+		);
 
 		return this.history;
 	}
@@ -93,7 +102,15 @@ export class GraphTransformationService {
 		const { options, patternGraph } = ruleConfig;
 		const replacementGraph = ruleConfig.replacementGraph;
 
+		logger.debug(
+			`GraphTransformationService: Executing rule "${ruleConfig.key}"`
+		);
 		const repetitions = this.getRepetitionOption(sequenceConfig);
+		if (repetitions > 1) {
+			logger.debug(
+				`GraphTransformationService: Rule is set to be repeated ${repetitions} times`
+			);
+		}
 
 		for (let i = 0; i < repetitions; i++) {
 			// Handle edge case for empty pattern
@@ -101,6 +118,9 @@ export class GraphTransformationService {
 			const match = { nodes: {}, edges: {} };
 			if (!patternGraph.nodes.length && !patternGraph.edges.length) {
 				await this.handleMatch(match, patternGraph, replacementGraph);
+				logger.debug(
+					`GraphTransformationService: Finished executing rule "${ruleConfig.key}"`
+				);
 				return;
 			}
 
@@ -115,8 +135,13 @@ export class GraphTransformationService {
 				nacs
 			);
 
+			logger.debug(
+				`GraphTransformationService: Found ${matches.length} match(es)`
+			);
+
 			if (matches.length) {
 				const max = this.calcMaxReplacements(matches.length, sequenceConfig);
+				logger.debug(`GraphTransformationService: Replacing ${max} match(es)`);
 
 				for (let i = 0; i < max; i++) {
 					const match = matches[i];
@@ -125,6 +150,9 @@ export class GraphTransformationService {
 				}
 			}
 		}
+		logger.debug(
+			`GraphTransformationService: Finished executing rule "${ruleConfig.key}"`
+		);
 	}
 
 	private calcMaxReplacements(
@@ -167,7 +195,11 @@ export class GraphTransformationService {
 	}
 
 	private getHomomorphicOption(options: GraphRewritingRuleSchema['options']) {
-		return options?.homomorphic ?? true;
+		const useHomomorphic = options?.homomorphic ?? true;
+		logger.debug(
+			`GraphTransformationService: Using ${useHomomorphic ? 'homomorphic' : 'isomorphic'} matching`
+		);
+		return useHomomorphic;
 	}
 
 	private getNACs(

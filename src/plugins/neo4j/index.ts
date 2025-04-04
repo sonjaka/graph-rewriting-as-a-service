@@ -89,14 +89,13 @@ const neo4jConnector: FastifyPluginAsync = async (fastify: FastifyInstance) => {
 		});
 	}
 
-	fastify.log.info('Fastify Neo4j Plugin: Adding relevant schemas');
+	fastify.log.debug('Fastify Neo4j Plugin: Adding relevant schemas');
 	fastify.addSchema(GraphNodeSchema);
 	fastify.addSchema(GraphEdgeSchema);
 	fastify.addSchema(GraphSchema);
 	fastify.addSchema(GraphInstantiatedAttribute);
 
-	fastify.log.info('Fastify Neo4j Plugin: Adding Neo4j routes');
-
+	fastify.log.debug('Fastify Neo4j Plugin: Adding Neo4j routes');
 	fastify.register(healthRoutes, {
 		prefix: '/neo4j',
 	});
