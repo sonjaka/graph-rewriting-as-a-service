@@ -74,7 +74,7 @@ export class GraphTransformationService {
 				await this.executeRule(ruleConfig, processStep);
 			}
 		} else {
-			// If no sequence config is give, run and replace only the first match
+			// If no sequence config is given, run and replace only the first match
 			for (const rule of rules) {
 				await this.executeRule(rule);
 			}
@@ -133,6 +133,7 @@ export class GraphTransformationService {
 			}
 
 			let homomorphic = true;
+
 			if (options && 'homomorphic' in options) {
 				homomorphic = options.homomorphic ? true : false;
 			}
@@ -148,6 +149,8 @@ export class GraphTransformationService {
 				homomorphic,
 				nacs
 			);
+
+			console.log('MATCHES:', matches);
 
 			// --> either we fix this, or we remove option for multiple replacements
 			// --> user can still replace all occurences by sending the request multiple times

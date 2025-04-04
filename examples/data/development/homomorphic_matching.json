@@ -1,0 +1,113 @@
+{
+	"hostgraph": {
+		"options": {
+			"type": "directed"
+		},
+		"nodes": [
+			{
+				"key": "A",
+				"attributes": {
+					"label": "Match me!"
+				}
+			},
+			{
+				"key": "B",
+				"attributes": {
+					"label": "Match me!"
+				}
+			},
+			{
+				"key": "C",
+				"attributes": {
+					"label": "Don't Match me!"
+				}
+			}
+		],
+		"edges": [
+			{
+				"key": "aToA",
+				"source": "A",
+				"target": "A",
+				"attributes": {}
+			},
+			{
+				"key": "aToB",
+				"source": "A",
+				"target": "B",
+				"attributes": {}
+			},
+			{
+				"key": "aToC",
+				"source": "A",
+				"target": "C",
+				"attributes": {}
+			}
+		]
+	},
+	"rules": [
+		{
+			"key": "updateNode",
+			"options": {
+				"homomorphic": true
+			},
+			"patternGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "n1",
+						"attributes": {}
+					},
+					{
+						"key": "n2",
+						"attributes": {
+							"label": "Match me!"
+						}
+					}
+				],
+				"edges": [
+					{
+						"key": "e1",
+						"source": "n1",
+						"target": "n2",
+						"attributes": {}
+					}
+				]
+			},
+			"replacementGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "n1",
+						"attributes": {}
+					},
+					{
+						"key": "n2",
+						"attributes": {
+							"label": "I've been replaced!"
+						}
+					}
+				],
+				"edges": [
+					{
+						"key": "e1",
+						"source": "n1",
+						"target": "n2",
+						"attributes": {}
+					}
+				]
+			}
+		}
+	],
+	"sequence": [
+		{
+			"rule": "updateNode",
+			"options": {
+				"mode": "all"
+			}
+		}
+	]
+}

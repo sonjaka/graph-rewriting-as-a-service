@@ -15,8 +15,6 @@ import {
 } from './graphTransformation.service';
 import { IDBGraphService } from '../db/types';
 import { GraphSchema } from '../../types/graph.schema';
-import { GraphRewritingRuleSchema } from '../../types/grs.schema';
-import Graph from 'graphology';
 
 import { Neo4jContainer, StartedNeo4jContainer } from '@testcontainers/neo4j';
 import neo4j, { Driver, Session } from 'neo4j-driver';
@@ -24,7 +22,6 @@ import { Neo4jGraphService } from '../db/neo4j/graph.service';
 
 // Example Data
 import sampleGraphData from './testutils/samplegraph.json';
-import sampleRules from './testutils/samplerules.json';
 import {
 	input as addNodeInput,
 	expectedOutput as addNodeExpectedOutput,
@@ -49,6 +46,12 @@ import {
 	input as updateEdgeInput,
 	expectedOutput as updateEdgeExpectedOutput,
 } from './testutils/updateEdge';
+import {
+	inputHomomorphic as homomorphicMatchingInput,
+	inputIsomorphic as isomorphicMatchingInput,
+	expectedOutputHomomorphic as homomorphicMatchingExpectedOutput,
+	expectedOutputIsomorphic as isomorphicMatchingExpectedOutput,
+} from './testutils/homomorphicMatching';
 
 import {
 	createNodeUuid,
@@ -75,58 +78,40 @@ describe('Test grs service', () => {
 		vi.resetAllMocks(); // Clear and set back implementation
 	});
 
-	test.todo(
-		'Test loadGraphIntoDb should call GraphService functions',
-		async () => {
-			const grsService = new GraphTransformationService(mockGraphService);
-
-			const createNodeSpy = vi.spyOn(mockGraphService, 'createNode');
-			const createEdgeSpy = vi.spyOn(mockGraphService, 'createEdge');
-			const deleteAllNodesSpy = vi.spyOn(mockGraphService, 'deleteAllNodes');
-
-			mockGraphService.getAllNodes = vi
-				.fn()
-				.mockResolvedValue(sampleGraphData.nodes);
-			mockGraphService.getAllEdges = vi
-				.fn()
-				.mockResolvedValue(sampleGraphData.edges);
-
-			const result = await grsService.importHostgraph(
-				sampleGraphData as GraphSchema
-			);
-
-			// Old nodes should have been deleted
-			expect(deleteAllNodesSpy).toHaveBeenCalled();
-
-			// Graph service functions should have been called fo all nodes (2) and edges (1)
-			expect(createNodeSpy).toHaveBeenCalled();
-			expect(createNodeSpy).toHaveBeenCalledTimes(2);
-			expect(createEdgeSpy).toHaveBeenCalled();
-			expect(createEdgeSpy).toHaveBeenCalledTimes(1);
-
-			// Result should be the same as the input
-			// (except for the changed ids, which we did not respect in the mock above)
-			expect(result).toMatchObject({
-				options: sampleGraphData.options,
-				nodes: result.nodes,
-				edges: result.edges,
-			});
-		}
-	);
-
-	test.todo('Test rules are correctly parsed into graphs', () => {
+	test('Test loadGraphIntoDb should call GraphService functions', async () => {
 		const grsService = new GraphTransformationService(mockGraphService);
-		const rulesData = sampleRules as GraphRewritingRuleSchema[];
-		// @ts-expect-error parse rules is currently not used / commented out
-		const rules = grsService.parseRules(rulesData);
-		expect(rules.has('add_triangle')).toBe(true);
-		expect(rules.get('add_triangle')).toHaveProperty('lhs');
-		expect(rules.get('add_triangle')).toHaveProperty('rhs');
-		const singleRule = rules.get('add_triangle');
-		const lhs = singleRule?.lhs;
-		const rhs = singleRule?.rhs;
-		expect(lhs).toBeInstanceOf(Graph);
-		expect(rhs).toBeInstanceOf(Graph);
+
+		const createNodeSpy = vi.spyOn(mockGraphService, 'createNode');
+		const createEdgeSpy = vi.spyOn(mockGraphService, 'createEdge');
+		const deleteAllNodesSpy = vi.spyOn(mockGraphService, 'deleteAllNodes');
+
+		mockGraphService.getAllNodes = vi
+			.fn()
+			.mockResolvedValue(sampleGraphData.nodes);
+		mockGraphService.getAllEdges = vi
+			.fn()
+			.mockResolvedValue(sampleGraphData.edges);
+
+		const result = await grsService.importHostgraph(
+			sampleGraphData as GraphSchema
+		);
+
+		// Old nodes should have been deleted
+		expect(deleteAllNodesSpy).toHaveBeenCalled();
+
+		// Graph service functions should have been called fo all nodes (2) and edges (1)
+		expect(createNodeSpy).toHaveBeenCalled();
+		expect(createNodeSpy).toHaveBeenCalledTimes(2);
+		expect(createEdgeSpy).toHaveBeenCalled();
+		expect(createEdgeSpy).toHaveBeenCalledTimes(1);
+
+		// Result should be the same as the input
+		// (except for the changed ids, which we did not respect in the mock above)
+		expect(result).toMatchObject({
+			options: sampleGraphData.options,
+			nodes: result.nodes,
+			edges: result.edges,
+		});
 	});
 });
 
@@ -267,6 +252,40 @@ describe('Integration tests for grs service against testcontainers', () => {
 			updateEdgeExpectedOutput
 		);
 	}, 10000);
+
+	test('Test homomorphic matching', async () => {
+		const grsService = new GraphTransformationService(graphService);
+
+		const output = await grsService.transformGraph(
+			homomorphicMatchingInput.hostgraph,
+			homomorphicMatchingInput.rules ?? [],
+			homomorphicMatchingInput.sequence
+		);
+
+		expectOutputGraphToMatchExpectedOutputGraph(
+			output[0],
+			homomorphicMatchingExpectedOutput
+		);
+	}, 10000);
+
+	test('Test isomorphic matching', async () => {
+		const grsService = new GraphTransformationService(graphService);
+
+		const output = await grsService.transformGraph(
+			isomorphicMatchingInput.hostgraph,
+			isomorphicMatchingInput.rules ?? [],
+			isomorphicMatchingInput.sequence
+		);
+
+		expectOutputGraphToMatchExpectedOutputGraph(
+			output[0],
+			isomorphicMatchingExpectedOutput
+		);
+	}, 10000);
+
+	test.todo('Test repetitions', async () => {
+		//
+	});
 	// // REAL WORLD Examples
 	// test.todo('Test transformation of UML to petrinet');
 	// test.todo('Test transformation of UML to petrinet');
