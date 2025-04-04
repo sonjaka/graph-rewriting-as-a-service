@@ -14,6 +14,8 @@ import healthRoutes from './routes/health';
 import neo4jConnector from './plugins/neo4j/index';
 import grsPlugin from './plugins/grs/index';
 
+import { logger } from './utils/logger';
+
 /**
  * Creates a fastify server instance
  */
@@ -25,6 +27,8 @@ export function buildServer(): FastifyInstance {
 			logger: loggerConfig[appEnvConfig.APP_ENV] ?? false,
 			ignoreTrailingSlash: true,
 		});
+
+	logger.init(server.log);
 
 	// Setup Swagger / SwaggerUI
 	// Access Swagger page through <root-route>/documentation endpoint
