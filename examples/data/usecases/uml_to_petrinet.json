@@ -479,8 +479,6 @@
 								"Initial",
 								"Decision",
 								"Merge",
-								"Decision",
-								"Merge",
 								"FlowFinal",
 								"ActivityFinal"
 							]
@@ -497,7 +495,30 @@
 					{
 						"key": "A",
 						"attributes": {
-							"type": "Place"
+							"type": "Place",
+							"label": {
+								"type": "jsonLogic",
+								"args": {
+									"rule": {
+										"if": [
+											{
+												"==": [
+													"$.nodes.[?(@.key === 'A')].attributes.type",
+													"Initial"
+												]
+											},
+											"Start",
+											{
+												"==": [
+													"$.nodes.[?(@.key === 'A')].attributes.type",
+													"ActivityFinal"
+												]
+											},
+											"Final"
+										]
+									}
+								}
+							}
 						}
 					}
 				],
