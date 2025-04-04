@@ -1,4 +1,4 @@
-import { afterEach, beforeAll, describe, expect, test, vi } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 import {
 	ExternalApiInstantiator,
 	ExternalApiInstantiatorErrors,
