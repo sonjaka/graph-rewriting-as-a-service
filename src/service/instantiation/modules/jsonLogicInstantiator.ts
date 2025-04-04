@@ -2,13 +2,12 @@ import JsonLogic from 'json-logic-js';
 import { JSONPath } from 'jsonpath-plus';
 import type { AdditionalOperation, RulesLogic } from 'json-logic-js';
 
-import { IValueInstantiator, IValueInstantiatorOptions } from '../types';
+import { IValueInstantiator, IInstantiatorOptions } from '../types';
 import { GraphSchema } from '../../../types/graph.schema';
 
 type JsonLogicRule = RulesLogic<AdditionalOperation>;
 
-export interface JsonLogicInstantiatorOptions
-	extends IValueInstantiatorOptions {
+export interface JsonLogicInstantiatorOptions extends IInstantiatorOptions {
 	rule: RulesLogic<AdditionalOperation>; // Array of rules to evaluate
 	data?: unknown; // Array of rules to evaluate
 	match: GraphSchema; // Map of matches for resolving placeholders
@@ -35,7 +34,7 @@ export class JsonLogicInstantiator
 		return this._instantiatorKey;
 	}
 
-	public instantiate(
+	public instantiateValue(
 		args: JsonLogicInstantiatorOptions
 	): string | number | boolean {
 		const { rule, data, match } = args;
@@ -49,6 +48,10 @@ export class JsonLogicInstantiator
 		}
 
 		return this.resolveJsonLogicRule(rule, match, data);
+	}
+
+	public instantiate(args: JsonLogicInstantiatorOptions) {
+		return this.instantiateValue(args);
 	}
 
 	private resolveJsonLogicRule(

@@ -1,5 +1,5 @@
 import { faker, Faker } from '@faker-js/faker';
-import { IValueInstantiator, IValueInstantiatorOptions } from '../types';
+import { IValueInstantiator, IInstantiatorOptions } from '../types';
 
 // TODO: Check for better typing
 
@@ -19,7 +19,7 @@ export enum FakerErrors {
 	'MethodNotAFunction' = 'Faker value instantiation: method is not a function',
 }
 
-interface FakerInstantiatorOptions extends IValueInstantiatorOptions {
+interface FakerInstantiatorOptions extends IInstantiatorOptions {
 	module: FakerModule;
 	method: string;
 	options?: Record<string, unknown>;
@@ -35,6 +35,10 @@ export class FakerInstantiator
 	}
 
 	public instantiate(args: FakerInstantiatorOptions) {
+		return this.instantiateValue(args);
+	}
+
+	public instantiateValue(args: FakerInstantiatorOptions) {
 		const { module, method, options } = args as {
 			module: FakerModule;
 			method: FakerMethod<typeof module>;

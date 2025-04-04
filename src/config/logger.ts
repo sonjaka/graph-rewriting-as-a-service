@@ -8,6 +8,7 @@ export const loggerConfig: Record<
 	boolean | (FastifyLoggerOptions & PinoLoggerOptions)
 > = {
 	development: {
+		level: 'debug',
 		transport: {
 			target: 'pino-pretty',
 			options: {

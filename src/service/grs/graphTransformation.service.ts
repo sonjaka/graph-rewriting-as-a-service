@@ -21,14 +21,14 @@ import {
 import { GraphNodeSchema } from '../../types/node.schema';
 import { GraphEdgeSchema } from '../../types/edge.schema';
 import { RewritingRuleProcessingConfigSchema } from '../../types/run-config.schema';
-import { createEdgeUuid, createNodeUuid } from '../../utils/uuid';
 import { InstantiatorService } from '../instantiation/instantiator.service';
 import { PatternGraphSchema } from '../../types/patterngraph.schema';
-import { PatternNodeSchema } from '../../types/patternnode.schema';
 import { ReplacementGraphSchema } from '../../types/replacementgraph.schema';
 import { ReplacementNodeSchema } from '../../types/replacementnode.schema';
 import { ReplacementEdgeSchema } from '../../types/replacementedge.schema';
 import { getRandomIntBetween } from '../../utils/numbers';
+import { SpoRewriteService } from './spoRewrite.service';
+import { logger } from '../../utils/logger';
 
 export type ResultGraphSchema = Omit<GraphSchema, 'nodes' | 'edges'> & {
 	nodes: (Omit<GraphNodeSchema, 'attributes'> & {
@@ -38,26 +38,6 @@ export type ResultGraphSchema = Omit<GraphSchema, 'nodes' | 'edges'> & {
 		attributes: DBGraphEdgeMetadata;
 	})[];
 };
-
-type NodeMatchMap = Map<string, ReplacementNodeSchema | undefined>;
-type EdgeMatchMap = Map<string, ReplacementEdgeSchema | undefined>;
-interface GraphDiffResult {
-	updatedNodes: NodeMatchMap;
-	addedNodes: ReplacementNodeSchema[];
-	removedNodes: PatternNodeSchema[];
-	updatedEdges: EdgeMatchMap;
-	addedEdges: ReplacementEdgeSchema[];
-	removedEdges: GraphEdgeSchema[];
-}
-interface ExternalAPIPostRequest {
-	method: 'POST';
-	headers: Record<string, string>;
-	body: string;
-}
-
-interface ExternalAPIJSONResult {
-	data: ReplacementGraphSchema;
-}
 
 export class GraphTransformationService {
 	private instantiatorService;
@@ -77,6 +57,8 @@ export class GraphTransformationService {
 		processingConfig: RewritingRuleProcessingConfigSchema[] = [],
 		options: GraphRewritingRequestSchema['options'] = {}
 	): Promise<ResultGraphSchema[]> {
+		logger.info('GraphTransformationService: Starting graph transformation.');
+
 		this.graphService.graphType = hostgraphData.options.type;
 		await this.importHostgraph(hostgraphData);
 
@@ -95,7 +77,10 @@ export class GraphTransformationService {
 				await this.executeRule(ruleConfig, processStep);
 			}
 		} else {
-			// If no sequence config is give, run and replace only the first match
+			// If no sequence config is given, run and replace only the first match
+			logger.info(
+				'GraphTransformationService: No sequence configuration provided. Executing rules sequentially, replacing only the first match.'
+			);
 			for (const rule of rules) {
 				await this.executeRule(rule);
 			}
@@ -103,6 +88,9 @@ export class GraphTransformationService {
 
 		const finalHostgraph = await this.exportHostgraph();
 		this.history.push(finalHostgraph);
+		logger.info(
+			'GraphTransformationService: Graph transformation completed. Final host graph exported.'
+		);
 
 		return this.history;
 	}
@@ -112,24 +100,16 @@ export class GraphTransformationService {
 		sequenceConfig?: RewritingRuleProcessingConfigSchema
 	) {
 		const { options, patternGraph } = ruleConfig;
-		let replacementGraph = ruleConfig.replacementGraph;
+		const replacementGraph = ruleConfig.replacementGraph;
 
-		let repetitions = 1;
-		if (sequenceConfig?.options?.repeat) {
-			if (
-				Array.isArray(sequenceConfig.options.repeat) &&
-				sequenceConfig.options.repeat.length === 2
-			) {
-				const min = sequenceConfig.options.repeat[0];
-				const max = sequenceConfig.options.repeat[1];
-				repetitions = getRandomIntBetween(min, max);
-			} else if (typeof sequenceConfig.options.repeat === 'number') {
-				repetitions = sequenceConfig.options.repeat;
-			} else {
-				throw Error(
-					'GraphTransformationService: sequence.options.repeat is not a number or numberArray'
-				);
-			}
+		logger.debug(
+			`GraphTransformationService: Executing rule "${ruleConfig.key}"`
+		);
+		const repetitions = this.getRepetitionOption(sequenceConfig);
+		if (repetitions > 1) {
+			logger.debug(
+				`GraphTransformationService: Rule is set to be repeated ${repetitions} times`
+			);
 		}
 
 		for (let i = 0; i < repetitions; i++) {
@@ -137,29 +117,16 @@ export class GraphTransformationService {
 			// Additions are still possible!
 			const match = { nodes: {}, edges: {} };
 			if (!patternGraph.nodes.length && !patternGraph.edges.length) {
-				replacementGraph = await this.handleExternalInstantiation(
-					match,
-					replacementGraph
+				await this.handleMatch(match, patternGraph, replacementGraph);
+				logger.debug(
+					`GraphTransformationService: Finished executing rule "${ruleConfig.key}"`
 				);
-
-				await this.performInstantiationAndReplacement(
-					match,
-					patternGraph,
-					replacementGraph
-				);
-
 				return;
 			}
 
-			let homomorphic = true;
-			if (options && 'homomorphic' in options) {
-				homomorphic = options.homomorphic ? true : false;
-			}
+			const homomorphic = this.getHomomorphicOption(options);
+			const nacs: DBGraphNACs[] = this.getNACs(patternGraph);
 
-			let nacs: DBGraphNACs[] = [];
-			if (patternGraph.nacs) {
-				nacs = [patternGraph.nacs];
-			}
 			const matches = await this.graphService.findPatternMatch(
 				patternGraph.nodes,
 				patternGraph.edges,
@@ -168,43 +135,77 @@ export class GraphTransformationService {
 				nacs
 			);
 
-			// --> either we fix this, or we remove option for multiple replacements
-			// --> user can still replace all occurences by sending the request multiple times
-			if (matches.length) {
-				let max = 1;
+			logger.debug(
+				`GraphTransformationService: Found ${matches.length} match(es)`
+			);
 
-				if (sequenceConfig) {
-					if (sequenceConfig.options.mode === 'all') {
-						max = matches.length;
-					} else if (
-						sequenceConfig.options.mode === 'interval' &&
-						sequenceConfig.options?.interval?.max
-					) {
-						max = Math.min(sequenceConfig.options.interval.max, matches.length);
-					}
-				}
+			if (matches.length) {
+				const max = this.calcMaxReplacements(matches.length, sequenceConfig);
+				logger.debug(`GraphTransformationService: Replacing ${max} match(es)`);
 
 				for (let i = 0; i < max; i++) {
 					const match = matches[i];
 
-					replacementGraph = await this.handleExternalInstantiation(
-						match,
-						replacementGraph
-					);
-
-					await this.performInstantiationAndReplacement(
-						match,
-						patternGraph,
-						replacementGraph
-					);
-
-					if (this.trackHistory) {
-						const currentHostgraph = await this.exportHostgraph();
-						this.history.push(currentHostgraph);
-					}
+					await this.handleMatch(match, patternGraph, replacementGraph);
 				}
 			}
 		}
+		logger.debug(
+			`GraphTransformationService: Finished executing rule "${ruleConfig.key}"`
+		);
+	}
+
+	private calcMaxReplacements(
+		matchesCount: number,
+		sequenceConfig?: RewritingRuleProcessingConfigSchema
+	) {
+		if (!sequenceConfig) return 1;
+		if (sequenceConfig.options.mode === 'all') {
+			return matchesCount;
+		} else if (
+			sequenceConfig.options.mode === 'interval' &&
+			sequenceConfig.options?.interval?.max
+		) {
+			return Math.min(sequenceConfig.options.interval.max, matchesCount);
+		}
+		return 1;
+	}
+
+	private getRepetitionOption(
+		sequenceConfig?: RewritingRuleProcessingConfigSchema
+	) {
+		if (!sequenceConfig) return 1;
+		if (!sequenceConfig.options) return 1;
+		if (!sequenceConfig.options.repeat) return 1;
+
+		if (
+			Array.isArray(sequenceConfig.options.repeat) &&
+			sequenceConfig.options.repeat.length === 2
+		) {
+			const min = sequenceConfig.options.repeat[0];
+			const max = sequenceConfig.options.repeat[1];
+			return getRandomIntBetween(min, max);
+		} else if (typeof sequenceConfig.options.repeat === 'number') {
+			return sequenceConfig.options.repeat;
+		} else {
+			throw Error(
+				'GraphTransformationService: sequence.options.repeat is not a number or numberArray'
+			);
+		}
+	}
+
+	private getHomomorphicOption(options: GraphRewritingRuleSchema['options']) {
+		const useHomomorphic = options?.homomorphic ?? true;
+		logger.debug(
+			`GraphTransformationService: Using ${useHomomorphic ? 'homomorphic' : 'isomorphic'} matching`
+		);
+		return useHomomorphic;
+	}
+
+	private getNACs(
+		patternGraph: GraphRewritingRuleSchema['patternGraph']
+	): DBGraphNACs[] {
+		return patternGraph.nacs ? [patternGraph.nacs] : [];
 	}
 
 	private async handleExternalInstantiation(
@@ -212,68 +213,31 @@ export class GraphTransformationService {
 		replacementGraph: ReplacementGraphSchema | ExternalReplacementGraphConfig
 	): Promise<ReplacementGraphSchema> {
 		if ('useExternalInstantiation' in replacementGraph) {
-			return await this.fetchExternalReplacementGraph(match, replacementGraph);
+			const instantiatorPlugin =
+				this.instantiatorService.getGraphInstantiator('externalApi');
+			return await instantiatorPlugin.instantiate({ match, replacementGraph });
 		}
 
 		return replacementGraph;
 	}
 
-	private async fetchExternalReplacementGraph(
-		searchMatch: DBGraphPatternMatchResult,
-		replacementGraph: ExternalReplacementGraphConfig
-	): Promise<ReplacementGraphSchema> {
-		if (!replacementGraph.endpoint) {
-			throw new Error(
-				'GraphTransformationService: external api endpoint not passed for instantiation of replacement graph'
-			);
-		}
+	private async handleMatch(
+		match: DBGraphPatternMatchResult,
+		patternGraph: PatternGraphSchema,
+		replacementGraph: ReplacementGraphSchema | ExternalReplacementGraphConfig
+	) {
+		replacementGraph = await this.handleExternalInstantiation(
+			match,
+			replacementGraph
+		);
 
-		const params: ExternalAPIPostRequest = {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: '',
-		};
+		await this.performInstantiationAndReplacement(
+			match,
+			patternGraph,
+			replacementGraph
+		);
 
-		let body = {
-			searchMatch: searchMatch,
-		};
-
-		if (replacementGraph.additionalRequestBodyParameters) {
-			body = {
-				...body,
-				...replacementGraph.additionalRequestBodyParameters,
-			};
-		}
-
-		params.body = JSON.stringify(body);
-
-		try {
-			const response = await fetch(replacementGraph.endpoint, params);
-			if (!response.ok) {
-				throw new Error(
-					`GraphTransformationService: fetch to external api endpoint failed with response ${response.status}`
-				);
-			}
-			const { data } = (await response.json()) as ExternalAPIJSONResult;
-
-			if (!data || (!data?.nodes && !data?.edges)) {
-				return Promise.reject(
-					new Error(
-						'GraphTransformationService: external API instantiation did not yield graph schema with nodes and edges'
-					)
-				);
-			}
-
-			if (data.nodes && !data.edges) {
-				data.edges = [];
-			} else if (!data.nodes && data.edges) {
-				data.nodes = [];
-			}
-
-			return data;
-		} catch (error) {
-			return Promise.reject(error);
-		}
+		this.updateHistory();
 	}
 
 	private async performInstantiationAndReplacement(
@@ -283,12 +247,8 @@ export class GraphTransformationService {
 	) {
 		const rhsInstantiated = this.instantiateAttributes(rhs, match);
 
-		const overlapAndDifference = this.computeOverlapAndDifferenceOfLhsAndRhs(
-			lhs,
-			rhsInstantiated
-		);
-
-		await this.replaceMatch(match, overlapAndDifference);
+		const rewriteService = new SpoRewriteService(this.graphService);
+		await rewriteService.performReplacement(match, lhs, rhsInstantiated);
 	}
 
 	public async importHostgraph(
@@ -343,184 +303,6 @@ export class GraphTransformationService {
 		return { options, nodes, edges };
 	}
 
-	/**
-	 * Main Algorithm performing the actual replacing of the pattern match
-	 * 1. Removes all nodes/edges that are in LHS, but NOT part of the RHS
-	 * 2. Updates all nodes/edges that are in LHS and part of the RHS
-	 * 3. Adds all nodes/edges that are part of the RHS but not the LHS
-	 *
-	 * @param occurence The match found in the database for the given lhs pattern
-	 * @param adjustment The difference (added, updated, removed) between the LHS and RHS (gluing interface)
-	 */
-	private async replaceMatch(
-		occurence: DBGraphPatternMatchResult,
-		adjustments: GraphDiffResult
-	) {
-		const preservedNodes: Record<string, string> = {};
-
-		if (Object.entries(occurence.nodes).length) {
-			// Remove all nodes and edges that are not in the replacement graph
-			const removedNodeIds = adjustments.removedNodes.map((node) => {
-				return occurence.nodes[node.key].key;
-			});
-			await this.graphService.deleteNodes(removedNodeIds);
-		}
-
-		if (Object.entries(occurence.edges).length) {
-			const removedEdgesIds = adjustments.removedEdges.map((edge) => {
-				return occurence.edges[edge.key].key;
-			});
-			await this.graphService.deleteEdges(removedEdgesIds);
-		}
-
-		// Update all nodes and edges that are part of both search pattern and replacement graph
-		if (Object.entries(occurence.nodes).length) {
-			for (const [key, rhsNode] of adjustments.updatedNodes) {
-				if (rhsNode) {
-					const oldNode = occurence.nodes[key];
-					const internalId = oldNode.key;
-
-					let options = {};
-					if (rhsNode?.rewriteOptions) {
-						options = rhsNode.rewriteOptions;
-					}
-
-					await this.graphService.updateNode(
-						rhsNode.attributes ?? {},
-						internalId,
-						oldNode.attributes?.type ? [oldNode.attributes?.type] : [],
-						options
-					);
-
-					preservedNodes[key] = internalId;
-				}
-			}
-		}
-
-		if (Object.entries(occurence.edges).length) {
-			for (const [key, rhsEdge] of adjustments.updatedEdges) {
-				if (rhsEdge) {
-					const oldEdge = occurence.edges[key];
-					const internalId = oldEdge.key;
-
-					const sourceInternalId = preservedNodes[rhsEdge.source];
-					const targetInternalId = preservedNodes[rhsEdge.target];
-
-					let options = {};
-					if (rhsEdge?.rewriteOptions) {
-						options = rhsEdge.rewriteOptions;
-					}
-
-					await this.graphService.updateEdge(
-						sourceInternalId,
-						targetInternalId,
-						internalId,
-						rhsEdge.attributes ?? [],
-						options
-					);
-
-					preservedNodes[key] = internalId;
-				}
-			}
-		}
-
-		// Add all new nodes & edges
-		for (const rhsNode of adjustments.addedNodes) {
-			const internalId = createNodeUuid();
-
-			await this.graphService.createNode(rhsNode.attributes ?? {}, internalId);
-
-			preservedNodes[rhsNode.key] = internalId;
-		}
-		for (const rhsEdge of adjustments.addedEdges) {
-			const internalId = createEdgeUuid();
-
-			const sourceInternalId = preservedNodes[rhsEdge.source];
-			const targetInternalId = preservedNodes[rhsEdge.target];
-
-			await this.graphService.createEdge(
-				sourceInternalId,
-				targetInternalId,
-				internalId,
-				rhsEdge.attributes
-			);
-		}
-
-		return;
-	}
-
-	private computeOverlapAndDifferenceOfLhsAndRhs(
-		lhs: PatternGraphSchema,
-		rhs: ReplacementGraphSchema
-	): GraphDiffResult {
-		const updatedNodes: NodeMatchMap = new Map();
-		const removedNodes: PatternNodeSchema[] = [];
-		const addedNodes: ReplacementNodeSchema[] = [];
-
-		const updatedEdges: EdgeMatchMap = new Map();
-		const removedEdges: GraphEdgeSchema[] = [];
-		const addedEdges: ReplacementEdgeSchema[] = [];
-
-		// All nodes in search graph that are also in replacement are "updated"
-		// All nodes in search graph that are not in replacement are "deleted"
-		for (const lhsNode of lhs.nodes) {
-			const rhsNode = rhs.nodes.find((rhsNode) => rhsNode.key === lhsNode.key);
-
-			if (rhsNode) {
-				updatedNodes.set(lhsNode.key, rhsNode);
-			} else {
-				removedNodes.push(lhsNode);
-			}
-		}
-
-		// All nodes that are in replacement but not in search graph are "added".
-		// All search graph nodes should already be part of updated/removed, so if it
-		// can't be found there, it has to be a new/added node
-		for (const rhsNode of rhs.nodes) {
-			if (!updatedNodes.has(rhsNode.key)) {
-				addedNodes.push(rhsNode);
-			}
-		}
-
-		// All edges in search graph that are also in replacement are "updated"
-		// --> An edge is only identical, if both key, source and target match!
-		// --> Nodes cannot be updated and will be deleted and recreated
-		// TODO: Figure out what to do about attributes that are not explicitly specified
-		// All edges in search graph that are not in replacement are "deleted"
-		for (const lhsEdge of lhs.edges) {
-			const rhsEdge = rhs.edges.find(
-				(rhsEdge) =>
-					rhsEdge.key === lhsEdge.key &&
-					rhsEdge.source === lhsEdge.source &&
-					lhsEdge.target === rhsEdge.target
-			);
-
-			if (rhsEdge) {
-				updatedEdges.set(lhsEdge.key, rhsEdge);
-			} else {
-				removedEdges.push(lhsEdge);
-			}
-		}
-
-		// All edges that are in replacement but not in search graph are "added".
-		// All search graph edges should already be part of updated/removed, so if it
-		// can't be found there, it has to be a new/added edge
-		for (const rhsEdge of rhs.edges) {
-			if (!updatedEdges.has(rhsEdge.key)) {
-				addedEdges.push(rhsEdge);
-			}
-		}
-
-		return {
-			updatedNodes,
-			updatedEdges,
-			removedNodes,
-			removedEdges,
-			addedNodes,
-			addedEdges,
-		};
-	}
-
 	private instantiateAttributes(
 		graph: ReplacementGraphSchema,
 		match: DBGraphPatternMatchResult
@@ -553,29 +335,45 @@ export class GraphTransformationService {
 		}
 
 		instantiatedGraph.nodes.map((node) => {
-			if (node?.attributes) {
-				for (const [key, attribute] of Object.entries(node.attributes)) {
-					if (attribute === null) continue;
-					if (typeof attribute === 'object') {
-						node.attributes[key] = this.instantiatorService.instantiate(
-							attribute.type,
-							{ ...attribute.args, match: formattedMatch }
-						);
-					}
-				}
-			}
+			return this.handleAttributeInstantiationForEdgeOrNodeItem(
+				node,
+				formattedMatch
+			);
 		});
 		instantiatedGraph.edges.map((edge) => {
-			for (const [key, attribute] of Object.entries(edge.attributes)) {
-				if (typeof attribute === 'object') {
-					edge.attributes[key] = this.instantiatorService.instantiate(
-						attribute.type,
-						{ ...attribute.args, match: formattedMatch }
-					);
-				}
-			}
+			return this.handleAttributeInstantiationForEdgeOrNodeItem(
+				edge,
+				formattedMatch
+			);
 		});
 
 		return instantiatedGraph;
+	}
+
+	private handleAttributeInstantiationForEdgeOrNodeItem(
+		item: ReplacementEdgeSchema | ReplacementNodeSchema,
+		match: GraphSchema
+	) {
+		if (item?.attributes) {
+			for (const [key, attribute] of Object.entries(item.attributes)) {
+				if (attribute === null) continue;
+				if (typeof attribute === 'object') {
+					const instantiatorPlugin =
+						this.instantiatorService.getValueInstantiator(attribute.type);
+					item.attributes[key] = instantiatorPlugin.instantiate({
+						...attribute.args,
+						match,
+					});
+				}
+			}
+		}
+		return item;
+	}
+
+	private async updateHistory() {
+		if (this.trackHistory) {
+			const currentHostgraph = await this.exportHostgraph();
+			this.history.push(currentHostgraph);
+		}
 	}
 }

@@ -24,3 +24,18 @@ POST http://localhost:8080/grs
 Content-Type: application/json
 
 < ../data/development/update_node_attr_replace.json
+
+// OPTIONS
+// Homomorphic matching
+// -> Should replace A & B's label with string "I've been replaced!"
+POST http://localhost:8080/grs
+Content-Type: application/json
+
+< ../data/development/homomorphic_matching.json
+
+// Isomorphic matching
+// -> Should replace only B's label with string "I've been replaced!"
+POST http://localhost:8080/grs
+Content-Type: application/json
+
+< ../data/development/isomorphic_matching.json
