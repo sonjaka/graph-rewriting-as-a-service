@@ -29,6 +29,15 @@
 			}
 		},
 		"nacs": {
+			"type": "array",
+			"items": {
+				"$ref": "#/$defs/nacSchema"
+			}
+		}
+	},
+	"required": ["options", "nodes", "edges"],
+	"$defs": {
+		"nacSchema": {
 			"type": "object",
 			"properties": {
 				"nodes": {
@@ -47,6 +56,5 @@
 			"required": ["nodes", "edges"],
 			"additionalProperties": false
 		}
-	},
-	"required": ["options", "nodes", "edges"]
+	}
 }

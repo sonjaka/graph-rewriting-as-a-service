@@ -8,16 +8,13 @@
 export interface PatternGraphSchema {
   options: {
     /**
-     * One of directed or undirected
+     * Type of the graph: either directed or undirected
      */
     type: "directed" | "undirected";
   };
   nodes: PatternNodeSchema[];
   edges: GraphEdgeSchema[];
-  nacs?: {
-    nodes: PatternNodeSchema[];
-    edges: GraphEdgeSchema[];
-  };
+  nacs?: NacSchema[];
 }
 export interface PatternNodeSchema {
   key: string;
@@ -50,4 +47,8 @@ export interface GraphEdgeSchema {
     [k: string]: number | string | boolean;
   };
   additionalProperties?: never;
+}
+export interface NacSchema {
+  nodes: PatternNodeSchema[];
+  edges: GraphEdgeSchema[];
 }
