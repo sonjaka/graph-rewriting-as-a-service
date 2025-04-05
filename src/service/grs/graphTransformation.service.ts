@@ -164,9 +164,13 @@ export class GraphTransformationService {
 			return matchesCount;
 		} else if (
 			sequenceConfig.options.mode === 'interval' &&
+			sequenceConfig.options?.interval?.min &&
 			sequenceConfig.options?.interval?.max
 		) {
-			return Math.min(sequenceConfig.options.interval.max, matchesCount);
+			const max = Math.min(sequenceConfig.options.interval.max, matchesCount);
+			const min = Math.min(sequenceConfig.options.interval.min, matchesCount);
+
+			return getRandomIntBetween(min, max);
 		}
 		return 1;
 	}
