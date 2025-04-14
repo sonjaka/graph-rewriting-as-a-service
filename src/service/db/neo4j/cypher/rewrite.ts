@@ -1,6 +1,6 @@
 import { createParameterUuid } from '../../../../utils/uuid';
 import { DBGraphNACs } from '../../types';
-import { DEFAULT_NODE_LABEL } from '../constants';
+import { DEFAULT_NODE_LABEL, DEFAULT_RELATIONSHIP_LABEL } from '../constants';
 import {
 	computeAttributesString,
 	MatchQueryComputationResult,
@@ -211,10 +211,11 @@ export function computeNacClause(nacs: DBGraphNACs[], hasWhere: boolean) {
 			// TODO: add directed edges
 			cypher += computeEdgeQueryString(
 				edge.key,
-				'DEFAULT_RELATIONSHIP_LABEL',
+				DEFAULT_RELATIONSHIP_LABEL,
 				edge.attributes,
 				edge.source,
-				edge.target
+				edge.target,
+				(nac?.options?.type && nac.options.type === 'directed') ?? false
 			);
 
 			cypher += ` `;

@@ -57,6 +57,10 @@ export interface GraphEdgeSchema {
   additionalProperties?: never;
 }
 export interface NacSchema {
+  /**
+   * Type of the graph: either directed or undirected
+   */
+  type?: "directed" | "undirected";
   nodes: PatternNodeSchema[];
   edges: GraphEdgeSchema[];
 }

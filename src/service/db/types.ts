@@ -43,6 +43,9 @@ export interface DBGraphEdge {
 }
 
 export interface DBGraphNACs {
+	options: {
+		type: DBGraphType;
+	};
 	nodes: DBGraphNode[] | [];
 	edges: DBGraphEdge[] | [];
 }
