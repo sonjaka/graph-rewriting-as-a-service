@@ -16,6 +16,7 @@ import { Neo4jGraphService } from './graph.service';
 import { getApocJsonAllExport } from './testutils/helpers';
 import { createParameterUuid } from '../../../utils/uuid';
 import { PatternNodeSchema } from '../../../types/patternnode.schema';
+import { DBGraphNACs } from '../types';
 
 let container: StartedNeo4jContainer;
 let driver: Driver;
@@ -963,6 +964,181 @@ describe('Integration tests for graph service with testcontainers', () => {
 				'directed',
 				false,
 				nacs
+			);
+			expect(neo4jSpy).toHaveBeenCalled();
+			expect(neo4jSpy).toHaveBeenCalledTimes(1);
+			expectedResultSets.forEach((expectedResultNode) => {
+				expect(result).toContainEqual(expectedResultNode);
+			});
+		});
+
+		test('Test pattern matching for nacs: exclude node with connection to NAC-Node', async () => {
+			// Set up test database with four nodes.
+			const nodeProps = {
+				attributes: [
+					{ _grs_internalId: 'testnodeA', name: 'A' },
+					{ _grs_internalId: 'testnodeB', name: 'B' },
+					{ _grs_internalId: 'testnodeC', name: 'C' },
+					{ _grs_internalId: 'testnodeD', name: 'D' },
+				],
+			};
+			await session.run(
+				`UNWIND $attributes AS config \
+				CREATE (n:GRS_Node) \
+				SET n = config`,
+				nodeProps
+			);
+
+			const edgesProps = {
+				config: [
+					{ source: 'testnodeA', target: 'testnodeB', key: 'aToB' },
+					{ source: 'testnodeA', target: 'testnodeC', key: 'aToC' },
+					{ source: 'testnodeA', target: 'testnodeD', key: 'aToD' },
+					{ source: 'testnodeC', target: 'testnodeB', key: 'cToB' },
+				],
+			};
+
+			await session.run(
+				`UNWIND $config AS config \
+				MATCH (a),(b) \
+				WHERE a._grs_internalId = config.source \
+				AND b._grs_internalId = config.target \
+				CREATE (a)-[r:\`GRS_Relationship\` {_grs_internalId: config.key, _grs_source: config.source, _grs_target: config.target}]->(b) RETURN r`,
+				edgesProps
+			);
+
+			const patternNodes = [
+				{
+					key: 'node1',
+					attributes: {},
+				},
+				{
+					key: 'node2',
+					attributes: {},
+				},
+			];
+
+			const patternEdges = [
+				{
+					key: 'edge',
+					source: 'node1',
+					target: 'node2',
+					attributes: {},
+				},
+			];
+
+			const nacs = [
+				{
+					options: {
+						type: 'directed',
+					},
+					nodes: [
+						{
+							key: 'node2',
+						},
+						{
+							key: 'node3',
+							attributes: {
+								name: 'B',
+							},
+						},
+					],
+					edges: [
+						{
+							key: 'edge2',
+							source: 'node2',
+							target: 'node3',
+							attributes: {},
+						},
+					],
+				},
+			];
+
+			// The result should only match the connections A->B, A->D and C->B
+			// but NOT A->C, because C is connected to a Node B, which is excluded via NACs
+			const expectedResultSets = [
+				{
+					edges: {
+						edge: {
+							attributes: {},
+							key: 'aToB',
+							source: 'testnodeA',
+							target: 'testnodeB',
+						},
+					},
+					nodes: {
+						node1: {
+							key: 'testnodeA',
+							attributes: {
+								name: 'A',
+							},
+						},
+						node2: {
+							key: 'testnodeB',
+							attributes: {
+								name: 'B',
+							},
+						},
+					},
+				},
+				{
+					edges: {
+						edge: {
+							attributes: {},
+							key: 'aToD',
+							source: 'testnodeA',
+							target: 'testnodeD',
+						},
+					},
+					nodes: {
+						node1: {
+							key: 'testnodeA',
+							attributes: {
+								name: 'A',
+							},
+						},
+						node2: {
+							key: 'testnodeD',
+							attributes: {
+								name: 'D',
+							},
+						},
+					},
+				},
+				{
+					edges: {
+						edge: {
+							attributes: {},
+							key: 'cToB',
+							source: 'testnodeC',
+							target: 'testnodeB',
+						},
+					},
+					nodes: {
+						node1: {
+							key: 'testnodeC',
+							attributes: {
+								name: 'C',
+							},
+						},
+						node2: {
+							key: 'testnodeB',
+							attributes: {
+								name: 'B',
+							},
+						},
+					},
+				},
+			];
+
+			const graphService = new Neo4jGraphService(session);
+			const neo4jSpy = vi.spyOn(session, 'executeRead');
+			const result = await graphService.findPatternMatch(
+				patternNodes,
+				patternEdges,
+				'directed',
+				false,
+				nacs as DBGraphNACs[]
 			);
 			expect(neo4jSpy).toHaveBeenCalled();
 			expect(neo4jSpy).toHaveBeenCalledTimes(1);
