@@ -1,5 +1,5 @@
 import { createParameterUuid } from '../../../../utils/uuid';
-import { DBGraphNACs } from '../../types';
+import { DBGraphEdge, DBGraphNACs } from '../../types';
 import { DEFAULT_NODE_LABEL, DEFAULT_RELATIONSHIP_LABEL } from '../constants';
 import {
 	computeAttributesString,
@@ -211,19 +211,26 @@ export function computeNacClause(nacs: DBGraphNACs[], hasWhere: boolean) {
 
 		if (nacEdges) {
 			nacEdges.forEach((edge) => {
-			cypher += `WITH * MATCH `;
-			// TODO: add directed edges
-			cypher += computeEdgeQueryString(
-				edge.key,
-				DEFAULT_RELATIONSHIP_LABEL,
-				edge.attributes,
-				edge.source,
-				edge.target,
+				cypher += `WITH * MATCH `;
+				// TODO: add directed edges
+				cypher += computeEdgeQueryString(
+					edge.key,
+					DEFAULT_RELATIONSHIP_LABEL,
+					edge.attributes,
+					edge.source,
+					edge.target,
 					directed
-			);
+				);
 
-			cypher += ` `;
-		});
+				cypher += ` `;
+			});
+
+			const excludeSymmetricMatches =
+				computeExlusionOfSymmetricMatches(nacEdges);
+			if (excludeSymmetricMatches.trim()) {
+				cypher += `WHERE ${excludeSymmetricMatches} `;
+			}
+		}
 
 		cypher += ` RETURN COUNT(*) as nac_matches${index} }`;
 
@@ -232,4 +239,41 @@ export function computeNacClause(nacs: DBGraphNACs[], hasWhere: boolean) {
 	});
 
 	return { cypher, hasWhere };
+}
+
+function computeExlusionOfSymmetricMatches(edges: DBGraphEdge[]) {
+	const seen: string[] = [];
+	const targetByStartNode = new Map();
+	let cypher = '';
+	edges.forEach((edge) => {
+		if (!seen.includes(edge.target)) {
+			if (!targetByStartNode.has(edge.source)) {
+				targetByStartNode.set(edge.source, []);
+			}
+			const targets = targetByStartNode.get(edge.source);
+			targets.push(edge.target);
+			seen.push(edge.target);
+		}
+	});
+
+	const used: string[] = [];
+	targetByStartNode.forEach((map) => {
+		if (map.length > 1) {
+			const edgeKey = map[0];
+			if (!used.includes(edgeKey)) {
+				used.push(edgeKey);
+				for (let i = 1; i < map.length; i++) {
+					if (map[i] && !used.includes(map[i])) {
+						const edgeKey2 = map[i];
+						if (cypher) {
+							cypher += 'AND ';
+						}
+						cypher += `${edgeKey} <> ${edgeKey2} AND id(${edgeKey}) < id(${edgeKey2}) `;
+					}
+				}
+			}
+		}
+	});
+
+	return cypher;
 }
