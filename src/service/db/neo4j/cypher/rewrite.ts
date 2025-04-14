@@ -206,7 +206,11 @@ export function computeNacClause(nacs: DBGraphNACs[], hasWhere: boolean) {
 			cypher += ` `;
 		});
 
-		nacEdges?.forEach((edge) => {
+		const directed =
+			nac?.options?.type && nac.options.type === 'directed' ? true : false;
+
+		if (nacEdges) {
+			nacEdges.forEach((edge) => {
 			cypher += `WITH * MATCH `;
 			// TODO: add directed edges
 			cypher += computeEdgeQueryString(
@@ -215,7 +219,7 @@ export function computeNacClause(nacs: DBGraphNACs[], hasWhere: boolean) {
 				edge.attributes,
 				edge.source,
 				edge.target,
-				(nac?.options?.type && nac.options.type === 'directed') ?? false
+					directed
 			);
 
 			cypher += ` `;

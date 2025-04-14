@@ -91,10 +91,13 @@ export interface PatternNodeSchema {
   };
 }
 export interface NacSchema {
-  /**
-   * Type of the graph: either directed or undirected
-   */
-  type?: "directed" | "undirected";
+  options?: {
+    /**
+     * Type of the graph: either directed or undirected
+     */
+    type?: "directed" | "undirected";
+    [k: string]: unknown;
+  };
   nodes: PatternNodeSchema[];
   edges: GraphEdgeSchema[];
 }

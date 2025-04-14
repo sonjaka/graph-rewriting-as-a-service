@@ -47,3 +47,8 @@ POST http://localhost:8080/grs
 Content-Type: application/json
 
 < ./data/development/nac_connection_with_wrong_attribute.json
+
+POST http://localhost:8080/grs
+Content-Type: application/json
+
+< ./data/development/nac_with_multiple_outgoing_edges.json
