@@ -116,8 +116,8 @@ export class GraphTransformationService {
 		for (let i = 0; i < repetitions; i++) {
 			// Handle edge case for empty pattern
 			// Additions are still possible!
-			const match = { nodes: {}, edges: {} };
 			if (!patternGraph.nodes.length && !patternGraph.edges.length) {
+				const match = { nodes: {}, edges: {} };
 				await this.handleMatch(match, patternGraph, replacementGraph);
 				logger.debug(
 					`GraphTransformationService: Finished executing rule "${ruleConfig.key}"`
