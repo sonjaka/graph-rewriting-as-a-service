@@ -4,7 +4,7 @@ import { IReply, notFoundReply, okReply } from '../../../utils/response';
 import GrsSchema from '../../../schemas/grs.schema.json';
 import { GraphRewritingRequestSchema as GrsSchemaInterface } from '../../../types/grs.schema';
 import { GraphSchema as GraphSchemaInterface } from '../../../types/graph.schema';
-import { GraphTransformationService } from '../../../service/grs/graphTransformation.service';
+import { GraphTransformationService } from '../../../service/grs/graph-transformation.service';
 
 const importHostgraph = async (
 	request: FastifyRequest<{ Body: GrsSchemaInterface }>,

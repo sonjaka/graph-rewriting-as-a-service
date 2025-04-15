@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, test } from 'vitest';
-import { RandexpErrors, RandExpInstantiator } from './randexpInstantiator';
+import { RandexpErrors, RandExpInstantiator } from './randexp-instantiator';
 import { faker } from '@faker-js/faker';
 
 describe('Test randexp instantiator', () => {

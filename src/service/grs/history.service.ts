@@ -1,4 +1,4 @@
-import { ResultGraphSchema } from './graphTransformation.service';
+import { ResultGraphSchema } from './graph-transformation.service';
 
 export class HistoryService {
 	private history: ResultGraphSchema[] = [];

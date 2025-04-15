@@ -2,7 +2,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 import {
 	ExternalApiInstantiator,
 	ExternalApiInstantiatorErrors,
-} from './externalApiInstantiator';
+} from './external-api-instantiator';
 import { DBGraphPatternMatchResult } from '../../db/types';
 
 global.fetch = vi.fn();

@@ -12,7 +12,7 @@ import {
 import {
 	GraphTransformationService,
 	ResultGraphSchema,
-} from './graphTransformation.service';
+} from './graph-transformation.service';
 import { IDBGraphService } from '../db/types';
 import { GraphSchema } from '../../types/graph.schema';
 

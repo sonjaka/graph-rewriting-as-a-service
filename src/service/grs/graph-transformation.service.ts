@@ -26,7 +26,7 @@ import { ReplacementGraphSchema } from '../../types/replacementgraph.schema';
 import { ReplacementNodeSchema } from '../../types/replacementnode.schema';
 import { ReplacementEdgeSchema } from '../../types/replacementedge.schema';
 import { getRandomIntBetween } from '../../utils/numbers';
-import { SpoRewriteService } from './spoRewrite.service';
+import { SpoRewriteService } from './spo-rewrite.service';
 import { logger } from '../../utils/logger';
 import { HistoryService } from './history.service';
 

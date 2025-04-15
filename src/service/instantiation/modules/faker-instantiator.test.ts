@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, test } from 'vitest';
-import { FakerInstantiator, FakerErrors } from './fakerInstantiator';
+import { FakerInstantiator, FakerErrors } from './faker-instantiator';
 import { faker } from '@faker-js/faker';
 
 describe('Test faker instantiator', () => {

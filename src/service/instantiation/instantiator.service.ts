@@ -1,9 +1,9 @@
 import { IGraphInstantiator, IValueInstantiator } from './types';
 
-import { RandExpInstantiator } from './modules/randexpInstantiator';
-import { FakerInstantiator } from './modules/fakerInstantiator';
-import { JsonLogicInstantiator } from './modules/jsonLogicInstantiator';
-import { ExternalApiInstantiator } from './modules/externalApiInstantiator';
+import { RandExpInstantiator } from './modules/randexp-instantiator';
+import { FakerInstantiator } from './modules/faker-instantiator';
+import { JsonLogicInstantiator } from './modules/json-logic-instantiator';
+import { ExternalApiInstantiator } from './modules/external-api-instantiator';
 
 export class InstantiatorService {
 	static plugins = [
