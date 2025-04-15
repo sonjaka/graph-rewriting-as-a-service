@@ -580,7 +580,30 @@
 					{
 						"key": "A",
 						"attributes": {
-							"type": "Transition"
+							"type": "Transition",
+							"label": {
+								"type": "jsonLogic",
+								"args": {
+									"rule": {
+										"if": [
+											{
+												"==": [
+													"$.nodes.[?(@.key === 'A')].attributes.type",
+													"Fork"
+												]
+											},
+											"Fork",
+											{
+												"==": [
+													"$.nodes.[?(@.key === 'A')].attributes.type",
+													"Join"
+												]
+											},
+											"Join"
+										]
+									}
+								}
+							}
 						}
 					}
 				],

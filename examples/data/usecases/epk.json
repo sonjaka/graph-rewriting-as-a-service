@@ -505,17 +505,19 @@
 						"attributes": {}
 					}
 				],
-				"nacs": {
-					"nodes": [
-						{
-							"key": "Event",
-							"attributes": {
-								"label": "Start"
+				"nacs": [
+					{
+						"nodes": [
+							{
+								"key": "Event",
+								"attributes": {
+									"label": "Start"
+								}
 							}
-						}
-					],
-					"edges": []
-				}
+						],
+						"edges": []
+					}
+				]
 			},
 			"replacementGraph": {
 				"options": {
@@ -788,9 +790,9 @@
 				"mode": "interval",
 				"interval": {
 					"min": 0,
-					"max": 2
+					"max": 1
 				},
-				"repeat": 2
+				"repeat": 1
 			}
 		},
 		{
@@ -799,9 +801,9 @@
 				"mode": "interval",
 				"interval": {
 					"min": 0,
-					"max": 3
+					"max": 1
 				},
-				"repeat": 2
+				"repeat": 1
 			}
 		}
 	],

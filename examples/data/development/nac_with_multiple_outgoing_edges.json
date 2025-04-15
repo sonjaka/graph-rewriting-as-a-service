@@ -1,0 +1,170 @@
+{
+	"hostgraph": {
+		"options": {
+			"type": "directed"
+		},
+		"nodes": [
+			{
+				"key": "A",
+				"attributes": {
+					"originalKey": "A",
+					"label": "Match me!"
+				}
+			},
+			{
+				"key": "B",
+				"attributes": {
+					"originalKey": "B",
+					"label": "Don't Match me!"
+				}
+			},
+			{
+				"key": "C",
+				"attributes": {
+					"originalKey": "C",
+					"label": "Match me!"
+				}
+			},
+			{
+				"key": "D",
+				"attributes": {
+					"originalKey": "D",
+					"label": "Match me!"
+				}
+			}
+		],
+		"edges": [
+			{
+				"key": "aToA",
+				"source": "A",
+				"target": "A",
+				"attributes": {}
+			},
+			{
+				"key": "aToB",
+				"source": "A",
+				"target": "B",
+				"attributes": {}
+			},
+			{
+				"key": "aToC",
+				"source": "A",
+				"target": "C",
+				"attributes": {}
+			},
+			{
+				"key": "aToD",
+				"source": "A",
+				"target": "D",
+				"attributes": {}
+			},
+			{
+				"key": "bToA",
+				"source": "B",
+				"target": "A",
+				"attributes": {}
+			},
+			{
+				"key": "bToC",
+				"source": "B",
+				"target": "C",
+				"attributes": {}
+			},
+			{
+				"key": "cToB",
+				"source": "C",
+				"target": "B",
+				"attributes": {}
+			}
+		]
+	},
+	"rules": [
+		{
+			"key": "updateNode",
+			"options": {
+				"homomorphic": true
+			},
+			"patternGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "n1",
+						"attributes": {}
+					}
+				],
+				"edges": [],
+				"nacs": [
+					{
+						"options": {
+							"type": "directed"
+						},
+						"nodes": [
+							{
+								"key": "n1",
+								"attributes": {}
+							},
+							{
+								"key": "n2",
+								"attributes": {}
+							},
+							{
+								"key": "n3",
+								"attributes": {}
+							}
+						],
+						"edges": [
+							{
+								"key": "e2",
+								"source": "n1",
+								"target": "n2",
+								"attributes": {}
+							},
+							{
+								"key": "e3",
+								"source": "n1",
+								"target": "n3",
+								"attributes": {}
+							},
+							{
+								"key": "e3",
+								"source": "n3",
+								"target": "n1",
+								"attributes": {}
+							},
+							{
+								"key": "e4",
+								"source": "n3",
+								"target": "n1",
+								"attributes": {}
+							}
+						]
+					}
+				]
+			},
+			"replacementGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "n1",
+						"attributes": {
+							"label": "I was matched!"
+						}
+					}
+				],
+				"edges": []
+			}
+		}
+	],
+	"sequence": [
+		{
+			"rule": "updateNode",
+			"options": {
+				"mode": "all"
+			}
+		}
+	]
+}

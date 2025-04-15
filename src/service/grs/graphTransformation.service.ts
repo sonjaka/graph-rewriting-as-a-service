@@ -7,7 +7,6 @@ import {
 import { GraphRewritingRuleSchema } from '../../types/rewrite-rule.schema';
 import {
 	DBGraphEdgeMetadata,
-	DBGraphNACs,
 	DBGraphNodeMetadata,
 	DBGraphPatternMatchResult,
 	IDBGraphService,
@@ -22,7 +21,7 @@ import { GraphNodeSchema } from '../../types/node.schema';
 import { GraphEdgeSchema } from '../../types/edge.schema';
 import { RewritingRuleProcessingConfigSchema } from '../../types/run-config.schema';
 import { InstantiatorService } from '../instantiation/instantiator.service';
-import { PatternGraphSchema } from '../../types/patterngraph.schema';
+import { NacSchema, PatternGraphSchema } from '../../types/patterngraph.schema';
 import { ReplacementGraphSchema } from '../../types/replacementgraph.schema';
 import { ReplacementNodeSchema } from '../../types/replacementnode.schema';
 import { ReplacementEdgeSchema } from '../../types/replacementedge.schema';
@@ -125,7 +124,7 @@ export class GraphTransformationService {
 			}
 
 			const homomorphic = this.getHomomorphicOption(options);
-			const nacs: DBGraphNACs[] = this.getNACs(patternGraph);
+			const nacs: NacSchema[] = this.getNACs(patternGraph);
 
 			const matches = await this.graphService.findPatternMatch(
 				patternGraph.nodes,
@@ -208,8 +207,8 @@ export class GraphTransformationService {
 
 	private getNACs(
 		patternGraph: GraphRewritingRuleSchema['patternGraph']
-	): DBGraphNACs[] {
-		return patternGraph.nacs ? [patternGraph.nacs] : [];
+	): NacSchema[] {
+		return patternGraph.nacs || [];
 	}
 
 	private async handleExternalInstantiation(

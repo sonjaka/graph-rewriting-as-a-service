@@ -16,16 +16,13 @@ export interface GraphRewritingRuleSchema {
 export interface PatternGraphSchema {
   options: {
     /**
-     * One of directed or undirected
+     * Type of the graph: either directed or undirected
      */
     type: "directed" | "undirected";
   };
   nodes: PatternNodeSchema[];
   edges: GraphEdgeSchema[];
-  nacs?: {
-    nodes: PatternNodeSchema[];
-    edges: GraphEdgeSchema[];
-  };
+  nacs?: NacSchema[];
 }
 export interface PatternNodeSchema {
   key: string;
@@ -59,10 +56,21 @@ export interface GraphEdgeSchema {
   };
   additionalProperties?: never;
 }
+export interface NacSchema {
+  options?: {
+    /**
+     * Type of the graph: either directed or undirected
+     */
+    type?: "directed" | "undirected";
+    [k: string]: unknown;
+  };
+  nodes: PatternNodeSchema[];
+  edges: GraphEdgeSchema[];
+}
 export interface ReplacementGraphSchema {
   options: {
     /**
-     * One of directed or undirected
+     * Type of the graph: either directed or undirected
      */
     type: "directed" | "undirected";
   };
@@ -113,7 +121,7 @@ export interface ReplacementEdgeSchema {
   };
   rewriteOptions?: {
     /**
-     * Defines how the attributes are handles during rewrite. 'Modify' mode adds or updates the given attributes. Setting an attribute to null deletes it. 'Replace' mode deletes all attributes of the matched node and then sets the given attributes. 'Delete' mode deletes all attributes and doesn't add any new ones.
+     * Defines how the attributes are handles during rewrite. 'Modify' mode adds or updates the given attributes (setting an attribute to null deletes it). 'Replace' mode deletes all attributes of the matched node and then sets the given attributes. 'Delete' mode deletes all attributes and doesn't add any new ones.
      */
     attributeReplacementMode?: "modify" | "replace" | "delete";
   };

@@ -29,8 +29,26 @@
 			}
 		},
 		"nacs": {
+			"type": "array",
+			"items": {
+				"$ref": "#/$defs/nacSchema"
+			}
+		}
+	},
+	"required": ["options", "nodes", "edges"],
+	"$defs": {
+		"nacSchema": {
 			"type": "object",
 			"properties": {
+				"options": {
+					"type": "object",
+					"properties": {
+						"type": {
+							"description": "Type of the graph: either directed or undirected",
+							"enum": ["directed", "undirected"]
+						}
+					}
+				},
 				"nodes": {
 					"type": "array",
 					"items": {
@@ -47,6 +65,5 @@
 			"required": ["nodes", "edges"],
 			"additionalProperties": false
 		}
-	},
-	"required": ["options", "nodes", "edges"]
+	}
 }

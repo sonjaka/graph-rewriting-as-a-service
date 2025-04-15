@@ -8,7 +8,7 @@
 export interface GraphSchema {
   options: {
     /**
-     * One of directed or undirected
+     * Type of the graph: either directed or undirected
      */
     type: "directed" | "undirected";
   };

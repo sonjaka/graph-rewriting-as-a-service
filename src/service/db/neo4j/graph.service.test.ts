@@ -16,6 +16,7 @@ import { Neo4jGraphService } from './graph.service';
 import { getApocJsonAllExport } from './testutils/helpers';
 import { createParameterUuid } from '../../../utils/uuid';
 import { PatternNodeSchema } from '../../../types/patternnode.schema';
+import { DBGraphEdge, DBGraphNACs } from '../types';
 
 let container: StartedNeo4jContainer;
 let driver: Driver;
@@ -971,173 +972,304 @@ describe('Integration tests for graph service with testcontainers', () => {
 			});
 		});
 
-		test.todo(
-			'NEO4J-99: Test pattern matching for nacs: excluding node with multiple outgoing edges',
-			async () => {
-				// Set up test database with two nodes
-				const nodeProps = {
-					attributes: [
-						{ _grs_internalId: 'testnodeA', hello: 'world' },
-						{ _grs_internalId: 'testnodeB', test: 'wert' },
-						{ _grs_internalId: 'testnodeC', hello: 'world' },
-						{ _grs_internalId: 'testnodeD', attribute: 'value' },
-						{ _grs_internalId: 'testnodeE' },
-						{ _grs_internalId: 'testnodeF' },
-					],
-				};
-				await session.run(
-					`UNWIND $attributes AS config \
+		test('Test pattern matching for nacs: exclude node with connection to NAC-Node', async () => {
+			// Set up test database with four nodes.
+			const nodeProps = {
+				attributes: [
+					{ _grs_internalId: 'testnodeA', name: 'A' },
+					{ _grs_internalId: 'testnodeB', name: 'B' },
+					{ _grs_internalId: 'testnodeC', name: 'C' },
+					{ _grs_internalId: 'testnodeD', name: 'D' },
+				],
+			};
+			await session.run(
+				`UNWIND $attributes AS config \
 				CREATE (n:GRS_Node) \
 				SET n = config`,
-					nodeProps
-				);
+				nodeProps
+			);
 
-				const edgesProps = {
-					config: [
-						{ source: 'testnodeA', target: 'testnodeB', key: 'aToB' },
-						{ source: 'testnodeA', target: 'testnodeC', key: 'aToC' },
-						{ source: 'testnodeC', target: 'testnodeD', key: 'cToD' },
-						{ source: 'testnodeD', target: 'testnodeE', key: 'dToE' },
-						{ source: 'testnodeE', target: 'testnodeC', key: 'eToC' },
-						{ source: 'testnodeA', target: 'testnodeF', key: 'aToF' },
-					],
-				};
+			const edgesProps = {
+				config: [
+					{ source: 'testnodeA', target: 'testnodeB', key: 'aToB' },
+					{ source: 'testnodeA', target: 'testnodeC', key: 'aToC' },
+					{ source: 'testnodeA', target: 'testnodeD', key: 'aToD' },
+					{ source: 'testnodeC', target: 'testnodeB', key: 'cToB' },
+				],
+			};
 
-				await session.run(
-					`UNWIND $config AS config \
+			await session.run(
+				`UNWIND $config AS config \
 				MATCH (a),(b) \
 				WHERE a._grs_internalId = config.source \
 				AND b._grs_internalId = config.target \
 				CREATE (a)-[r:\`GRS_Relationship\` {_grs_internalId: config.key, _grs_source: config.source, _grs_target: config.target}]->(b) RETURN r`,
-					edgesProps
-				);
+				edgesProps
+			);
 
-				const patternNodes = [
-					{
-						key: 'A',
-						attributes: {},
-					},
-					{
-						key: 'B',
-						attributes: {},
-					},
-				];
+			const patternNodes = [
+				{
+					key: 'node1',
+					attributes: {},
+				},
+				{
+					key: 'node2',
+					attributes: {},
+				},
+			];
 
-				const patternEdges = [
-					{
-						key: 'edge',
-						source: 'A',
-						target: 'B',
-						attributes: {},
-					},
-				];
+			const patternEdges = [
+				{
+					key: 'edge',
+					source: 'node1',
+					target: 'node2',
+					attributes: {},
+				},
+			];
 
-				const nacs = [
-					{
-						nodes: [
-							{
-								key: 'A',
-								attributes: {},
-							},
-							{
-								key: 'B',
-								attributes: {},
-							},
-							{
-								key: 'C',
-								attributes: {},
-							},
-							// {
-							// 	key: 'D',
-							// 	attributes: {},
-							// },
-						],
-						edges: [
-							{
-								attributes: {},
-								key: 'atob',
-								source: 'A',
-								target: 'B',
-							},
-							{
-								attributes: {},
-								key: 'atob',
-								source: 'A',
-								target: 'C',
-							},
-							// {
-							// 	attributes: {},
-							// 	key: 'atob',
-							// 	source: 'A',
-							// 	target: 'D',
-							// },
-						],
+			const nacs = [
+				{
+					options: {
+						type: 'directed',
 					},
-				];
-
-				// Should have two resultsets with A-B and A-C
-				const expectedResultSets = [
-					{
-						edges: {
-							edge: {
-								attributes: {},
-								key: 'dToE',
-								source: 'testnodeD',
+					nodes: [
+						{
+							key: 'node2',
+						},
+						{
+							key: 'node3',
+							attributes: {
+								name: 'B',
 							},
 						},
-						nodes: {
-							A: {
-								key: 'testnodeD',
-								attributes: {
-									attribute: 'value',
-								},
+					],
+					edges: [
+						{
+							key: 'edge2',
+							source: 'node2',
+							target: 'node3',
+							attributes: {},
+						},
+					],
+				},
+			];
+
+			// The result should only match the connections A->B, A->D and C->B
+			// but NOT A->C, because C is connected to a Node B, which is excluded via NACs
+			const expectedResultSets = [
+				{
+					edges: {
+						edge: {
+							attributes: {},
+							key: 'aToB',
+							source: 'testnodeA',
+							target: 'testnodeB',
+						},
+					},
+					nodes: {
+						node1: {
+							key: 'testnodeA',
+							attributes: {
+								name: 'A',
 							},
-							B: {
-								key: 'testnodeE',
-								attributes: {},
+						},
+						node2: {
+							key: 'testnodeB',
+							attributes: {
+								name: 'B',
 							},
 						},
 					},
-					{
-						edges: {
-							edge: {
-								attributes: {},
-								key: 'eToC',
-								source: 'testnodeE',
-								target: 'testnodeC',
+				},
+				{
+					edges: {
+						edge: {
+							attributes: {},
+							key: 'aToD',
+							source: 'testnodeA',
+							target: 'testnodeD',
+						},
+					},
+					nodes: {
+						node1: {
+							key: 'testnodeA',
+							attributes: {
+								name: 'A',
 							},
 						},
-						nodes: {
-							A: {
-								key: 'testnodeE',
-								attributes: {},
-							},
-							B: {
-								key: 'testnodeC',
-								attributes: {
-									hello: 'world',
-								},
+						node2: {
+							key: 'testnodeD',
+							attributes: {
+								name: 'D',
 							},
 						},
 					},
-				];
+				},
+				{
+					edges: {
+						edge: {
+							attributes: {},
+							key: 'cToB',
+							source: 'testnodeC',
+							target: 'testnodeB',
+						},
+					},
+					nodes: {
+						node1: {
+							key: 'testnodeC',
+							attributes: {
+								name: 'C',
+							},
+						},
+						node2: {
+							key: 'testnodeB',
+							attributes: {
+								name: 'B',
+							},
+						},
+					},
+				},
+			];
 
-				const graphService = new Neo4jGraphService(session);
-				const neo4jSpy = vi.spyOn(session, 'executeRead');
-				const result = await graphService.findPatternMatch(
-					patternNodes,
-					patternEdges,
-					'directed',
-					false,
-					nacs
-				);
-				expect(neo4jSpy).toHaveBeenCalled();
-				expect(neo4jSpy).toHaveBeenCalledTimes(1);
-				expectedResultSets.forEach((expectedResultNode) => {
-					expect(result).toContainEqual(expectedResultNode);
-				});
-			}
-		);
+			const graphService = new Neo4jGraphService(session);
+			const neo4jSpy = vi.spyOn(session, 'executeRead');
+			const result = await graphService.findPatternMatch(
+				patternNodes,
+				patternEdges,
+				'directed',
+				false,
+				nacs as DBGraphNACs[]
+			);
+			expect(neo4jSpy).toHaveBeenCalled();
+			expect(neo4jSpy).toHaveBeenCalledTimes(1);
+			expectedResultSets.forEach((expectedResultNode) => {
+				expect(result).toContainEqual(expectedResultNode);
+			});
+		});
+
+		test('Test pattern matching for nacs: excluding node with two outgoing edges to any nodes', async () => {
+			// Set up test database with two nodes
+			const nodeProps = {
+				attributes: [
+					{ _grs_internalId: 'testnodeA', name: 'A' },
+					{ _grs_internalId: 'testnodeB', name: 'B' },
+					{ _grs_internalId: 'testnodeC', name: 'C' },
+					{ _grs_internalId: 'testnodeD', name: 'D' },
+				],
+			};
+			await session.run(
+				`UNWIND $attributes AS config \
+				CREATE (n:GRS_Node) \
+				SET n = config`,
+				nodeProps
+			);
+
+			const edgesProps = {
+				config: [
+					{ source: 'testnodeA', target: 'testnodeB', key: 'aToB' },
+					{ source: 'testnodeA', target: 'testnodeC', key: 'aToC' },
+					{ source: 'testnodeA', target: 'testnodeD', key: 'aToD' },
+
+					{ source: 'testnodeB', target: 'testnodeA', key: 'bToA' },
+					{ source: 'testnodeB', target: 'testnodeC', key: 'bToC' },
+
+					{ source: 'testnodeC', target: 'testnodeB', key: 'cToB' },
+				],
+			};
+
+			await session.run(
+				`UNWIND $config AS config \
+				MATCH (a),(b) \
+				WHERE a._grs_internalId = config.source \
+				AND b._grs_internalId = config.target \
+				CREATE (a)-[r:\`GRS_Relationship\` {_grs_internalId: config.key, _grs_source: config.source, _grs_target: config.target}]->(b) RETURN r`,
+				edgesProps
+			);
+
+			const patternNodes = [
+				{
+					key: 'node1',
+					attributes: {},
+				},
+			];
+
+			const patternEdges: DBGraphEdge[] = [];
+
+			const nacs = [
+				{
+					options: {
+						type: 'directed',
+					},
+					nodes: [
+						{
+							key: 'node1',
+						},
+						{
+							key: 'node2',
+						},
+						{
+							key: 'node3',
+						},
+					],
+					edges: [
+						{
+							key: 'edge2',
+							source: 'node1',
+							target: 'node2',
+							attributes: {},
+						},
+						{
+							key: 'edge3',
+							source: 'node1',
+							target: 'node3',
+							attributes: {},
+						},
+					],
+				},
+			];
+
+			// The result should only match the nodes C and D
+			// Because A and B have multiple outgoing edges
+			const expectedResultSets = [
+				{
+					edges: {},
+					nodes: {
+						node1: {
+							key: 'testnodeC',
+							attributes: {
+								name: 'C',
+							},
+						},
+					},
+				},
+				{
+					edges: {},
+					nodes: {
+						node1: {
+							key: 'testnodeD',
+							attributes: {
+								name: 'D',
+							},
+						},
+					},
+				},
+			];
+
+			const graphService = new Neo4jGraphService(session);
+			const neo4jSpy = vi.spyOn(session, 'executeRead');
+			const result = await graphService.findPatternMatch(
+				patternNodes,
+				patternEdges,
+				'directed',
+				false,
+				nacs as DBGraphNACs[]
+			);
+			expect(neo4jSpy).toHaveBeenCalled();
+			expect(neo4jSpy).toHaveBeenCalledTimes(1);
+			expectedResultSets.forEach((expectedResultNode) => {
+				expect(result).toContainEqual(expectedResultNode);
+			});
+		});
 	});
 });
 
