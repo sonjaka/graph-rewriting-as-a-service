@@ -50,20 +50,9 @@ export class SpoRewriteService {
 	) {
 		const preservedNodes: Record<string, string> = {};
 
-		if (Object.entries(occurence.nodes).length) {
-			// Remove all nodes and edges that are not in the replacement graph
-			const removedNodeIds = adjustments.removedNodes.map((node) => {
-				return occurence.nodes[node.key].key;
-			});
-			await this.graphService.deleteNodes(removedNodeIds);
-		}
-
-		if (Object.entries(occurence.edges).length) {
-			const removedEdgesIds = adjustments.removedEdges.map((edge) => {
-				return occurence.edges[edge.key].key;
-			});
-			await this.graphService.deleteEdges(removedEdgesIds);
-		}
+		// Remove all nodes and edges that are not in the replacement graph
+		await this.deleteRemovedNodes(occurence, adjustments.removedNodes);
+		await this.deleteRemovedEdges(occurence, adjustments.removedEdges);
 
 		// Update all nodes and edges that are part of both search pattern and replacement graph
 		if (Object.entries(occurence.nodes).length) {
@@ -139,6 +128,30 @@ export class SpoRewriteService {
 		}
 
 		return;
+	}
+
+	private async deleteRemovedNodes(
+		occurence: DBGraphPatternMatchResult,
+		removedNodes: PatternNodeSchema[]
+	): Promise<void> {
+		if (Object.entries(occurence.nodes).length) {
+			const removedNodeIds = removedNodes.map((node) => {
+				return occurence.nodes[node.key].key;
+			});
+			await this.graphService.deleteNodes(removedNodeIds);
+		}
+	}
+
+	private async deleteRemovedEdges(
+		occurence: DBGraphPatternMatchResult,
+		removedEdges: GraphEdgeSchema[]
+	): Promise<void> {
+		if (Object.entries(occurence.edges).length) {
+			const removedEdgesIds = removedEdges.map((edge) => {
+				return occurence.edges[edge.key].key;
+			});
+			await this.graphService.deleteEdges(removedEdgesIds);
+		}
 	}
 
 	private computeOverlapAndDifferenceOfLhsAndRhs(
