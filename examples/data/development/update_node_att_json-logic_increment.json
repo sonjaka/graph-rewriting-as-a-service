@@ -1,0 +1,57 @@
+{
+	"hostgraph": {
+		"options": {
+			"type": "directed"
+		},
+		"nodes": [
+			{
+				"key": "A",
+				"attributes": {
+					"numericAttribute": 1
+				}
+			}
+		],
+		"edges": []
+	},
+	"rules": [
+		{
+			"key": "increment_node_attribute",
+			"patternGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "node1",
+						"attributes": {}
+					}
+				],
+				"edges": []
+			},
+			"replacementGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "node1",
+						"attributes": {
+							"numericAttribute": {
+								"type": "jsonLogic",
+								"args": {
+									"rule": {
+										"+": [
+											"$.nodes.[?(@.key === 'node1')].attributes.numericAttribute",
+											2
+										]
+									}
+								}
+							}
+						}
+					}
+				],
+				"edges": []
+			}
+		}
+	]
+}
