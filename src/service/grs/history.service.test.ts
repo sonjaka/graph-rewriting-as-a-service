@@ -1,25 +1,8 @@
-import { describe, expect, test, beforeEach, afterEach, vi } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import { HistoryService } from './history.service';
-import { IDBGraphService } from '../db/types';
 import { ResultGraphSchema } from './graph-transformation.service';
 
 describe('Test history service', () => {
-	let mockGraphService: IDBGraphService;
-
-	beforeEach(() => {
-		mockGraphService = {
-			createNode: vi.fn(),
-			getAllNodes: vi.fn(),
-			deleteAllNodes: vi.fn(),
-			createEdge: vi.fn(),
-			getAllEdges: vi.fn(),
-		} as unknown as IDBGraphService;
-	});
-
-	afterEach(() => {
-		vi.resetAllMocks(); // Clear and set back implementation
-	});
-
 	test('Correct initialization with empty history', async () => {
 		const historyService = new HistoryService();
 
@@ -71,9 +54,7 @@ describe('Test history service', () => {
 		} as ResultGraphSchema;
 
 		historyService.addToHistory(secondEntry);
-
 		historyService.clearHistory();
-
 		expect(historyService.getHistory()).toStrictEqual([]);
 	});
 });
