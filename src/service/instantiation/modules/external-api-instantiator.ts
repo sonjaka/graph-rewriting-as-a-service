@@ -1,6 +1,6 @@
 import { IGraphInstantiator, IInstantiatorOptions } from '../types';
 import { ReplacementGraphSchema } from '../../../types/replacementgraph.schema';
-import { ExternalApiInstantiationOptions } from '../../../types/grs.schema';
+import { ExternalApiInstantiationOptions } from '../../../types/request-transform.schema';
 import { DBGraphPatternMatchResult } from '../../db/types';
 
 interface ExternalApiInstantiatorOptions

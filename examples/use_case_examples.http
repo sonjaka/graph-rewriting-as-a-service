@@ -1,5 +1,5 @@
 // Simple Example: Sierpinski Triangles Example
-POST http://localhost:8080/grs
+POST http://localhost:8080/transform
 Content-Type: application/json
 
 < ./data/usecases/sierpinsky_triangles.json
@@ -8,14 +8,14 @@ Content-Type: application/json
 // Example: EPK Instantiation
 // - with jsonLogic instantiated attributes
 // - with faker generated function labels
-POST http://localhost:8080/grs
+POST http://localhost:8080/transform
 Content-Type: application/json
 
 < ./data/usecases/epk.json
 
 
 // Example: UML to Petrinet
-POST http://localhost:8080/grs
+POST http://localhost:8080/transform
 Content-Type: application/json
 
 < ./data/usecases/uml_to_petrinet.json

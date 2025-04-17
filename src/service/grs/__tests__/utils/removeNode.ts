@@ -1,5 +1,5 @@
 import { GraphSchema } from '../../../types/graph.schema';
-import { GraphRewritingRequestSchema } from '../../../types/grs.schema';
+import { GraphRewritingRequestSchema } from '../../../types/request-transform.schema';
 
 export const input: GraphRewritingRequestSchema = {
 	hostgraph: {

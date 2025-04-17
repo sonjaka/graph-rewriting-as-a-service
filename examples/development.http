@@ -1,26 +1,26 @@
 
 
 // ADD EDGES
-POST http://localhost:8080/grs
+POST http://localhost:8080/transform
 Content-Type: application/json
 
 < ./data/development/add_edge.json
 
 // UPDATE NODES
 // Should update node B with additional attributes
-POST http://localhost:8080/grs
+POST http://localhost:8080/transform
 Content-Type: application/json
 
 < ./data/development/update_node_attr_modify.json
 
 // Should delete all attributes from B
-POST http://localhost:8080/grs
+POST http://localhost:8080/transform
 Content-Type: application/json
 
 < ./data/development/update_node_attr_delete.json
 
 // Should replace attributes from B
-POST http://localhost:8080/grs
+POST http://localhost:8080/transform
 Content-Type: application/json
 
 < ./data/development/update_node_attr_replace.json
@@ -28,14 +28,14 @@ Content-Type: application/json
 // OPTIONS
 // Homomorphic matching
 // -> Should replace A & B's label with string "I've been replaced!"
-POST http://localhost:8080/grs
+POST http://localhost:8080/transform
 Content-Type: application/json
 
 < ./data/development/homomorphic_matching.json
 
 // Isomorphic matching
 // -> Should replace only B's label with string "I've been replaced!"
-POST http://localhost:8080/grs
+POST http://localhost:8080/transform
 Content-Type: application/json
 
 < ./data/development/isomorphic_matching.json
@@ -43,19 +43,19 @@ Content-Type: application/json
 
 // NACs
 // Should not match if connected node is connected with a node with a given attribute
-POST http://localhost:8080/grs
+POST http://localhost:8080/transform
 Content-Type: application/json
 
 < ./data/development/nac_connection_with_wrong_attribute.json
 
-POST http://localhost:8080/grs
+POST http://localhost:8080/transform
 Content-Type: application/json
 
 < ./data/development/nac_with_multiple_outgoing_edges.json
 
 // INSTANTIATION
 // Increment Attribute Value
-POST http://localhost:8080/grs
+POST http://localhost:8080/transform
 Content-Type: application/json
 
 < ./data/development/update_node_att_json-logic_increment.json
