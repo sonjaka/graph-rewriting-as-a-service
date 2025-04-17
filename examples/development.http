@@ -52,3 +52,10 @@ POST http://localhost:8080/grs
 Content-Type: application/json
 
 < ./data/development/nac_with_multiple_outgoing_edges.json
+
+// INSTANTIATION
+// Increment Attribute Value
+POST http://localhost:8080/grs
+Content-Type: application/json
+
+< ./data/development/update_node_att_json-logic_increment.json
