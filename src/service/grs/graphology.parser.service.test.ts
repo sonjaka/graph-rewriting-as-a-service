@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { GraphologyParserService } from './graphology.parser.service';
 
-import sampleGraphData from './testutils/samplegraph.json';
+import sampleGraphData from './__tests__/utils/samplegraph.json';
 import { SerializedGraph } from 'graphology-types';
 
 describe('Test graphology parser service', () => {
@@ -9,7 +9,7 @@ describe('Test graphology parser service', () => {
 		const graphParserService = new GraphologyParserService();
 
 		const parsedGraph = graphParserService.parseGraph(
-			sampleGraphData as SerializedGraph
+			sampleGraphData as unknown as SerializedGraph
 		);
 
 		parsedGraph.forEachNode((node, attributes) => {

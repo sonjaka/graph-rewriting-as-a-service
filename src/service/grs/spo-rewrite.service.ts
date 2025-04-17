@@ -27,10 +27,7 @@ export class SpoRewriteService {
 		lhs: PatternGraphSchema,
 		rhs: ReplacementGraphSchema
 	) {
-		const overlapAndDifference = this.computeOverlapAndDifferenceOfLhsAndRhs(
-			lhs,
-			rhs
-		);
+		const overlapAndDifference = this.computePreservationMorphism(lhs, rhs);
 
 		await this.replaceMatch(match, overlapAndDifference);
 	}
@@ -154,7 +151,7 @@ export class SpoRewriteService {
 		}
 	}
 
-	private computeOverlapAndDifferenceOfLhsAndRhs(
+	private computePreservationMorphism(
 		lhs: PatternGraphSchema,
 		rhs: ReplacementGraphSchema
 	): GraphDiffResult {

@@ -251,24 +251,32 @@ export class Neo4jGraphService implements IDBGraphService {
 				'Neo4jGraphService: no internalId given in updateEdge clause'
 			);
 		}
-		const oldEdge = await this.getEdge(internalId);
-
-		await this.deleteEdge(internalId);
 
 		let attributes = {};
 
-		if (options?.attributeReplacementMode === 'delete') {
-			attributes = {};
-		} else if (options?.attributeReplacementMode === 'replace') {
-			attributes = {
-				...metadata,
-			};
-		} else if (oldEdge) {
-			attributes = {
-				...oldEdge.attributes,
-				...metadata,
-			};
+		const oldEdge = await this.getEdge(internalId);
+
+		const replacementMode = options?.attributeReplacementMode;
+		switch (replacementMode) {
+			case 'delete':
+				break;
+			case 'replace':
+				attributes = {
+					...metadata,
+				};
+				break;
+			case 'modify':
+			default:
+				if (oldEdge) {
+					attributes = {
+						...oldEdge.attributes,
+						...metadata,
+					};
+				}
+				break;
 		}
+
+		await this.deleteEdge(internalId);
 
 		const edge = await this.createEdge(
 			internalIdSource,
