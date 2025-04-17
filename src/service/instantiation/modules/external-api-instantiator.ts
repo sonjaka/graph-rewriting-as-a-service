@@ -1,10 +1,11 @@
-import { IGraphInstantiator } from '../types';
+import { IGraphInstantiator, IInstantiatorOptions } from '../types';
 import { ReplacementGraphSchema } from '../../../types/replacementgraph.schema';
 import { ExternalApiInstantiationOptions } from '../../../types/grs.schema';
 import { DBGraphPatternMatchResult } from '../../db/types';
 
 interface ExternalApiInstantiatorOptions
-	extends ExternalApiInstantiationOptions {
+	extends IInstantiatorOptions,
+		ExternalApiInstantiationOptions {
 	match: DBGraphPatternMatchResult;
 }
 
@@ -85,18 +86,33 @@ export class ExternalApiInstantiator
 		return JSON.stringify(body);
 	}
 
-	private ensureValidGraphSchema(apiResult): ReplacementGraphSchema {
-		if (!apiResult || (!apiResult?.nodes && !apiResult?.edges)) {
+	private ensureValidGraphSchema(apiResult: unknown): ReplacementGraphSchema {
+		if (!apiResult) {
+			// ApiResult was falsy (null, undefined, empty, etc.)
+			throw new Error(ExternalApiInstantiatorErrors.InvalidResult);
+		}
+		if (typeof apiResult !== 'object' || Array.isArray(apiResult)) {
+			// ApiResult was not an object --> cannot be the expected graph object
+			throw new Error(ExternalApiInstantiatorErrors.InvalidResult);
+		}
+		if (!('nodes' in apiResult) && !('edges' in apiResult)) {
+			// Result has neither nodes nor edges --> not a graph
 			throw new Error(ExternalApiInstantiatorErrors.InvalidResult);
 		}
 
-		if (!apiResult.edges) {
-			apiResult.edges = [];
+		// if only edges OR nodes are set, we can fix it to resemble a replacement graph
+		if (!('edges' in apiResult)) {
+			(apiResult as ReplacementGraphSchema).edges = [];
 		}
-		if (!apiResult.nodes) {
-			apiResult.nodes = [];
+		if (!('nodes' in apiResult)) {
+			(apiResult as ReplacementGraphSchema).nodes = [];
+		}
+		if (!('options' in apiResult)) {
+			(apiResult as ReplacementGraphSchema).options = {
+				type: 'undirected',
+			};
 		}
 
-		return apiResult;
+		return apiResult as ReplacementGraphSchema;
 	}
 }

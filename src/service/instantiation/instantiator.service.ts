@@ -1,9 +1,9 @@
 import { IGraphInstantiator, IValueInstantiator } from './types';
 
-import { RandExpInstantiator } from './modules/randexpInstantiator';
-import { FakerInstantiator } from './modules/fakerInstantiator';
-import { JsonLogicInstantiator } from './modules/jsonLogicInstantiator';
-import { ExternalApiInstantiator } from './modules/externalApiInstantiator';
+import { RandExpInstantiator } from './modules/randexp-instantiator';
+import { FakerInstantiator } from './modules/faker-instantiator';
+import { JsonLogicInstantiator } from './modules/json-logic-instantiator';
+import { ExternalApiInstantiator } from './modules/external-api-instantiator';
 
 export class InstantiatorService {
 	static plugins = [
@@ -18,51 +18,52 @@ export class InstantiatorService {
 		this.instantiators = new Map();
 
 		InstantiatorService.plugins.forEach((instantiator) => {
-			const instantiatorPlugin = new instantiator();
-			const key = instantiatorPlugin.instantiatorKey;
-			this.instantiators.set(key, instantiatorPlugin);
+			const instantiatorInstance = new instantiator();
+			const key = instantiatorInstance.instantiatorKey;
+			this.instantiators.set(key, instantiatorInstance);
 		});
 	}
 
 	private getInstantiator(instantiator: string) {
-		const instantiatorPlugin = this.instantiators.get(instantiator);
-		if (!instantiatorPlugin) {
+		const instantiatorInstance = this.instantiators.get(instantiator);
+		if (!instantiatorInstance) {
 			throw Error(`Instantiator of type "${instantiator}" is not loaded`);
 		}
-		return instantiatorPlugin;
+		return instantiatorInstance;
 	}
 
 	public getGraphInstantiator(instantiatorName: string): IGraphInstantiator {
-		const instantiatorPlugin = this.getInstantiator(instantiatorName);
-		if (!this.isGraphInstantiator(instantiatorPlugin)) {
+		const instantiatorInstance = this.getInstantiator(instantiatorName);
+		if (!this.isGraphInstantiator(instantiatorInstance)) {
 			throw Error(
-				`Instantiator of type "${instantiatorPlugin}" is not a subgraph instantiator`
+				`Instantiator of type "${instantiatorName}" is not a subgraph instantiator`
 			);
 		}
-		return instantiatorPlugin;
+		return instantiatorInstance;
 	}
 
 	public getValueInstantiator(instantiatorName: string): IValueInstantiator {
-		const instantiatorPlugin = this.getInstantiator(instantiatorName);
-		if (!this.isValueInstantiator(instantiatorPlugin)) {
+		const instantiatorInstance = this.getInstantiator(instantiatorName);
+		if (!this.isValueInstantiator(instantiatorInstance)) {
 			throw Error(
-				`Instantiator of type "${instantiatorPlugin}" is not a value instantiator`
+				`Instantiator of type "${instantiatorName}" is not a value instantiator`
 			);
 		}
-		return instantiatorPlugin;
+		return instantiatorInstance;
 	}
 
 	private isGraphInstantiator(
-		instantiatorPlugin: IValueInstantiator | IGraphInstantiator
-	): instantiatorPlugin is IGraphInstantiator {
+		instantiatorInstance: IValueInstantiator | IGraphInstantiator
+	): instantiatorInstance is IGraphInstantiator {
 		return (
-			(instantiatorPlugin as IGraphInstantiator).instantiateGraph !== undefined
+			(instantiatorInstance as IGraphInstantiator).instantiateGraph !==
+			undefined
 		);
 	}
 
 	private isValueInstantiator(
-		instantiatorPlugin: IValueInstantiator | IGraphInstantiator
-	): instantiatorPlugin is IValueInstantiator {
-		return !this.isGraphInstantiator(instantiatorPlugin);
+		instantiatorInstance: IValueInstantiator | IGraphInstantiator
+	): instantiatorInstance is IValueInstantiator {
+		return !this.isGraphInstantiator(instantiatorInstance);
 	}
 }

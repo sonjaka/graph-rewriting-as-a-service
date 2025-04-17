@@ -2,7 +2,7 @@
 POST http://localhost:8080/grs
 Content-Type: application/json
 
-< ../data/usecases/sierpinsky_triangles.json
+< ./data/usecases/sierpinsky_triangles.json
 
 
 // Example: EPK Instantiation

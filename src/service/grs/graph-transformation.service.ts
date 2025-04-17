@@ -26,8 +26,9 @@ import { ReplacementGraphSchema } from '../../types/replacementgraph.schema';
 import { ReplacementNodeSchema } from '../../types/replacementnode.schema';
 import { ReplacementEdgeSchema } from '../../types/replacementedge.schema';
 import { getRandomIntBetween } from '../../utils/numbers';
-import { SpoRewriteService } from './spoRewrite.service';
+import { SpoRewriteService } from './spo-rewrite.service';
 import { logger } from '../../utils/logger';
+import { HistoryService } from './history.service';
 
 export type ResultGraphSchema = Omit<GraphSchema, 'nodes' | 'edges'> & {
 	nodes: (Omit<GraphNodeSchema, 'attributes'> & {
@@ -40,7 +41,7 @@ export type ResultGraphSchema = Omit<GraphSchema, 'nodes' | 'edges'> & {
 
 export class GraphTransformationService {
 	private instantiatorService;
-	private history: ResultGraphSchema[] = [];
+	private historyService;
 	private trackHistory = false;
 	private hostgraphOptions: GraphSchema['options'] = {
 		type: 'undirected',
@@ -48,6 +49,7 @@ export class GraphTransformationService {
 
 	constructor(private readonly graphService: IDBGraphService) {
 		this.instantiatorService = new InstantiatorService();
+		this.historyService = new HistoryService();
 	}
 
 	public async transformGraph(
@@ -61,7 +63,7 @@ export class GraphTransformationService {
 		this.graphService.graphType = hostgraphData.options.type;
 		await this.importHostgraph(hostgraphData);
 
-		this.history = [];
+		this.historyService.clearHistory();
 		this.trackHistory = options?.returnHistory || false;
 		this.hostgraphOptions = hostgraphData.options;
 
@@ -86,12 +88,12 @@ export class GraphTransformationService {
 		}
 
 		const finalHostgraph = await this.exportHostgraph();
-		this.history.push(finalHostgraph);
+		this.historyService.addToHistory(finalHostgraph);
 		logger.info(
 			'GraphTransformationService: Graph transformation completed. Final host graph exported.'
 		);
 
-		return this.history;
+		return this.historyService.getHistory();
 	}
 
 	private async executeRule(
@@ -114,8 +116,8 @@ export class GraphTransformationService {
 		for (let i = 0; i < repetitions; i++) {
 			// Handle edge case for empty pattern
 			// Additions are still possible!
-			const match = { nodes: {}, edges: {} };
 			if (!patternGraph.nodes.length && !patternGraph.edges.length) {
+				const match = { nodes: {}, edges: {} };
 				await this.handleMatch(match, patternGraph, replacementGraph);
 				logger.debug(
 					`GraphTransformationService: Finished executing rule "${ruleConfig.key}"`
@@ -380,7 +382,7 @@ export class GraphTransformationService {
 	private async updateHistory() {
 		if (this.trackHistory) {
 			const currentHostgraph = await this.exportHostgraph();
-			this.history.push(currentHostgraph);
+			this.historyService.addToHistory(currentHostgraph);
 		}
 	}
 }

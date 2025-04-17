@@ -4,7 +4,7 @@ import {
 	JsonLogicErrors,
 	JsonLogicInstantiatorOptions,
 	JsonPathErrors,
-} from './jsonLogicInstantiator';
+} from './json-logic-instantiator';
 import { RulesLogic } from 'json-logic-js';
 import { GraphSchema } from '../../../types/grs.schema';
 import { logger } from '../../../utils/logger';

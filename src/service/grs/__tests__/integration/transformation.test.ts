@@ -9,113 +9,57 @@ import {
 	beforeAll,
 } from 'vitest';
 
+import { Neo4jContainer, StartedNeo4jContainer } from '@testcontainers/neo4j';
+import neo4j, { Driver, Session } from 'neo4j-driver';
+import { Neo4jGraphService } from '../../../db/neo4j/graph.service';
+
+import { GraphSchema } from '../../../../types/graph.schema';
+
 import {
 	GraphTransformationService,
 	ResultGraphSchema,
-} from './graphTransformation.service';
-import { IDBGraphService } from '../db/types';
-import { GraphSchema } from '../../types/graph.schema';
+} from '../../graph-transformation.service';
 
-import { Neo4jContainer, StartedNeo4jContainer } from '@testcontainers/neo4j';
-import neo4j, { Driver, Session } from 'neo4j-driver';
-import { Neo4jGraphService } from '../db/neo4j/graph.service';
-
-// Example Data
-import sampleGraphData from './testutils/samplegraph.json';
 import {
 	input as addNodeInput,
 	expectedOutput as addNodeExpectedOutput,
-} from './testutils/addNode';
+} from '../utils/addNode';
 import {
 	input as addEdgeInput,
 	expectedOutput as addEdgeExpectedOutput,
-} from './testutils/addEdge';
+} from '../utils/addEdge';
 import {
 	input as removeNodeInput,
 	expectedOutput as removeNodeExpectedOutput,
-} from './testutils/removeNode';
+} from '../utils/removeNode';
 import {
 	input as removeEdgeInput,
 	expectedOutput as removeEdgeExpectedOutput,
-} from './testutils/removeEdge';
+} from '../utils/removeEdge';
 import {
 	input as updateNodeInput,
 	expectedOutput as updateNodeExpectedOutput,
-} from './testutils/updateNode';
+} from '../utils/updateNode';
 import {
 	input as updateEdgeInput,
 	expectedOutput as updateEdgeExpectedOutput,
-} from './testutils/updateEdge';
+} from '../utils/updateEdge';
 import {
 	inputHomomorphic as homomorphicMatchingInput,
 	inputIsomorphic as isomorphicMatchingInput,
 	expectedOutputHomomorphic as homomorphicMatchingExpectedOutput,
 	expectedOutputIsomorphic as isomorphicMatchingExpectedOutput,
-} from './testutils/homomorphicMatching';
+} from '../utils/homomorphicMatching';
 
 import {
 	createNodeUuid,
 	createEdgeUuid,
 	createParameterUuid,
-} from '../../utils/uuid';
+} from '../../../../utils/uuid';
 
-vi.mock('../../utils/uuid');
+vi.mock('../../../../utils/uuid');
 
-describe('Test grs service', () => {
-	let mockGraphService: IDBGraphService;
-
-	beforeEach(() => {
-		mockGraphService = {
-			createNode: vi.fn(),
-			getAllNodes: vi.fn(),
-			deleteAllNodes: vi.fn(),
-			createEdge: vi.fn(),
-			getAllEdges: vi.fn(),
-		} as unknown as IDBGraphService;
-	});
-
-	afterEach(() => {
-		vi.resetAllMocks(); // Clear and set back implementation
-	});
-
-	test('Test loadGraphIntoDb should call GraphService functions', async () => {
-		const grsService = new GraphTransformationService(mockGraphService);
-
-		const createNodeSpy = vi.spyOn(mockGraphService, 'createNode');
-		const createEdgeSpy = vi.spyOn(mockGraphService, 'createEdge');
-		const deleteAllNodesSpy = vi.spyOn(mockGraphService, 'deleteAllNodes');
-
-		mockGraphService.getAllNodes = vi
-			.fn()
-			.mockResolvedValue(sampleGraphData.nodes);
-		mockGraphService.getAllEdges = vi
-			.fn()
-			.mockResolvedValue(sampleGraphData.edges);
-
-		const result = await grsService.importHostgraph(
-			sampleGraphData as GraphSchema
-		);
-
-		// Old nodes should have been deleted
-		expect(deleteAllNodesSpy).toHaveBeenCalled();
-
-		// Graph service functions should have been called fo all nodes (2) and edges (1)
-		expect(createNodeSpy).toHaveBeenCalled();
-		expect(createNodeSpy).toHaveBeenCalledTimes(2);
-		expect(createEdgeSpy).toHaveBeenCalled();
-		expect(createEdgeSpy).toHaveBeenCalledTimes(1);
-
-		// Result should be the same as the input
-		// (except for the changed ids, which we did not respect in the mock above)
-		expect(result).toMatchObject({
-			options: sampleGraphData.options,
-			nodes: result.nodes,
-			edges: result.edges,
-		});
-	});
-});
-
-describe('Integration tests for grs service against testcontainers', () => {
+describe('Integration tests for graph transformation against testcontainers', () => {
 	let container: StartedNeo4jContainer;
 	let driver: Driver;
 	let session: Session;
