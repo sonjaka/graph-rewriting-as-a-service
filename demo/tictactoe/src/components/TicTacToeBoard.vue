@@ -191,15 +191,51 @@ const updateBoardModelFromJson = (data) => {
 }
 
 const calculateComputerMove = async () => {
-  try {
-    // check Blocking moves
-    const directions = ['down', 'right', 'diagonalTLtoBR', 'diagonalBLtoTR']
-    for (const direction of directions) {
-      const checkBlockingMoveRule = structuredClone(autoPlayRuleBlockUser)
-      checkBlockingMoveRule.patternGraph.edges[0].attributes.direction = direction
-      checkBlockingMoveRule.patternGraph.edges[1].attributes.direction = direction
+  // check Blocking moves
+  const directions = ['down', 'right', 'diagonalTLtoBR', 'diagonalBLtoTR']
+  for (const direction of directions) {
+    const checkBlockingMoveRule = structuredClone(autoPlayRuleBlockUser)
+    checkBlockingMoveRule.patternGraph.edges[0].attributes.direction = direction
+    checkBlockingMoveRule.patternGraph.edges[1].attributes.direction = direction
 
-      const response = await fetch(apiUrl + '/grs', {
+    const completeRule = {
+      hostgraph: getHostgraphFromBoardModel(),
+      rules: [checkBlockingMoveRule],
+    }
+
+    const response = await fetch(apiUrl + '/find', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(completeRule),
+    })
+
+    if (!response.ok) {
+      throw new Error(`Response status: ${response.status}`)
+    }
+
+    const json = await response.json()
+    const resultData = json.data
+
+    if (resultData.length) {
+      const nodes = resultData[0].nodes
+      const nodeToMark = Object.values(nodes).find((node) => !node.attributes.mark)
+
+      if (!nodeToMark) continue
+
+      const markSingleNode = createSingleNodeUpdateRule(
+        nodeToMark.attributes.row,
+        nodeToMark.attributes.column,
+        'O',
+      )
+
+      const grsRule = {
+        hostgraph: getHostgraphFromBoardModel(),
+        rules: [markSingleNode],
+      }
+
+      const response = await fetch(apiUrl + '/transform', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -212,17 +248,21 @@ const calculateComputerMove = async () => {
       }
 
       const json = await response.json()
-      const data = json.data
+      const boardData = json.data
+      updateBoardModelFromJson(boardData)
 
-      console.log(data)
+      // Break loop and return from function as rewriting is already done
+      return
     }
+  }
 
+  try {
     const grsRule = {
       hostgraph: getHostgraphFromBoardModel(),
       rules: [autoPlayRule],
     }
 
-    const response = await fetch(apiUrl + '/grs', {
+    const response = await fetch(apiUrl + '/transform', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -244,30 +284,14 @@ const calculateComputerMove = async () => {
 
 const calculatePlayerMove = async (row, column) => {
   try {
-    const playerMoveRule = structuredClone(emptyRule)
-
-    playerMoveRule.patternGraph.nodes.push({
-      key: 'node1',
-      attributes: {
-        row,
-        column,
-        type: 'field',
-      },
-    })
-
-    playerMoveRule.replacementGraph.nodes.push({
-      key: 'node1',
-      attributes: {
-        mark: 'X',
-      },
-    })
+    const playerMoveRule = createSingleNodeUpdateRule(row, column, 'X')
 
     const grsRule = {
       hostgraph: getHostgraphFromBoardModel(),
       rules: [playerMoveRule],
     }
 
-    const response = await fetch(apiUrl + '/grs', {
+    const response = await fetch(apiUrl + '/transform', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -285,6 +309,28 @@ const calculatePlayerMove = async (row, column) => {
   } catch (error) {
     console.error(error.message)
   }
+}
+
+const createSingleNodeUpdateRule = (row, column, mark) => {
+  const markSingleNodeRule = structuredClone(emptyRule)
+
+  markSingleNodeRule.patternGraph.nodes.push({
+    key: 'node1',
+    attributes: {
+      row,
+      column,
+      type: 'field',
+    },
+  })
+
+  markSingleNodeRule.replacementGraph.nodes.push({
+    key: 'node1',
+    attributes: {
+      mark,
+    },
+  })
+
+  return markSingleNodeRule
 }
 
 const checkGameStatus = async () => {}

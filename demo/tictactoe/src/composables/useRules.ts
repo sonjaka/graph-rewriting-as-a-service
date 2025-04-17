@@ -97,7 +97,7 @@ export function useTicTacToeRules() {
     homomorphic: false,
     patternGraph: {
       options: {
-        type: 'directed',
+        type: 'undirected',
       },
       nodes: [
         {
@@ -118,12 +118,6 @@ export function useTicTacToeRules() {
           key: 'C',
           attributes: {
             type: 'field',
-          },
-        },
-        {
-          key: 'state',
-          attributes: {
-            type: 'state',
           },
         },
       ],
