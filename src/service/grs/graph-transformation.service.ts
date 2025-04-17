@@ -100,7 +100,7 @@ export class GraphTransformationService {
 
 	public async matchPattern(
 		hostgraphData: GraphSchema,
-		rules: GraphRewritingRuleSchema[] = []
+		rules: GraphFindRuleSchema[] = []
 	) {
 		if (rules.length) {
 			await this.initializeHostGraph(hostgraphData);
