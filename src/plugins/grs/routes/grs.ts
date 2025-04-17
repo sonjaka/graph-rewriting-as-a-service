@@ -101,7 +101,12 @@ export default async function routes(fastify: FastifyInstance) {
 	fastify.post<{
 		Body: GrsSchemaInterface;
 		Reply: IReply<GraphSchemaInterface>;
-	}>('/grs', { schema: { body: GrsSchema } }, grsHandler);
+	}>('/find', { schema: { body: GrsSchema } }, grsHandler);
+
+	fastify.post<{
+		Body: GrsSchemaInterface;
+		Reply: IReply<GraphSchemaInterface>;
+	}>('/transform', { schema: { body: GrsSchema } }, grsHandler);
 
 	fastify.post('/example-external-api-result', externalApiExampleHandler);
 }

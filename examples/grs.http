@@ -1,16 +1,16 @@
-POST http://localhost:8080/grs
+POST http://localhost:/transform
 Content-Type: application/json
 
 < ./data/grs/hostgraph_only.json
 
 
-POST http://localhost:8080/grs
+POST http://localhost:/transform
 Content-Type: application/json
 
 < ./data/grs/hostgraph_w_rules.json
 
 
-POST http://localhost:8080/grs
+POST http://localhost:/transform
 Content-Type: application/json
 
 < ./data/grs/hostgraph_w_rules_w_external_replacementgraph.json
@@ -20,7 +20,7 @@ Content-Type: application/json
 // - regexr (regex: (Hello|Howdy|Hi|Bonjour) (World|People|Computers))
 // - faker (alphanumeric)
 // - jsonLogic (combines different json logic rules, some refer to searchmatch content through jsonPath)
-POST http://localhost:8080/grs
+POST http://localhost:/transform
 Content-Type: application/json
 
 < ./data/grs/hostgraph_w_rules_w_instantiated_attributes.json
