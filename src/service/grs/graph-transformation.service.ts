@@ -3,7 +3,7 @@ import {
 	ExternalReplacementGraphConfig,
 	GraphRewritingRequestSchema,
 	GraphSchema,
-} from '../../types/grs.schema';
+} from '../../types/request-transform.schema';
 import { GraphRewritingRuleSchema } from '../../types/rewrite-rule.schema';
 import {
 	DBGraphEdgeMetadata,
@@ -29,6 +29,7 @@ import { getRandomIntBetween } from '../../utils/numbers';
 import { SpoRewriteService } from './spo-rewrite.service';
 import { logger } from '../../utils/logger';
 import { HistoryService } from './history.service';
+import { GraphFindRuleSchema } from '../../types/find-rule.schema';
 
 export type ResultGraphSchema = Omit<GraphSchema, 'nodes' | 'edges'> & {
 	nodes: (Omit<GraphNodeSchema, 'attributes'> & {
@@ -38,6 +39,9 @@ export type ResultGraphSchema = Omit<GraphSchema, 'nodes' | 'edges'> & {
 		attributes: DBGraphEdgeMetadata;
 	})[];
 };
+
+export type RewriteRuleOptions = GraphRewritingRuleSchema['options'];
+export type FindRuleOptions = GraphFindRuleSchema['options'];
 
 export class GraphTransformationService {
 	private instantiatorService;
@@ -60,12 +64,10 @@ export class GraphTransformationService {
 	): Promise<ResultGraphSchema[]> {
 		logger.info('GraphTransformationService: Starting graph transformation.');
 
-		this.graphService.graphType = hostgraphData.options.type;
-		await this.importHostgraph(hostgraphData);
+		await this.initializeHostGraph(hostgraphData);
 
 		this.historyService.clearHistory();
 		this.trackHistory = options?.returnHistory || false;
-		this.hostgraphOptions = hostgraphData.options;
 
 		if (processingConfig.length) {
 			for (const processStep of processingConfig) {
@@ -94,6 +96,21 @@ export class GraphTransformationService {
 		);
 
 		return this.historyService.getHistory();
+	}
+
+	public async matchPattern(
+		hostgraphData: GraphSchema,
+		rules: GraphRewritingRuleSchema[] = []
+	) {
+		if (rules.length) {
+			await this.initializeHostGraph(hostgraphData);
+
+			const { options, patternGraph } = rules[0];
+			const matches = await this.findPatternMatches(patternGraph, options);
+			return matches;
+		}
+
+		return [];
 	}
 
 	private async executeRule(
@@ -125,16 +142,7 @@ export class GraphTransformationService {
 				return;
 			}
 
-			const homomorphic = this.getHomomorphicOption(options);
-			const nacs: NacSchema[] = this.getNACs(patternGraph);
-
-			const matches = await this.graphService.findPatternMatch(
-				patternGraph.nodes,
-				patternGraph.edges,
-				patternGraph.options.type,
-				homomorphic,
-				nacs
-			);
+			const matches = await this.findPatternMatches(patternGraph, options);
 
 			logger.debug(
 				`GraphTransformationService: Found ${matches.length} match(es)`
@@ -154,6 +162,24 @@ export class GraphTransformationService {
 		logger.debug(
 			`GraphTransformationService: Finished executing rule "${ruleConfig.key}"`
 		);
+	}
+
+	private async findPatternMatches(
+		patternGraph: PatternGraphSchema,
+		options: RewriteRuleOptions | FindRuleOptions
+	) {
+		const homomorphic = this.getHomomorphicOption(options);
+		const nacs: NacSchema[] = this.getNACs(patternGraph);
+
+		const matches = await this.graphService.findPatternMatch(
+			patternGraph.nodes,
+			patternGraph.edges,
+			patternGraph.options.type,
+			homomorphic,
+			nacs
+		);
+
+		return matches;
 	}
 
 	private calcMaxReplacements(
@@ -377,6 +403,13 @@ export class GraphTransformationService {
 			}
 		}
 		return item;
+	}
+
+	private async initializeHostGraph(hostgraphData: GraphSchema) {
+		logger.debug('GraphTransformationService: Importing Hostgraph.');
+		this.hostgraphOptions = hostgraphData.options;
+		this.graphService.graphType = hostgraphData.options.type;
+		await this.importHostgraph(hostgraphData);
 	}
 
 	private async updateHistory() {

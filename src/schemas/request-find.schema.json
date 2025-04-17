@@ -1,0 +1,21 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "request-find.schema.json",
+	"title": "Graph Find Pattern Request Schema",
+	"type": "object",
+	"additionalProperties": false,
+	"properties": {
+		"hostgraph": {
+			"$ref": "graph.schema.json"
+		},
+		"rules": {
+			"type": "array",
+			"items": {
+				"$ref": "rewrite-rule.schema.json"
+			},
+			"minItems": 1,
+			"maxItems": 1
+		}
+	},
+	"required": ["hostgraph", "rules"]
+}

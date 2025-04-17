@@ -1,8 +1,10 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { IReply, notFoundReply, okReply } from '../../../utils/response';
 
-import GrsSchema from '../../../schemas/grs.schema.json';
-import { GraphRewritingRequestSchema as GrsSchemaInterface } from '../../../types/grs.schema';
+import RequestTransformSchema from '../../../schemas/request-transform.schema.json';
+import RequestFindSchema from '../../../schemas/request-find.schema.json';
+import { GraphRewritingRequestSchema as GrsSchemaInterface } from '../../../types/request-transform.schema';
+import { GraphFindPatternRequestSchema as GraphFindRequestSchemaInterface } from '../../../types/request-find.schema';
 import { GraphSchema as GraphSchemaInterface } from '../../../types/graph.schema';
 import { GraphTransformationService } from '../../../service/grs/graph-transformation.service';
 
@@ -24,10 +26,10 @@ const importHostgraph = async (
 	return notFoundReply(reply, 'Not found');
 };
 
-const grsHandler = async (
+const transformHandler = async (
 	request: FastifyRequest<{ Body: GrsSchemaInterface }>,
 	reply: FastifyReply
-): Promise<IReply<GraphSchemaInterface>> => {
+): Promise<IReply<GraphSchemaInterface[]>> => {
 	const dbGraphService = request.dbGraphService;
 
 	const hostgraphData = request.body.hostgraph;
@@ -48,6 +50,30 @@ const grsHandler = async (
 			sequence,
 			options
 		);
+
+		return okReply(reply, result);
+	}
+
+	return notFoundReply(reply, 'Not found');
+};
+
+const findHandler = async (
+	request: FastifyRequest<{ Body: GraphFindRequestSchemaInterface }>,
+	reply: FastifyReply
+): Promise<IReply<GraphSchemaInterface[]>> => {
+	const dbGraphService = request.dbGraphService;
+
+	const hostgraphData = request.body.hostgraph;
+	const rules = request.body.rules || [];
+
+	if (!dbGraphService) {
+		throw new Error('Graph Service not set');
+	}
+
+	if (dbGraphService) {
+		const grsService = new GraphTransformationService(dbGraphService);
+
+		const result = await grsService.matchPattern(hostgraphData, rules);
 
 		return okReply(reply, result);
 	}
@@ -94,19 +120,23 @@ const externalApiExampleHandler = async (
 export default async function routes(fastify: FastifyInstance) {
 	fastify.post<{ Body: GrsSchemaInterface }>(
 		'/hostgraph',
-		{ schema: { body: GrsSchema } },
+		{ schema: { body: RequestTransformSchema } },
 		importHostgraph
 	);
 
 	fastify.post<{
-		Body: GrsSchemaInterface;
-		Reply: IReply<GraphSchemaInterface>;
-	}>('/find', { schema: { body: GrsSchema } }, grsHandler);
+		Body: GraphFindRequestSchemaInterface;
+		Reply: IReply<GraphSchemaInterface[]>;
+	}>('/find', { schema: { body: RequestFindSchema } }, findHandler);
 
 	fastify.post<{
 		Body: GrsSchemaInterface;
-		Reply: IReply<GraphSchemaInterface>;
-	}>('/transform', { schema: { body: GrsSchema } }, grsHandler);
+		Reply: IReply<GraphSchemaInterface[]>;
+	}>(
+		'/transform',
+		{ schema: { body: RequestTransformSchema } },
+		transformHandler
+	);
 
 	fastify.post('/example-external-api-result', externalApiExampleHandler);
 }

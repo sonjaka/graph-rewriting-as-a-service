@@ -1,6 +1,6 @@
 {
 	"$schema": "http://json-schema.org/draft-07/schema#",
-	"$id": "grs.schema.json",
+	"$id": "request-transform.schema.json",
 	"title": "Graph Rewriting Request Schema",
 	"type": "object",
 	"additionalProperties": false,

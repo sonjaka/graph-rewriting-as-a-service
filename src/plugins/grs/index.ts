@@ -2,7 +2,9 @@ import fastifyPlugin from 'fastify-plugin';
 import { FastifyInstance, FastifyPluginAsync } from 'fastify';
 
 import GraphRewritingRule from '../../schemas/rewrite-rule.schema.json';
-import GrsSchema from '../../schemas/grs.schema.json';
+import GraphFindRule from '../../schemas/find-rule.schema.json';
+import RequestTransformSchema from '../../schemas/request-transform.schema.json';
+import RequestFindSchema from '../../schemas/request-find.schema.json';
 import PatternnodeSchema from '../../schemas/patternnode.schema.json';
 import PatterngraphSchema from '../../schemas/patterngraph.schema.json';
 import ReplacementnodeSchema from '../../schemas/replacementnode.schema.json';
@@ -28,7 +30,9 @@ const grsPlugin: FastifyPluginAsync = async (fastify: FastifyInstance) => {
 	fastify.addSchema(ReplacementnodeSchema);
 	fastify.addSchema(ReplacementgraphSchema);
 	fastify.addSchema(GraphRewritingRule);
-	fastify.addSchema(GrsSchema);
+	fastify.addSchema(GraphFindRule);
+	fastify.addSchema(RequestTransformSchema);
+	fastify.addSchema(RequestFindSchema);
 };
 
 export default fastifyPlugin(grsPlugin, {

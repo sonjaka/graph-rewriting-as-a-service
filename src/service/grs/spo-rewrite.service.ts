@@ -1,5 +1,5 @@
 import { GraphEdgeSchema } from '../../types/edge.schema';
-import { ReplacementGraphSchema } from '../../types/grs.schema';
+import { ReplacementGraphSchema } from '../../types/request-transform.schema';
 import { PatternGraphSchema } from '../../types/patterngraph.schema';
 import { PatternNodeSchema } from '../../types/patternnode.schema';
 import { ReplacementEdgeSchema } from '../../types/replacementedge.schema';

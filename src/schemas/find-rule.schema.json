@@ -1,0 +1,22 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "find-rule.schema.json",
+	"title": "Graph Find Rule Schema",
+	"type": "object",
+	"additionalProperties": false,
+	"properties": {
+		"patternGraph": {
+			"$ref": "patterngraph.schema.json"
+		},
+		"options": {
+			"type": "object",
+			"properties": {
+				"homomorphic": {
+					"type": "boolean"
+				}
+			},
+			"additionalProperties": false
+		}
+	},
+	"required": ["patternGraph"]
+}
