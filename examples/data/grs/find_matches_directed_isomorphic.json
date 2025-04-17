@@ -1,0 +1,84 @@
+{
+	"hostgraph": {
+		"options": {
+			"type": "directed"
+		},
+		"nodes": [
+			{
+				"key": "A",
+				"attributes": {
+					"label": "A"
+				}
+			},
+			{
+				"key": "B",
+				"attributes": {
+					"label": "B"
+				}
+			},
+			{
+				"key": "C",
+				"attributes": {
+					"label": "C"
+				}
+			}
+		],
+		"edges": [
+			{
+				"key": "aToB",
+				"source": "A",
+				"target": "B",
+				"attributes": {}
+			},
+			{
+				"key": "aToA",
+				"source": "A",
+				"target": "A",
+				"attributes": {}
+			},
+			{
+				"key": "bToC",
+				"source": "B",
+				"target": "C",
+				"attributes": {}
+			},
+			{
+				"key": "cToA",
+				"source": "C",
+				"target": "A",
+				"attributes": {}
+			}
+		]
+	},
+	"rules": [
+		{
+			"key": "homomorphic",
+			"patternGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "node1",
+						"attributes": {}
+					},
+					{
+						"key": "node2",
+						"attributes": {}
+					}
+				],
+				"edges": [
+					{
+						"key": "oneToTwo",
+						"source": "node1",
+						"target": "node2",
+						"attributes": {}
+					}
+				]
+			},
+			"options": {
+				"homomorphic": false
+			}
+		}
+	]
+}
