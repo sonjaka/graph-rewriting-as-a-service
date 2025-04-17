@@ -6,6 +6,7 @@
  */
 
 export interface GraphFindRuleSchema {
+  key?: string;
   patternGraph: PatternGraphSchema;
   options?: {
     homomorphic?: boolean;

@@ -11,7 +11,7 @@
 		"rules": {
 			"type": "array",
 			"items": {
-				"$ref": "rewrite-rule.schema.json"
+				"$ref": "find-rule.schema.json"
 			},
 			"minItems": 1,
 			"maxItems": 1
