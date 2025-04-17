@@ -8,6 +8,14 @@ import { DBGraphPatternMatchResult } from '../../db/types';
 global.fetch = vi.fn();
 vi.mock('fetch');
 
+const emptyReplacementGraph = {
+	nodes: [],
+	edges: [],
+	options: {
+		type: 'undirected',
+	},
+};
+
 describe('Test externalApi instantiator', () => {
 	afterEach(() => {
 		vi.clearAllMocks(); // Reset all mocked calls between tests
@@ -144,7 +152,7 @@ describe('Test externalApi instantiator', () => {
 				param2: 'world',
 			},
 		});
-		expect(result).toStrictEqual({ nodes: [], edges: [] });
+		expect(result).toStrictEqual(emptyReplacementGraph);
 
 		vi.mocked(fetch).mockReturnValue({
 			// @ts-expect-error: incorrectly typed
@@ -159,7 +167,7 @@ describe('Test externalApi instantiator', () => {
 				param2: 'world',
 			},
 		});
-		expect(result2).toStrictEqual({ nodes: [], edges: [] });
+		expect(result2).toStrictEqual(emptyReplacementGraph);
 	});
 
 	test('Should throw error for response not ok', async () => {
@@ -296,11 +304,13 @@ describe('Test externalApi instantiator', () => {
 		};
 
 		await expect(() =>
-			instantiator.instantiate({
-				match,
+			instantiator.instantiate(
 				// @ts-expect-error: Parameters are not as typed
-				replacementGraph,
-			})
+				{
+					match,
+					replacementGraph,
+				}
+			)
 		).rejects.toThrowError(ExternalApiInstantiatorErrors.NoEndpoint);
 	});
 });
