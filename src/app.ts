@@ -6,8 +6,11 @@ import { Server, IncomingMessage, ServerResponse } from 'http';
 import Swagger from '@fastify/swagger';
 import SwaggerUI from '@fastify/swagger-ui';
 
+import cors from '@fastify/cors';
+
 import { loggerConfig } from './config/logger';
 import { getAppEnvConfig } from './config/env';
+import { corsOptions } from './config/cors';
 
 import healthRoutes from './routes/health';
 
@@ -29,6 +32,9 @@ export function buildServer(): FastifyInstance {
 		});
 
 	logger.init(server.log);
+
+	// Setup CORS
+	server.register(cors, corsOptions);
 
 	// Setup Swagger / SwaggerUI
 	// Access Swagger page through <root-route>/documentation endpoint
