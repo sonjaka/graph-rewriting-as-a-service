@@ -5,7 +5,7 @@ import { useTicTacToeRules } from '../composables/useRules.ts'
 
 const apiUrl = import.meta.env.VITE_APP_API_URL
 
-const { autoPlayRule, emptyRule, autoPlayRuleBlockUser } = useTicTacToeRules()
+const { autoPlayRule, emptyRule, autoPlayRuleBlockUser, threeConnectedRule } = useTicTacToeRules()
 
 // defineProps<{
 //   msg: string
@@ -16,7 +16,7 @@ const { autoPlayRule, emptyRule, autoPlayRuleBlockUser } = useTicTacToeRules()
 //   ['', '', ''],
 //   ['', '', ''],
 // ]
-const boardModel = ref([
+const emptyBoard = [
   [
     { key: 'topLeft', mark: '' },
     { key: 'topCenter', mark: '' },
@@ -32,41 +32,53 @@ const boardModel = ref([
     { key: 'bottomCenter', mark: '' },
     { key: 'bottomRight', mark: '' },
   ],
-])
+]
 
-const hasGameStarted = ref(false)
+const boardModel = ref([...emptyBoard])
+
+const isGameFinished = ref(false)
+const winner = ref('')
 const isLoading = ref(false)
 const showStartGameErrorMessage = ref(false)
 const showAutoPlayerErrorMessage = ref(false)
 
-const handleStart = () => {
-  hasGameStarted.value = true
-  console.log('Game started:' + hasGameStarted.value)
-  showStartGameErrorMessage.value = false
+const resetGame = () => {
+  isGameFinished.value = false
+  winner.value = ''
+  for (const row of boardModel.value) {
+    for (const col of row) {
+      col.mark = ''
+      col.partOfStrike = false
+    }
+  }
 }
 
 const handleClick = async (rowIndex, columnIndex, column) => {
   console.log('click', rowIndex, columnIndex)
-  // if (isLoading) {
-  //   showAutoPlayerErrorMessage.value = true
-  //   return
-  // }
+  if (isGameFinished.value === true) {
+    console.log('Game is finished')
+    return
+  }
 
-  if (column.mark) {
+  if (['X', 'O'].includes(column.mark)) {
+    console.log('Field already marked')
+    return
   }
 
   isLoading.value = true
   const hostgraph = getHostgraphFromBoardModel()
 
-  if (hasGameStarted.value) {
-    await calculatePlayerMove(rowIndex, columnIndex)
+  console.log('perform player move')
+  await calculatePlayerMove(rowIndex, columnIndex)
 
-    await checkGameStatus()
+  await checkGameStatus()
 
+  if (!isGameFinished.value) {
+    console.log('calc computer move')
     await calculateComputerMove()
-  } else {
-    showStartGameErrorMessage.value = true
+    await checkGameStatus()
   }
+
   showAutoPlayerErrorMessage.value = false
   isLoading.value = false
 }
@@ -333,7 +345,111 @@ const createSingleNodeUpdateRule = (row, column, mark) => {
   return markSingleNodeRule
 }
 
-const checkGameStatus = async () => {}
+const setGameFinished = () => {
+  isGameFinished.value = true
+  isLoading.value = false
+}
+
+const checkGameStatus = async () => {
+  // check if someone got three in a row
+  const directions = ['down', 'right', 'diagonalTLtoBR', 'diagonalBLtoTR']
+  const players = ['X', 'O']
+  for (const player of players) {
+    for (const direction of directions) {
+      const checkThreeConnectedRule = structuredClone(threeConnectedRule)
+      checkThreeConnectedRule.patternGraph.edges[0].attributes.direction = direction
+      checkThreeConnectedRule.patternGraph.edges[1].attributes.direction = direction
+
+      checkThreeConnectedRule.patternGraph.nodes[0].attributes.mark = player
+      checkThreeConnectedRule.patternGraph.nodes[1].attributes.mark = player
+      checkThreeConnectedRule.patternGraph.nodes[2].attributes.mark = player
+
+      const completeRule = {
+        hostgraph: getHostgraphFromBoardModel(),
+        rules: [checkThreeConnectedRule],
+      }
+
+      const response = await fetch(apiUrl + '/find', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(completeRule),
+      })
+
+      if (!response.ok) {
+        throw new Error(`Response status: ${response.status}`)
+      }
+
+      const json = await response.json()
+      const resultData = json.data
+
+      if (resultData.length) {
+        const nodes = Object.values(resultData[0].nodes)
+        console.log(nodes)
+        if (nodes.length) {
+          winner.value = nodes[0].attributes.mark
+          isGameFinished.value = true
+
+          for (const node of nodes) {
+            console.log(node.attributes.row, node.attributes.column)
+            boardModel.value[node.attributes.row][node.attributes.column]['partOfStrike'] = true
+          }
+
+          setGameFinished()
+          return
+        }
+      }
+    }
+  }
+
+  // check if there are any empty fields left
+  const emptyFieldsRule = structuredClone(emptyRule)
+
+  emptyFieldsRule.patternGraph.nodes.push({
+    key: 'node1',
+    attributes: {
+      type: 'field',
+    },
+  })
+
+  const nac = {
+    nodes: [
+      {
+        key: 'node1',
+        attributes: {
+          mark: ['X', 'O'],
+        },
+      },
+    ],
+    edges: [],
+  }
+  emptyFieldsRule.patternGraph.nacs.push(nac)
+
+  const response = await fetch(apiUrl + '/find', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      hostgraph: getHostgraphFromBoardModel(),
+      rules: [emptyFieldsRule],
+    }),
+  })
+
+  if (!response.ok) {
+    throw new Error(`Response status: ${response.status}`)
+  }
+
+  const json = await response.json()
+  const resultData = json.data
+
+  console.log('empty fields rule result', resultData)
+
+  if (!resultData.length) {
+    setGameFinished()
+  }
+}
 
 const compileGameStateNode = () => {
   const gameState = {
@@ -355,12 +471,21 @@ const compileGameStateNode = () => {
     <div v-if="showAutoPlayerErrorMessage">
       It's the computer players turn. Please wait until loading has finished!
     </div>
+    <div v-if="isGameFinished">
+      <strong v-if="winner === 'X'">YOU WON!</strong>
+      <strong v-if="winner === 'O'">GAME OVER</strong>
+      <strong v-if="winner === ''">It's a TIE!</strong>
+    </div>
 
     <div class="grid">
       <div v-for="(row, rowIndex) in boardModel">
         <div
           v-for="(column, columnIndex) in row"
           class="grid__item"
+          :class="{
+            'grid__item--highlighted': column?.partOfStrike ? true : false,
+            'grid__item--clickable': !['O', 'X'].includes(column?.mark),
+          }"
           @click="handleClick(rowIndex, columnIndex, column)"
         >
           {{ column.mark }}
@@ -371,7 +496,7 @@ const compileGameStateNode = () => {
     <div v-if="isLoading" class="loading">loading...</div>
 
     <div class="controls">
-      <button v-if="!hasGameStarted" @click="handleStart">Start Game</button>
+      <button @click="resetGame">Reset Game</button>
     </div>
   </div>
 </template>
@@ -400,27 +525,21 @@ const compileGameStateNode = () => {
   height: 100px;
 
   border: 1px solid;
+
+  font-size: 20px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: not-allowed;
 }
 
-/* .grid__item::before,
-.grid__item::after {
-  content: '';
-  position: absolute;
-  background-color: var(--line-color);
-  z-index: 1;
+.grid__item--highlighted {
+  font-weight: 800;
 }
 
-.grid__item::after {
-  inline-size: 100vw;
-  block-size: var(--line-thickness);
-  inset-inline-start: 0;
-  inset-block-start: calc(var(--line-offset) * -1);
+.grid__item--clickable {
+  cursor: pointer;
 }
-
-.grid__item::before {
-  inline-size: var(--line-thickness);
-  block-size: 100vh;
-  inset-block-start: 0;
-  inset-inline-start: calc(var(--line-offset) * -1);
-} */
 </style>
