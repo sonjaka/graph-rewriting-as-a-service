@@ -418,9 +418,10 @@ export class Neo4jGraphService implements IDBGraphService {
 		query += edgesQueries.join(', ');
 
 		if (nacs && nacs.length) {
-			const nacResult = computeNacClause(nacs, hasWhere);
-			query += nacResult.cypher;
-			hasWhere = nacResult.hasWhere;
+			const { cypher, where, params } = computeNacClause(nacs, hasWhere);
+			query += cypher;
+			hasWhere = where;
+			if (params) parameters = { ...parameters, ...params };
 		}
 
 		if (!homo) {
