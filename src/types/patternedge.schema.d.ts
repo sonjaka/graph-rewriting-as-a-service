@@ -22,6 +22,6 @@ export interface GraphEdgeSchema {
    * The edges attributes & values
    */
   attributes: {
-    [k: string]: number | string | boolean;
+    [k: string]: number | string | boolean | null | (number | string | boolean)[];
   };
 }

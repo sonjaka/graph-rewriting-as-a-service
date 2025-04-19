@@ -212,26 +212,33 @@ export function computeNacClause(nacs: DBGraphNACs[], hasWhere: boolean) {
 
 			nodesQueries.push(cypher);
 		});
-		cypher += ` WITH * MATCH ` + nodesQueries.join(', ');
+		if (nodesQueries.length) {
+			cypher += ` WITH * MATCH ` + nodesQueries.join(', ');
+		}
 
 		const directed =
 			nac?.options?.type && nac.options.type === 'directed' ? true : false;
 
 		if (nacEdges) {
-			nacEdges.forEach((edge) => {
-				cypher += `WITH * MATCH `;
-				// TODO: add directed edges
-				cypher += computeEdgeQueryString(
+			const edgeQueries: string[] = [];
+			nacEdges?.forEach((edge) => {
+				const { cypher, where, params } = computeEdgeQuery(
 					edge.key,
 					DEFAULT_RELATIONSHIP_LABEL,
-					edge.attributes,
+					edge.attributes ?? {},
 					edge.source,
 					edge.target,
 					directed
 				);
 
-				cypher += ` `;
+				if (where) whereClauses.push(where);
+				if (params) parameters = { ...parameters, ...params };
+
+				edgeQueries.push(cypher);
 			});
+			if (edgeQueries.length) {
+				cypher += ` WITH * MATCH ` + edgeQueries.join(', ');
+			}
 
 			whereClauses.push(computeExlusionOfSymmetricMatches(nacEdges));
 		}

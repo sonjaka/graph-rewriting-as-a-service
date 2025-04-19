@@ -26,7 +26,6 @@ export interface GraphNodeSchema {
   attributes: {
     [k: string]: number | string | boolean;
   };
-  additionalProperties?: never;
 }
 export interface GraphEdgeSchema {
   /**
@@ -45,12 +44,6 @@ export interface GraphEdgeSchema {
    * The edges attributes & values
    */
   attributes: {
-    type?: string;
-    /**
-     * This interface was referenced by `undefined`'s JSON-Schema definition
-     * via the `patternProperty` "^(?!type$).*".
-     */
     [k: string]: number | string | boolean;
   };
-  additionalProperties?: never;
 }
