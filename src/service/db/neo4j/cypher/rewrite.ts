@@ -189,47 +189,65 @@ export function computeInjectivityClause(
  */
 export function computeNacClause(nacs: DBGraphNACs[], hasWhere: boolean) {
 	let cypher = '';
+	let parameters = {};
 	nacs.forEach((nac, index) => {
 		const nacNodes = nac.nodes;
 		const nacEdges = nac.edges;
 
+		const whereClauses: string[] = [];
+
 		// TODO: Check if the "WITH" is needed here
 		cypher += ' WITH * call {';
 
+		const nodesQueries: string[] = [];
 		nacNodes?.forEach((node) => {
-			cypher += ` WITH * MATCH `;
-			cypher += computeNodeQueryString(
+			const { cypher, where, params } = computeNodeQuery(
 				node.key,
 				[DEFAULT_NODE_LABEL],
 				node.attributes ?? {}
 			);
-			cypher += ` `;
+
+			if (where) whereClauses.push(where);
+			if (params) parameters = { ...parameters, ...params };
+
+			nodesQueries.push(cypher);
 		});
+		if (nodesQueries.length) {
+			cypher += ` WITH * MATCH ` + nodesQueries.join(', ');
+		}
 
 		const directed =
 			nac?.options?.type && nac.options.type === 'directed' ? true : false;
 
 		if (nacEdges) {
-			nacEdges.forEach((edge) => {
-				cypher += `WITH * MATCH `;
-				// TODO: add directed edges
-				cypher += computeEdgeQueryString(
+			const edgeQueries: string[] = [];
+			nacEdges?.forEach((edge) => {
+				const { cypher, where, params } = computeEdgeQuery(
 					edge.key,
 					DEFAULT_RELATIONSHIP_LABEL,
-					edge.attributes,
+					edge.attributes ?? {},
 					edge.source,
 					edge.target,
 					directed
 				);
 
-				cypher += ` `;
-			});
+				if (where) whereClauses.push(where);
+				if (params) parameters = { ...parameters, ...params };
 
-			const excludeSymmetricMatches =
-				computeExlusionOfSymmetricMatches(nacEdges);
-			if (excludeSymmetricMatches.trim()) {
-				cypher += `WHERE ${excludeSymmetricMatches} `;
+				edgeQueries.push(cypher);
+			});
+			if (edgeQueries.length) {
+				cypher += ` WITH * MATCH ` + edgeQueries.join(', ');
 			}
+
+			whereClauses.push(computeExlusionOfSymmetricMatches(nacEdges));
+		}
+
+		if (whereClauses.length) {
+			const filteredWhereClauses = whereClauses.filter(
+				(item) => item.trim().length
+			);
+			cypher += ` WHERE ${filteredWhereClauses.join(' AND ')} `;
 		}
 
 		cypher += ` RETURN COUNT(*) as nac_matches${index} }`;
@@ -238,7 +256,7 @@ export function computeNacClause(nacs: DBGraphNACs[], hasWhere: boolean) {
 		hasWhere = true;
 	});
 
-	return { cypher, hasWhere };
+	return { cypher, where: hasWhere, params: parameters };
 }
 
 function computeExlusionOfSymmetricMatches(edges: DBGraphEdge[]) {

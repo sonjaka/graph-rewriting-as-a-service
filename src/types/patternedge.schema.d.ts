@@ -5,7 +5,7 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
-export interface GraphEdgeSchema {
+export interface PatternEdgeSchema {
   /**
    * The edge's ID
    */
@@ -22,6 +22,6 @@ export interface GraphEdgeSchema {
    * The edges attributes & values
    */
   attributes: {
-    [k: string]: number | string | boolean;
+    [k: string]: number | string | boolean | null | (number | string | boolean)[];
   };
 }

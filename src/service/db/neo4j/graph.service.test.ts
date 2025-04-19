@@ -16,7 +16,8 @@ import { Neo4jGraphService } from './graph.service';
 import { getApocJsonAllExport } from './testutils/helpers';
 import { createParameterUuid } from '../../../utils/uuid';
 import { PatternNodeSchema } from '../../../types/patternnode.schema';
-import { DBGraphEdge, DBGraphNACs } from '../types';
+import { DBGraphNACs } from '../types';
+import { PatternEdgeSchema } from '../../../types/patternedge.schema';
 
 let container: StartedNeo4jContainer;
 let driver: Driver;
@@ -1191,9 +1192,9 @@ describe('Integration tests for graph service with testcontainers', () => {
 					key: 'node1',
 					attributes: {},
 				},
-			];
+			] as PatternNodeSchema[];
 
-			const patternEdges: DBGraphEdge[] = [];
+			const patternEdges: PatternEdgeSchema[] = [];
 
 			const nacs = [
 				{
@@ -1346,7 +1347,7 @@ describe('Unit tests for graph service with mocked neo4j functions', () => {
 						numberAttribute: 1,
 					},
 				},
-			];
+			] as PatternNodeSchema[];
 
 			const neo4jSpy = vi.spyOn(mockSession, 'executeRead');
 			await graphService.findPatternMatch(nodes, []);
@@ -1379,7 +1380,7 @@ describe('Unit tests for graph service with mocked neo4j functions', () => {
 					key: 'C',
 					attributes: {},
 				},
-			];
+			] as PatternNodeSchema[];
 
 			const edges = [
 				{
@@ -1551,7 +1552,7 @@ describe('Unit tests for graph service with mocked neo4j functions', () => {
 					target: 'C',
 					attributes: {},
 				},
-			];
+			] as PatternEdgeSchema[];
 
 			const neo4jSpy = vi.spyOn(mockSession, 'executeRead');
 			await graphService.findPatternMatch(nodes, edges, 'directed');
@@ -1596,7 +1597,7 @@ describe('Unit tests for graph service with mocked neo4j functions', () => {
 					target: 'C',
 					attributes: {},
 				},
-			];
+			] as PatternEdgeSchema[];
 
 			const nacs = [
 				{
@@ -1616,8 +1617,140 @@ describe('Unit tests for graph service with mocked neo4j functions', () => {
 			await graphService.findPatternMatch(nodes, edges, 'directed', true, nacs);
 			expect(neo4jSpy).toHaveBeenCalled();
 			expect(mockTx.run).toHaveBeenCalledWith(
-				'MATCH (`A`:`GRS_Node`), (`B`:`GRS_Node`), (`C`:`GRS_Node`), (A)-[`aToB`:GRS_Relationship]->(B), (B)-[`bToC`:GRS_Relationship]->(C) WITH * call { WITH * MATCH (`C`:`GRS_Node` {test:"value"})  RETURN COUNT(*) as nac_matches0 } WITH * WHERE nac_matches0=0 AND B.type = $p_1 AND aToB.type = $p_2 RETURN A, B, C, aToB, bToC',
-				{ p_1: 'BType', p_2: 'edge connector' }
+				'MATCH (`A`:`GRS_Node`), (`B`:`GRS_Node`), (`C`:`GRS_Node`), (A)-[`aToB`:GRS_Relationship]->(B), (B)-[`bToC`:GRS_Relationship]->(C) WITH * call { WITH * MATCH (`C`:`GRS_Node`) WHERE  C.test = $p_3  RETURN COUNT(*) as nac_matches0 } WITH * WHERE nac_matches0=0 AND B.type = $p_1 AND aToB.type = $p_2 RETURN A, B, C, aToB, bToC',
+				{ p_1: 'BType', p_2: 'edge connector', p_3: 'value' }
+			);
+		});
+
+		test('Match simple pattern with NACs with Node with either/or attribute', async () => {
+			// test case pattern
+			const nodes = [
+				{
+					key: 'A',
+					attributes: {},
+				},
+				{
+					key: 'B',
+					attributes: {
+						type: 'BType',
+					},
+				},
+				{
+					key: 'C',
+					attributes: {},
+				},
+			] as PatternNodeSchema[];
+
+			const edges = [
+				{
+					key: 'aToB',
+					source: 'A',
+					target: 'B',
+					attributes: {
+						type: 'edge connector',
+					},
+				},
+				{
+					key: 'bToC',
+					source: 'B',
+					target: 'C',
+					attributes: {},
+				},
+			] as PatternEdgeSchema[];
+
+			const nacs = [
+				{
+					nodes: [
+						{
+							key: 'C',
+							attributes: {
+								test: ['value1', 'value2'],
+							},
+						},
+					],
+					edges: [],
+				},
+			];
+
+			const neo4jSpy = vi.spyOn(mockSession, 'executeRead');
+			await graphService.findPatternMatch(nodes, edges, 'directed', true, nacs);
+			expect(neo4jSpy).toHaveBeenCalled();
+			expect(mockTx.run).toHaveBeenCalledWith(
+				'MATCH (`A`:`GRS_Node`), (`B`:`GRS_Node`), (`C`:`GRS_Node`), (A)-[`aToB`:GRS_Relationship]->(B), (B)-[`bToC`:GRS_Relationship]->(C) WITH * call { WITH * MATCH (`C`:`GRS_Node`) WHERE  C.test IN $p_3  RETURN COUNT(*) as nac_matches0 } WITH * WHERE nac_matches0=0 AND B.type = $p_1 AND aToB.type = $p_2 RETURN A, B, C, aToB, bToC',
+				{ p_1: 'BType', p_2: 'edge connector', p_3: ['value1', 'value2'] }
+			);
+		});
+
+		test('Match simple pattern with NACs with Edge with either/or attribute', async () => {
+			// test case pattern
+			const nodes = [
+				{
+					key: 'A',
+					attributes: {},
+				},
+				{
+					key: 'B',
+					attributes: {
+						type: 'BType',
+					},
+				},
+				{
+					key: 'C',
+					attributes: {},
+				},
+			] as PatternNodeSchema[];
+
+			const edges = [
+				{
+					key: 'aToB',
+					source: 'A',
+					target: 'B',
+					attributes: {
+						type: 'edge connector',
+					},
+				},
+				{
+					key: 'bToC',
+					source: 'B',
+					target: 'C',
+					attributes: {},
+				},
+			] as PatternEdgeSchema[];
+
+			const nacs = [
+				{
+					nodes: [
+						{
+							key: 'C',
+							attributes: {
+								test: ['value1', 'value2'],
+							},
+						},
+					],
+					edges: [
+						{
+							key: 'bToC',
+							source: 'B',
+							target: 'C',
+							attributes: {
+								test: ['value3', 'value4'],
+							},
+						},
+					],
+				},
+			];
+
+			const neo4jSpy = vi.spyOn(mockSession, 'executeRead');
+			await graphService.findPatternMatch(nodes, edges, 'directed', true, nacs);
+			expect(neo4jSpy).toHaveBeenCalled();
+			expect(mockTx.run).toHaveBeenCalledWith(
+				'MATCH (`A`:`GRS_Node`), (`B`:`GRS_Node`), (`C`:`GRS_Node`), (A)-[`aToB`:GRS_Relationship]->(B), (B)-[`bToC`:GRS_Relationship]->(C) WITH * call { WITH * MATCH (`C`:`GRS_Node`) WITH * MATCH (B)-[`bToC`:GRS_Relationship]-(C) WHERE  C.test IN $p_3 AND  bToC.test IN $p_4  RETURN COUNT(*) as nac_matches0 } WITH * WHERE nac_matches0=0 AND B.type = $p_1 AND aToB.type = $p_2 RETURN A, B, C, aToB, bToC',
+				{
+					p_1: 'BType',
+					p_2: 'edge connector',
+					p_3: ['value1', 'value2'],
+					p_4: ['value3', 'value4'],
+				}
 			);
 		});
 	});

@@ -2,5 +2,8 @@
 build
 coverage
 
+# Ignore demo cases
+demo
+
 # Ignore compiled schema files
 src/types/*.d.ts

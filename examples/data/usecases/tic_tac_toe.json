@@ -1,0 +1,578 @@
+{
+	"hostgraph": {
+		"options": {
+			"type": "directed"
+		},
+		"nodes": [
+			{
+				"key": "state",
+				"attributes": {
+					"type": "state",
+					"currentSymbol": "X",
+					"status": "ongoing"
+				}
+			},
+			{
+				"key": "topLeft",
+				"attributes": {
+					"type": "field",
+					"position": "topLeft",
+					"row": 0,
+					"column": 0
+				}
+			},
+			{
+				"key": "topCenter",
+				"attributes": {
+					"type": "field",
+					"position": "topCenter",
+					"row": 0,
+					"column": 1
+				}
+			},
+			{
+				"key": "topRight",
+				"attributes": {
+					"type": "field",
+					"position": "topRight",
+					"row": 0,
+					"column": 2
+				}
+			},
+			{
+				"key": "centerLeft",
+				"attributes": {
+					"type": "field",
+					"position": "centerLeft",
+					"row": 1,
+					"column": 0
+				}
+			},
+			{
+				"key": "centerCenter",
+				"attributes": {
+					"type": "field",
+					"position": "centerCenter",
+					"row": 1,
+					"column": 1
+				}
+			},
+			{
+				"key": "centerRight",
+				"attributes": {
+					"type": "field",
+					"position": "centerRight",
+					"row": 1,
+					"column": 2
+				}
+			},
+			{
+				"key": "bottomLeft",
+				"attributes": {
+					"type": "field",
+					"position": "bottomLeft",
+					"row": 2,
+					"column": 0
+				}
+			},
+			{
+				"key": "bottomCenter",
+				"attributes": {
+					"type": "field",
+					"position": "bottomCenter",
+					"row": 2,
+					"column": 1
+				}
+			},
+			{
+				"key": "bottomRight",
+				"attributes": {
+					"type": "field",
+					"position": "bottomRight",
+					"row": 2,
+					"column": 2
+				}
+			}
+		],
+		"edges": [
+			{
+				"key": "TLtoTC",
+				"source": "topLeft",
+				"target": "topCenter",
+				"attributes": {
+					"direction": "right"
+				}
+			},
+			{
+				"key": "TCtoTR",
+				"source": "topCenter",
+				"target": "topRight",
+				"attributes": {
+					"direction": "right"
+				}
+			},
+			{
+				"key": "CLtoCC",
+				"source": "centerLeft",
+				"target": "centerCenter",
+				"attributes": {
+					"direction": "right"
+				}
+			},
+			{
+				"key": "CCtoCR",
+				"source": "centerCenter",
+				"target": "centerRight",
+				"attributes": {
+					"direction": "right"
+				}
+			},
+			{
+				"key": "BLtoBC",
+				"source": "bottomLeft",
+				"target": "bottomCenter",
+				"attributes": {
+					"direction": "right"
+				}
+			},
+			{
+				"key": "BCtoBR",
+				"source": "bottomCenter",
+				"target": "bottomRight",
+				"attributes": {
+					"direction": "right"
+				}
+			},
+			{
+				"key": "TLtoCL",
+				"source": "topLeft",
+				"target": "centerLeft",
+				"attributes": {
+					"direction": "down"
+				}
+			},
+			{
+				"key": "TCtoCC",
+				"source": "topCenter",
+				"target": "centerCenter",
+				"attributes": {
+					"direction": "down"
+				}
+			},
+			{
+				"key": "TRtoCR",
+				"source": "topRight",
+				"target": "centerRight",
+				"attributes": {
+					"direction": "down"
+				}
+			},
+			{
+				"key": "CLtoBL",
+				"source": "centerLeft",
+				"target": "bottomLeft",
+				"attributes": {
+					"direction": "down"
+				}
+			},
+			{
+				"key": "CCtoBC",
+				"source": "centerCenter",
+				"target": "bottomCenter",
+				"attributes": {
+					"direction": "down"
+				}
+			},
+			{
+				"key": "CRtoBR",
+				"source": "centerRight",
+				"target": "bottomRight",
+				"attributes": {
+					"direction": "down"
+				}
+			}
+		]
+	},
+	"rules": [
+		{
+			"key": "play",
+			"homomorphic": false,
+			"patternGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "A",
+						"attributes": {
+							"type": "field"
+						}
+					},
+					{
+						"key": "state",
+						"attributes": {
+							"type": "state"
+						}
+					}
+				],
+				"edges": [],
+				"nacs": [
+					{
+						"nodes": [
+							{
+								"key": "A",
+								"attributes": {
+									"mark": ["X", "O"]
+								}
+							}
+						],
+						"edges": []
+					}
+				]
+			},
+			"replacementGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "A",
+						"attributes": {
+							"mark": {
+								"type": "jsonLogic",
+								"args": {
+									"rule": {
+										"if": [
+											{
+												"==": [
+													"$.nodes.[?(@.key === 'state')].attributes.currentSymbol",
+													"X"
+												]
+											},
+											"O",
+											{
+												"==": [
+													"$.nodes.[?(@.key === 'state')].attributes.currentSymbol",
+													"O"
+												]
+											},
+											"X",
+											{ "var": "" }
+										]
+									}
+								}
+							}
+						}
+					},
+					{
+						"key": "state",
+						"attributes": {
+							"type": "state",
+							"currentSymbol": {
+								"type": "jsonLogic",
+								"args": {
+									"rule": {
+										"if": [
+											{
+												"==": [
+													"$.nodes.[?(@.key === 'state')].attributes.currentSymbol",
+													"X"
+												]
+											},
+											"O",
+											{
+												"==": [
+													"$.nodes.[?(@.key === 'state')].attributes.currentSymbol",
+													"O"
+												]
+											},
+											"X",
+											{ "var": "" }
+										]
+									}
+								}
+							}
+						}
+					}
+				],
+				"edges": []
+			}
+		},
+		{
+			"key": "check_full_row_X",
+			"homomorphic": false,
+			"patternGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "one",
+						"attributes": {
+							"type": "field",
+							"mark": "X"
+						}
+					},
+					{
+						"key": "two",
+						"attributes": {
+							"type": "field",
+							"mark": "X"
+						}
+					},
+					{
+						"key": "three",
+						"attributes": {
+							"type": "field",
+							"mark": "X"
+						}
+					},
+					{
+						"key": "state",
+						"attributes": {
+							"type": "state"
+						}
+					}
+				],
+				"edges": [
+					{
+						"key": "edge1",
+						"source": "one",
+						"target": "two",
+						"attributes": {
+							"direction": "right"
+						}
+					},
+					{
+						"key": "edge2",
+						"source": "two",
+						"target": "three",
+						"attributes": {
+							"direction": "right"
+						}
+					}
+				]
+			},
+			"replacementGraph": {
+				"nodes": {
+					"key": "state",
+					"attributes": {
+						"type": "state",
+						"status": "finished",
+						"winner": "X"
+					}
+				}
+			}
+		},
+		{
+			"key": "check_full_row_O",
+			"homomorphic": false,
+			"patternGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "one",
+						"attributes": {
+							"type": "field",
+							"mark": "O"
+						}
+					},
+					{
+						"key": "two",
+						"attributes": {
+							"type": "field",
+							"mark": "O"
+						}
+					},
+					{
+						"key": "three",
+						"attributes": {
+							"type": "field",
+							"mark": "O"
+						}
+					},
+					{
+						"key": "state",
+						"attributes": {
+							"type": "state"
+						}
+					}
+				],
+				"edges": [
+					{
+						"key": "edge1",
+						"source": "one",
+						"target": "two",
+						"attributes": {
+							"direction": "right"
+						}
+					},
+					{
+						"key": "edge2",
+						"source": "two",
+						"target": "three",
+						"attributes": {
+							"direction": "right"
+						}
+					}
+				]
+			},
+			"replacementGraph": {
+				"nodes": {
+					"key": "state",
+					"attributes": {
+						"type": "state",
+						"status": "finished",
+						"winner": "O"
+					}
+				}
+			}
+		},
+		{
+			"key": "check_full_column_X",
+			"homomorphic": false,
+			"patternGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "one",
+						"attributes": {
+							"type": "field",
+							"mark": "X"
+						}
+					},
+					{
+						"key": "two",
+						"attributes": {
+							"type": "field",
+							"mark": "X"
+						}
+					},
+					{
+						"key": "three",
+						"attributes": {
+							"type": "field",
+							"mark": "X"
+						}
+					},
+					{
+						"key": "state",
+						"attributes": {
+							"type": "state",
+							"mark": "X"
+						}
+					}
+				],
+				"edges": [
+					{
+						"key": "edge1",
+						"source": "one",
+						"target": "two",
+						"attributes": {
+							"direction": "down"
+						}
+					},
+					{
+						"key": "edge2",
+						"source": "two",
+						"target": "three",
+						"attributes": {
+							"direction": "down"
+						}
+					}
+				]
+			},
+			"replacementGraph": {
+				"nodes": {
+					"key": "state",
+					"attributes": {
+						"type": "state",
+						"status": "finished",
+						"winner": "X"
+					}
+				}
+			}
+		},
+		{
+			"key": "check_full_column_O",
+			"homomorphic": false,
+			"patternGraph": {
+				"options": {
+					"type": "directed"
+				},
+				"nodes": [
+					{
+						"key": "one",
+						"attributes": {
+							"type": "field",
+							"mark": "O"
+						}
+					},
+					{
+						"key": "two",
+						"attributes": {
+							"type": "field",
+							"mark": "O"
+						}
+					},
+					{
+						"key": "three",
+						"attributes": {
+							"type": "field",
+							"mark": "O"
+						}
+					},
+					{
+						"key": "state",
+						"attributes": {
+							"type": "state",
+							"mark": "O"
+						}
+					}
+				],
+				"edges": [
+					{
+						"key": "edge1",
+						"source": "one",
+						"target": "two",
+						"attributes": {
+							"direction": "down"
+						}
+					},
+					{
+						"key": "edge2",
+						"source": "two",
+						"target": "three",
+						"attributes": {
+							"direction": "down"
+						}
+					}
+				]
+			},
+			"replacementGraph": {
+				"nodes": {
+					"key": "state",
+					"attributes": {
+						"type": "state",
+						"status": "finished",
+						"winner": "O"
+					}
+				}
+			}
+		}
+	],
+	"sequence": [
+		{
+			"rule": "play",
+			"options": {
+				"mode": "first",
+				"repeat": 9
+			}
+		}
+	],
+	"returnHistory": true
+}
