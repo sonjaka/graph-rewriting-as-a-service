@@ -58,8 +58,15 @@ jobs:
       - name: Run tests
         run: npm run test
 
-      - name: Test Summary
-        uses: test-summary/action@v2
-        with:
-          paths: 'test/results/junit-report.xml'
+#      - name: Test Summary
+#        uses: test-summary/action@v2
+#        with:
+#          paths: 'test/results/junit-report.xml'
+#        if: always()
+
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
+        with:
+          files: |
+            test/results/junit-report.xml
