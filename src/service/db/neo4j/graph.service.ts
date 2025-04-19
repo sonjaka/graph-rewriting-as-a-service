@@ -17,7 +17,6 @@ import {
 	DBGraphEdgeResult,
 	DBGraphEdgeMetadata,
 	DBGraphType,
-	DBGraphEdge,
 	DBGraphPatternMatchResult,
 	DBGraphNACs,
 	EdgeUpdateRewriteOptions,
@@ -31,6 +30,7 @@ import {
 import { createNodeQuery, updateNodeQuery } from './cypher/base';
 import { PatternNodeSchema } from '../../../types/patterngraph.schema';
 import { DEFAULT_NODE_LABEL, DEFAULT_RELATIONSHIP_LABEL } from './constants';
+import { PatternEdgeSchema } from '../../../types/patternedge.schema';
 
 type Neo4jNode = Node<Integer, DBGraphNodeProperties>;
 type Neo4jRelationship = Relationship<Integer, DBGraphEdgeProperties>;
@@ -362,7 +362,7 @@ export class Neo4jGraphService implements IDBGraphService {
 	 */
 	public async findPatternMatch(
 		nodes: PatternNodeSchema[],
-		edges: DBGraphEdge[],
+		edges: PatternEdgeSchema[],
 		type: DBGraphType = 'undirected',
 		homo = true,
 		nacs: DBGraphNACs[] = []

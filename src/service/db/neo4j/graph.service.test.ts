@@ -16,7 +16,8 @@ import { Neo4jGraphService } from './graph.service';
 import { getApocJsonAllExport } from './testutils/helpers';
 import { createParameterUuid } from '../../../utils/uuid';
 import { PatternNodeSchema } from '../../../types/patternnode.schema';
-import { DBGraphEdge, DBGraphNACs } from '../types';
+import { DBGraphNACs } from '../types';
+import { PatternEdgeSchema } from '../../../types/patternedge.schema';
 
 let container: StartedNeo4jContainer;
 let driver: Driver;
@@ -1191,9 +1192,9 @@ describe('Integration tests for graph service with testcontainers', () => {
 					key: 'node1',
 					attributes: {},
 				},
-			];
+			] as PatternNodeSchema[];
 
-			const patternEdges: DBGraphEdge[] = [];
+			const patternEdges: PatternEdgeSchema[] = [];
 
 			const nacs = [
 				{
@@ -1346,7 +1347,7 @@ describe('Unit tests for graph service with mocked neo4j functions', () => {
 						numberAttribute: 1,
 					},
 				},
-			];
+			] as PatternNodeSchema[];
 
 			const neo4jSpy = vi.spyOn(mockSession, 'executeRead');
 			await graphService.findPatternMatch(nodes, []);
@@ -1379,7 +1380,7 @@ describe('Unit tests for graph service with mocked neo4j functions', () => {
 					key: 'C',
 					attributes: {},
 				},
-			];
+			] as PatternNodeSchema[];
 
 			const edges = [
 				{
@@ -1551,7 +1552,7 @@ describe('Unit tests for graph service with mocked neo4j functions', () => {
 					target: 'C',
 					attributes: {},
 				},
-			];
+			] as PatternEdgeSchema[];
 
 			const neo4jSpy = vi.spyOn(mockSession, 'executeRead');
 			await graphService.findPatternMatch(nodes, edges, 'directed');
@@ -1596,7 +1597,7 @@ describe('Unit tests for graph service with mocked neo4j functions', () => {
 					target: 'C',
 					attributes: {},
 				},
-			];
+			] as PatternEdgeSchema[];
 
 			const nacs = [
 				{
@@ -1655,7 +1656,7 @@ describe('Unit tests for graph service with mocked neo4j functions', () => {
 					target: 'C',
 					attributes: {},
 				},
-			];
+			] as PatternEdgeSchema[];
 
 			const nacs = [
 				{
@@ -1714,7 +1715,7 @@ describe('Unit tests for graph service with mocked neo4j functions', () => {
 					target: 'C',
 					attributes: {},
 				},
-			];
+			] as PatternEdgeSchema[];
 
 			const nacs = [
 				{
