@@ -22,7 +22,7 @@ Content-Type: application/json
 
 
 // Example: TicTacToe Tun
-POST http://localhost:8080/grs
+POST http://localhost:8080/transform
 Content-Type: application/json
 
 < ./data/usecases/tic_tac_toe.json
