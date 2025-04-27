@@ -45,7 +45,8 @@ export class SpoRewriteService {
 		occurence: DBGraphPatternMatchResult,
 		adjustments: GraphDiffResult
 	) {
-		const preservedNodes: Record<string, string> = {};
+		// Map to keep track of updated/added nodes so that they can be referenced correctly in the edges
+		let preservedNodes: Record<string, string> = {};
 
 		// Remove all nodes and edges that are not in the replacement graph
 		await this.deleteRemovedNodes(occurence, adjustments.removedNodes);
@@ -53,64 +54,110 @@ export class SpoRewriteService {
 
 		// Update all nodes and edges that are part of both search pattern and replacement graph
 		if (Object.entries(occurence.nodes).length) {
-			for (const [key, rhsNode] of adjustments.updatedNodes) {
-				if (rhsNode) {
-					const oldNode = occurence.nodes[key];
-					const internalId = oldNode.key;
-
-					let options = {};
-					if (rhsNode?.rewriteOptions) {
-						options = rhsNode.rewriteOptions;
-					}
-
-					await this.graphService.updateNode(
-						rhsNode.attributes ?? {},
-						internalId,
-						oldNode.attributes?.type ? [oldNode.attributes?.type] : [],
-						options
-					);
-
-					preservedNodes[key] = internalId;
-				}
-			}
+			await this.updateUpdatedNodes(
+				adjustments.updatedNodes,
+				occurence.nodes,
+				preservedNodes
+			);
 		}
 
 		if (Object.entries(occurence.edges).length) {
-			for (const [key, rhsEdge] of adjustments.updatedEdges) {
-				if (rhsEdge) {
-					const oldEdge = occurence.edges[key];
-					const internalId = oldEdge.key;
-
-					const sourceInternalId = preservedNodes[rhsEdge.source];
-					const targetInternalId = preservedNodes[rhsEdge.target];
-
-					let options = {};
-					if (rhsEdge?.rewriteOptions) {
-						options = rhsEdge.rewriteOptions;
-					}
-
-					await this.graphService.updateEdge(
-						sourceInternalId,
-						targetInternalId,
-						internalId,
-						rhsEdge.attributes ?? [],
-						options
-					);
-
-					preservedNodes[key] = internalId;
-				}
-			}
+			await this.updateUpdatedEdges(
+				adjustments.updatedEdges,
+				occurence.edges,
+				preservedNodes
+			);
 		}
 
 		// Add all new nodes & edges
-		for (const rhsNode of adjustments.addedNodes) {
+		preservedNodes = await this.createAddedNodes(
+			adjustments.addedNodes,
+			preservedNodes
+		);
+		await this.createAddedEdges(adjustments.addedEdges, preservedNodes);
+
+		return;
+	}
+
+	private async updateUpdatedNodes(
+		updatedNodes: NodeMatchMap,
+		oldNodes: DBGraphPatternMatchResult['nodes'],
+		preservedNodes: Record<string, string>
+	) {
+		for (const [key, rhsNode] of updatedNodes) {
+			if (rhsNode) {
+				// const oldNode = occurence.nodes[key];
+				const oldNode = oldNodes[key];
+				const internalId = oldNode.key;
+
+				let options = {};
+				if (rhsNode?.rewriteOptions) {
+					options = rhsNode.rewriteOptions;
+				}
+
+				await this.graphService.updateNode(
+					rhsNode.attributes ?? {},
+					internalId,
+					oldNode.attributes?.type ? [oldNode.attributes?.type] : [],
+					options
+				);
+
+				preservedNodes[key] = internalId;
+			}
+		}
+	}
+
+	private async updateUpdatedEdges(
+		updatedEdges: EdgeMatchMap,
+		oldEdges: DBGraphPatternMatchResult['edges'],
+		preservedNodes: Record<string, string>
+	) {
+		for (const [key, rhsEdge] of updatedEdges) {
+			if (rhsEdge) {
+				const oldEdge = oldEdges[key];
+				const internalId = oldEdge.key;
+
+				const sourceInternalId = preservedNodes[rhsEdge.source];
+				const targetInternalId = preservedNodes[rhsEdge.target];
+
+				let options = {};
+				if (rhsEdge?.rewriteOptions) {
+					options = rhsEdge.rewriteOptions;
+				}
+
+				await this.graphService.updateEdge(
+					sourceInternalId,
+					targetInternalId,
+					internalId,
+					rhsEdge.attributes ?? [],
+					options
+				);
+
+				preservedNodes[key] = internalId;
+			}
+		}
+	}
+
+	private async createAddedNodes(
+		addedNodes: ReplacementNodeSchema[],
+		preservedNodes: Record<string, string>
+	) {
+		for (const rhsNode of addedNodes) {
 			const internalId = createNodeUuid();
 
 			await this.graphService.createNode(rhsNode.attributes ?? {}, internalId);
 
 			preservedNodes[rhsNode.key] = internalId;
 		}
-		for (const rhsEdge of adjustments.addedEdges) {
+
+		return preservedNodes;
+	}
+
+	private async createAddedEdges(
+		addedEdges: ReplacementEdgeSchema[],
+		preservedNodes: Record<string, string>
+	) {
+		for (const rhsEdge of addedEdges) {
 			const internalId = createEdgeUuid();
 
 			const sourceInternalId = preservedNodes[rhsEdge.source];
@@ -123,8 +170,6 @@ export class SpoRewriteService {
 				rhsEdge.attributes
 			);
 		}
-
-		return;
 	}
 
 	private async deleteRemovedNodes(
