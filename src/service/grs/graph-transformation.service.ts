@@ -95,7 +95,11 @@ export class GraphTransformationService {
 			'GraphTransformationService: Graph transformation completed. Final host graph exported.'
 		);
 
-		return this.historyService.getHistory();
+		const history = this.historyService.getHistory();
+		// Delete all nodes and edges of this run
+		await this.graphService.deleteAllNodes();
+
+		return history;
 	}
 
 	public async matchPattern(
@@ -107,6 +111,10 @@ export class GraphTransformationService {
 
 			const { options, patternGraph } = rules[0];
 			const matches = await this.findPatternMatches(patternGraph, options);
+
+			// Delete all nodes and edges of this run
+			await this.graphService.deleteAllNodes();
+
 			return matches;
 		}
 
@@ -289,9 +297,6 @@ export class GraphTransformationService {
 	public async importHostgraph(
 		hostgraphData: GraphSchema
 	): Promise<ResultGraphSchema> {
-		// First delete all previous nodes and edges
-		await this.graphService.deleteAllNodes();
-
 		const parser = new GraphologyParserService();
 		// graphology requires graph attributes options
 		const hostgraph = parser.parseGraph({ ...hostgraphData, attributes: {} });
