@@ -52,6 +52,7 @@ import {
 } from '../utils/homomorphicMatching';
 
 import {
+	createGraphUuid,
 	createNodeUuid,
 	createEdgeUuid,
 	createParameterUuid,
@@ -75,14 +76,16 @@ describe('Integration tests for graph transformation against testcontainers', ()
 	}, 30000);
 
 	beforeEach(async () => {
-		session = driver.session();
-		graphService = new Neo4jGraphService(session);
-
 		vi.resetAllMocks(); // Clear and set back implementation
 
 		let nodeCount = 0;
 		let edgeCount = 0;
 		let paramCount = 0;
+		let graphCount = 0;
+		vi.mocked(createGraphUuid).mockImplementation(() => {
+			graphCount++;
+			return `g_${graphCount}`;
+		});
 		vi.mocked(createEdgeUuid).mockImplementation(() => {
 			edgeCount++;
 			return `e_${edgeCount}`;
@@ -95,6 +98,9 @@ describe('Integration tests for graph transformation against testcontainers', ()
 			paramCount++;
 			return `p_${paramCount}`;
 		});
+
+		session = driver.session();
+		graphService = new Neo4jGraphService(session);
 	});
 
 	afterEach(async () => {
@@ -114,6 +120,8 @@ describe('Integration tests for graph transformation against testcontainers', ()
 
 	test('Test addition of simple node', async () => {
 		const grsService = new GraphTransformationService(graphService);
+
+		console.log(grsService);
 
 		const output = await grsService.transformGraph(
 			addNodeInput.hostgraph,
@@ -230,6 +238,7 @@ describe('Integration tests for graph transformation against testcontainers', ()
 	test.todo('Test repetitions', async () => {
 		//
 	});
+
 	// // REAL WORLD Examples
 	// test.todo('Test transformation of UML to petrinet');
 	// test.todo('Test transformation of UML to petrinet');
