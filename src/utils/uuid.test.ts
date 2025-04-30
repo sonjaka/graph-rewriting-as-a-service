@@ -3,6 +3,13 @@ import { expect, test, describe } from 'vitest';
 import { createNodeUuid, createEdgeUuid, createParameterUuid } from './uuid';
 
 describe('Test uuid helpers', () => {
+	test("Test graphUuid should start with 'g' an contain no '-' chars", () => {
+		const nodeUuid = createNodeUuid();
+
+		expect(nodeUuid).not.toContain('-');
+		expect(nodeUuid.startsWith('g')).toBe(true);
+	});
+
 	test("Test nodeUuid should start with 'n' an contain no '-' chars", () => {
 		const nodeUuid = createNodeUuid();
 

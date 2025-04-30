@@ -4,6 +4,10 @@ function createNormalizedUuid() {
 	return `${uuid().replaceAll('-', '')}`;
 }
 
+export function createGraphUuid() {
+	return 'g_' + createNormalizedUuid();
+}
+
 export function createNodeUuid() {
 	return 'n_' + createNormalizedUuid();
 }

@@ -31,6 +31,7 @@ import { createNodeQuery, updateNodeQuery } from './cypher/base';
 import { PatternNodeSchema } from '../../../types/patterngraph.schema';
 import { DEFAULT_NODE_LABEL, DEFAULT_RELATIONSHIP_LABEL } from './constants';
 import { PatternEdgeSchema } from '../../../types/patternedge.schema';
+import { createGraphUuid } from '../../../utils/uuid';
 
 type Neo4jNode = Node<Integer, DBGraphNodeProperties>;
 type Neo4jRelationship = Relationship<Integer, DBGraphEdgeProperties>;
@@ -58,7 +59,11 @@ export class Neo4jGraphService implements IDBGraphService {
 	private defaultNodeLabel = DEFAULT_NODE_LABEL;
 	private defaultRelationshipLabel = DEFAULT_RELATIONSHIP_LABEL;
 
-	constructor(private readonly session: Session) {}
+	private graphUuid;
+
+	constructor(private readonly session: Session) {
+		this.graphUuid = createGraphUuid();
+	}
 
 	// TODO: Fix how type is handled
 	public graphType: DBGraphType = 'undirected';
@@ -71,6 +76,7 @@ export class Neo4jGraphService implements IDBGraphService {
 
 		if (internalId) {
 			metadata['_grs_internalId'] = internalId;
+			metadata['_grs_graphId'] = this.graphUuid;
 		}
 
 		const nodeLabels = this.constructNodeLabelsFromAttributes(metadata);
@@ -99,6 +105,7 @@ export class Neo4jGraphService implements IDBGraphService {
 			);
 		}
 		metadata['_grs_internalId'] = internalId;
+		metadata['_grs_graphId'] = this.graphUuid;
 
 		const nodeLabels = this.constructNodeLabelsFromAttributes(metadata);
 
@@ -126,10 +133,11 @@ export class Neo4jGraphService implements IDBGraphService {
 	public async getNode(internalId: DBGraphNodeInternalId) {
 		const cypher = `MATCH (n) \
             WHERE n._grs_internalId = $internalId \
+			AND n._grs_graphId = $graphId
             RETURN n`;
 
 		const res = await this.session.executeRead((tx: ManagedTransaction) =>
-			tx.run(cypher, { internalId })
+			tx.run(cypher, { internalId, graphId: this.graphUuid })
 		);
 
 		const nodeRecords = res.records.map((record) => record.get('n'));
@@ -142,11 +150,12 @@ export class Neo4jGraphService implements IDBGraphService {
 		// const cypher = `MATCH (n)
 		// OPTIONAL MATCH (n)-[r]-(m)
 		// RETURN COLLECT(DISTINCT n) AS nodes, COLLECT(DISTINCT r) AS relationships`;
-		const cypher = `MATCH (n)
+		const cypher = `MATCH (n) \
+			WHERE n._grs_graphId = $graphId \
 		    RETURN DISTINCT n`;
 
 		const res = await this.session.executeRead((tx: ManagedTransaction) =>
-			tx.run<Neo4jGetNodesResult>(cypher)
+			tx.run<Neo4jGetNodesResult>(cypher, { graphId: this.graphUuid })
 		);
 
 		const nodeRecords = res.records.map((record) => record.get('n'));
@@ -158,10 +167,11 @@ export class Neo4jGraphService implements IDBGraphService {
 	public async deleteNode(internalId: DBGraphNodeInternalId) {
 		const cypher = `MATCH (n) \
             WHERE n._grs_internalId = $internalId \
+			AND n._grs_graphId = $graphId
             DETACH DELETE n`;
 
 		const res = await this.session.executeWrite((tx: ManagedTransaction) =>
-			tx.run(cypher, { internalId })
+			tx.run(cypher, { internalId, graphId: this.graphUuid })
 		);
 		const nodeRecords = res.records.map((record) => record.get('n'));
 		const nodes = this.mapNodeRecordsToNodesResult(nodeRecords);
@@ -172,10 +182,11 @@ export class Neo4jGraphService implements IDBGraphService {
 	public async deleteNodes(internalIds: DBGraphNodeInternalId[]) {
 		const cypher = `MATCH (n) \
             WHERE n._grs_internalId in $internalIds \
+			AND n._grs_graphId = $graphId \
             DETACH DELETE n`;
 
 		const res = await this.session.executeWrite((tx: ManagedTransaction) =>
-			tx.run(cypher, { internalIds })
+			tx.run(cypher, { internalIds, graphId: this.graphUuid })
 		);
 		const nodeRecords = res.records.map((record) => record.get('n'));
 		const nodes = this.mapNodeRecordsToNodesResult(nodeRecords);
@@ -185,11 +196,13 @@ export class Neo4jGraphService implements IDBGraphService {
 
 	public async deleteAllNodes() {
 		const cypher =
-			'MATCH (n) CALL (n) \
+			'MATCH (n) \
+			WHERE n._grs_graphId = $graphId \
+			CALL (n) \
             { DETACH DELETE n } \
             IN TRANSACTIONS';
 
-		const res = await this.session.run(cypher);
+		const res = await this.session.run(cypher, { graphId: this.graphUuid });
 
 		const nodeRecords = res.records.map((record) => record.get('n'));
 		const nodes = this.mapNodeRecordsToNodesResult(nodeRecords);
@@ -210,6 +223,7 @@ export class Neo4jGraphService implements IDBGraphService {
 		const relation = this.defaultRelationshipLabel;
 
 		const properties = {
+			_grs_graphId: this.graphUuid,
 			_grs_internalId: internalId,
 			_grs_source: internalIdSource,
 			_grs_target: internalIdTarget,
@@ -223,6 +237,8 @@ export class Neo4jGraphService implements IDBGraphService {
 		const cypher = `MATCH (a),(b) \
 			WHERE a._grs_internalId = $internalIdSource \
 			AND b._grs_internalId = $internalIdTarget \
+			AND a._grs_graphId = $graphId \
+			AND b._grs_graphId = $graphId \
 			CREATE (a)-[r:${relation} $attributes ]->(b) RETURN r`;
 
 		const res = await this.session.executeWrite((tx: ManagedTransaction) =>
@@ -230,6 +246,7 @@ export class Neo4jGraphService implements IDBGraphService {
 				internalIdSource,
 				internalIdTarget,
 				attributes,
+				graphId: this.graphUuid,
 			})
 		);
 
@@ -291,10 +308,11 @@ export class Neo4jGraphService implements IDBGraphService {
 	public async getEdge(internalId: DBGraphEdgeInternalId) {
 		const cypher = `MATCH ()-[r]-() \
             WHERE r._grs_internalId = $internalId \
+			AND r._grs_graphId = $graphId \
             RETURN r`;
 
 		const res = await this.session.executeRead((tx: ManagedTransaction) =>
-			tx.run(cypher, { internalId })
+			tx.run(cypher, { internalId, graphId: this.graphUuid })
 		);
 
 		const edgeRecords = res.records.map((record) => record.get('r'));
@@ -306,11 +324,13 @@ export class Neo4jGraphService implements IDBGraphService {
 	public async deleteEdge(internalId: DBGraphEdgeInternalId) {
 		const cypher = `MATCH ()-[r]-()
 			WHERE r._grs_internalId = $internalId \
+			AND r._grs_graphId = $graphId \
 			DELETE r`;
 
 		const res = await this.session.executeWrite((tx: ManagedTransaction) =>
 			tx.run<Neo4jRelationshipResult>(cypher, {
 				internalId,
+				graphId: this.graphUuid,
 			})
 		);
 		const edgeRecords = res.records.map((record) => record.get('r'));
@@ -322,11 +342,13 @@ export class Neo4jGraphService implements IDBGraphService {
 	public async deleteEdges(internalIds: DBGraphEdgeInternalId[]) {
 		const cypher = `MATCH ()-[r]-()
 			WHERE r._grs_internalId in $internalIds \
+			AND r._grs_graphId = $graphId \
 			DELETE r`;
 
 		const res = await this.session.executeWrite((tx: ManagedTransaction) =>
 			tx.run<Neo4jRelationshipResult>(cypher, {
 				internalIds,
+				graphId: this.graphUuid,
 			})
 		);
 		const edgeRecords = res.records.map((record) => record.get('r'));
@@ -337,10 +359,11 @@ export class Neo4jGraphService implements IDBGraphService {
 
 	public async getAllEdges() {
 		const cypher = `MATCH ()-[r]-() \
+			WHERE r._grs_graphId = $graphId \
 			RETURN DISTINCT r`;
 
 		const res = await this.session.executeRead((tx: ManagedTransaction) =>
-			tx.run<Neo4jRelationshipResult>(cypher)
+			tx.run<Neo4jRelationshipResult>(cypher, { graphId: this.graphUuid })
 		);
 
 		const edgeRecords = res.records.map((record) => record.get('r'));
@@ -383,10 +406,14 @@ export class Neo4jGraphService implements IDBGraphService {
 			// 	nodeLabels = this.constructNodeLabelsFromAttributes(node.attributes);
 			// }
 			// Don't match type labels.
+			let attributes = { _grs_graphId: this.graphUuid };
+			if (node.attributes) {
+				attributes = { ...attributes, ...node.attributes };
+			}
 			const { cypher, where, params } = computeNodeQuery(
 				node.key,
 				[this.defaultNodeLabel],
-				node.attributes ?? {}
+				attributes
 			);
 
 			if (where) whereClauses.push(where);
@@ -400,10 +427,14 @@ export class Neo4jGraphService implements IDBGraphService {
 		edges.forEach((edge) => {
 			queryVars.push(edge.key);
 
+			let attributes = { _grs_graphId: this.graphUuid };
+			if (edge.attributes) {
+				attributes = { ...attributes, ...edge.attributes };
+			}
 			const { cypher, where, params } = computeEdgeQuery(
 				edge.key,
 				this.defaultRelationshipLabel,
-				edge.attributes,
+				attributes,
 				edge.source,
 				edge.target,
 				type === 'directed'
@@ -513,6 +544,7 @@ export class Neo4jGraphService implements IDBGraphService {
 		};
 		// Remove all keys that were only for internal use
 		delete nodeData.attributes?._grs_internalId;
+		delete nodeData.attributes?._grs_graphId;
 
 		return nodeData;
 	}
@@ -540,6 +572,7 @@ export class Neo4jGraphService implements IDBGraphService {
 		delete edgeData.attributes?._grs_internalId;
 		delete edgeData.attributes?._grs_source;
 		delete edgeData.attributes?._grs_target;
+		delete edgeData.attributes?._grs_graphId;
 
 		return edgeData;
 	}
