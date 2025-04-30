@@ -64,29 +64,38 @@ export class GraphTransformationService {
 	): Promise<ResultGraphSchema[]> {
 		logger.info('GraphTransformationService: Starting graph transformation.');
 
-		await this.initializeHostGraph(hostgraphData);
+		try {
+			await this.initializeHostGraph(hostgraphData);
 
-		this.historyService.clearHistory();
-		this.trackHistory = options?.returnHistory || false;
+			this.historyService.clearHistory();
+			this.trackHistory = options?.returnHistory || false;
 
-		if (processingConfig.length) {
-			for (const processStep of processingConfig) {
-				const ruleConfig = rules.find((rule) => rule.key === processStep.rule);
+			if (processingConfig.length) {
+				for (const processStep of processingConfig) {
+					const ruleConfig = rules.find(
+						(rule) => rule.key === processStep.rule
+					);
 
-				if (!ruleConfig) {
-					throw Error(`Rule "${processStep.rule}" not found`);
+					if (!ruleConfig) {
+						throw Error(`Rule "${processStep.rule}" not found`);
+					}
+
+					await this.executeRule(ruleConfig, processStep);
 				}
-
-				await this.executeRule(ruleConfig, processStep);
+			} else {
+				// If no sequence config is given, run and replace only the first match
+				logger.info(
+					'GraphTransformationService: No sequence configuration provided. Executing rules sequentially, replacing only the first match.'
+				);
+				for (const rule of rules) {
+					await this.executeRule(rule);
+				}
 			}
-		} else {
-			// If no sequence config is given, run and replace only the first match
-			logger.info(
-				'GraphTransformationService: No sequence configuration provided. Executing rules sequentially, replacing only the first match.'
-			);
-			for (const rule of rules) {
-				await this.executeRule(rule);
-			}
+		} catch (e) {
+			// Something went wrong, so we have to clean up the data mess in the DB!
+			logger.error({ error: e }, 'An error occured, cleaning up database');
+			this.graphService.deleteAllNodes();
+			throw e;
 		}
 
 		const finalHostgraph = await this.exportHostgraph();
@@ -107,15 +116,22 @@ export class GraphTransformationService {
 		rules: GraphFindRuleSchema[] = []
 	) {
 		if (rules.length) {
-			await this.initializeHostGraph(hostgraphData);
+			try {
+				await this.initializeHostGraph(hostgraphData);
 
-			const { options, patternGraph } = rules[0];
-			const matches = await this.findPatternMatches(patternGraph, options);
+				const { options, patternGraph } = rules[0];
+				const matches = await this.findPatternMatches(patternGraph, options);
 
-			// Delete all nodes and edges of this run
-			await this.graphService.deleteAllNodes();
+				// Delete all nodes and edges of this run
+				await this.graphService.deleteAllNodes();
 
-			return matches;
+				return matches;
+			} catch (e) {
+				// Something went wrong, so we have to clean up the data mess in the DB!
+				logger.error({ error: e }, 'An error occured, cleaning up database');
+				this.graphService.deleteAllNodes();
+				throw e;
+			}
 		}
 
 		return [];
