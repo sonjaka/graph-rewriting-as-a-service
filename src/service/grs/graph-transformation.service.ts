@@ -9,7 +9,7 @@ import {
 	DBGraphEdgeMetadata,
 	DBGraphNodeMetadata,
 	DBGraphPatternMatchResult,
-	IDBGraphService,
+	IGraphDB,
 } from '../db/types';
 import { GraphologyParserService } from './graphology.parser.service';
 import {
@@ -51,7 +51,7 @@ export class GraphTransformationService {
 		type: 'undirected',
 	};
 
-	constructor(private readonly graphService: IDBGraphService) {
+	constructor(private readonly graphService: IGraphDB) {
 		this.instantiatorService = new InstantiatorService();
 		this.historyService = new HistoryService();
 	}

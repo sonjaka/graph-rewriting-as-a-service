@@ -1,14 +1,14 @@
 import { describe, expect, test, vi, beforeEach, afterEach } from 'vitest';
 
 import { GraphTransformationService } from './graph-transformation.service';
-import { IDBGraphService } from '../db/types';
+import { IGraphDB } from '../db/types';
 import { GraphSchema } from '../../types/graph.schema';
 
 // Example Data
 import sampleGraphData from './__tests__/utils/samplegraph.json';
 
 describe('Test GRS service', () => {
-	let mockGraphService: IDBGraphService;
+	let mockGraphService: IGraphDB;
 
 	beforeEach(() => {
 		mockGraphService = {
@@ -17,7 +17,7 @@ describe('Test GRS service', () => {
 			deleteAllNodes: vi.fn(),
 			createEdge: vi.fn(),
 			getAllEdges: vi.fn(),
-		} as unknown as IDBGraphService;
+		} as unknown as IGraphDB;
 	});
 
 	afterEach(() => {

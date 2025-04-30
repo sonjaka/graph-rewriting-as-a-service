@@ -12,7 +12,7 @@ import {
 	DBGraphNodeMetadata,
 	DBGraphNodeProperties,
 	DBGraphNodeResult,
-	IDBGraphService,
+	IGraphDB,
 	DBGraphEdgeProperties,
 	DBGraphEdgeResult,
 	DBGraphEdgeMetadata,
@@ -54,7 +54,7 @@ type Neo4jGetNodesResult = Neo4jNodeResult;
 
 type PatternNodeMetadata = Exclude<PatternNodeSchema['attributes'], undefined>;
 
-export class Neo4jGraphService implements IDBGraphService {
+export class Neo4jGraphService implements IGraphDB {
 	private defaultNodeLabel = DEFAULT_NODE_LABEL;
 	private defaultRelationshipLabel = DEFAULT_RELATIONSHIP_LABEL;
 

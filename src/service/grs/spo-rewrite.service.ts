@@ -5,7 +5,7 @@ import { PatternNodeSchema } from '../../types/patternnode.schema';
 import { ReplacementEdgeSchema } from '../../types/replacementedge.schema';
 import { ReplacementNodeSchema } from '../../types/replacementnode.schema';
 import { createNodeUuid, createEdgeUuid } from '../../utils/uuid';
-import { IDBGraphService, DBGraphPatternMatchResult } from '../db/types';
+import { IGraphDB, DBGraphPatternMatchResult } from '../db/types';
 
 interface GraphDiffResult {
 	updatedNodes: NodeMatchMap;
@@ -20,7 +20,7 @@ type NodeMatchMap = Map<string, ReplacementNodeSchema | undefined>;
 type EdgeMatchMap = Map<string, ReplacementEdgeSchema | undefined>;
 
 export class SpoRewriteService {
-	constructor(private readonly graphService: IDBGraphService) {}
+	constructor(private readonly graphService: IGraphDB) {}
 
 	public async performReplacement(
 		match: DBGraphPatternMatchResult,

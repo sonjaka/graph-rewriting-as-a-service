@@ -63,7 +63,7 @@ export interface DBGraphPatternMatchResult {
 export type NodeUpdateRewriteOptions = ReplacementNodeSchema['rewriteOptions'];
 export type EdgeUpdateRewriteOptions = ReplacementEdgeSchema['rewriteOptions'];
 
-export interface IDBGraphService {
+export interface IGraphDB {
 	graphType: DBGraphType;
 	createNode(
 		metadata: DBGraphNodeMetadata,
