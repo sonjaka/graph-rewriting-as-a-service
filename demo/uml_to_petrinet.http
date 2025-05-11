@@ -1,0 +1,5 @@
+// Example: UML to Petrinet
+POST http://localhost:8080/transform
+Content-Type: application/json
+
+< ../examples/data/usecases/uml_to_petrinet.json

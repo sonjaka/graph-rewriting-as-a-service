@@ -1,0 +1,5 @@
+// Simple Example: Sierpinski Triangles Example
+POST http://localhost:8080/transform
+Content-Type: application/json
+
+< ../examples/data/usecases/sierpinsky_triangles.json
