@@ -22,13 +22,29 @@ You may start the project by running the tasks `docker compose up` and `npm run 
 If using VSCode you can instead run the VSCode-Task `Start dev environment` as a shortcut.
 
 ## Documentation
-
 For documentation of the rewrite and instantiation rules, please refer to the [Wiki](https://github.com/sonjaka/graph-rewriting-as-a-service/wiki).
 
-## API Collection
+## Demos
+The demos and examples use .http files to define example requests that can be sent to the development server.
+These can be run from VS Code with the [httpYak VSCode Extension](https://marketplace.visualstudio.com/items?itemName=anweber.vscode-httpyac). IntenlliJ natively supports http files.
+httpYak also provides a CLI tool: [httpYak on the CLI](https://httpyac.github.io/guide/installation_cli.html).
 
-This repository contains a collection of usage examples for the API endpoints.
-These can be run from VS Code with the [httpYak VSCode Extension](https://marketplace.visualstudio.com/items?itemName=anweber.vscode-httpyac), or through [httpYak on the CLI](https://httpyac.github.io/guide/installation_cli.html).
+### Demos
+This repository contains three demos for graph rewriting requests.
+They can be found in the /demo folder.
+
+#### Sierpinsky-Triangles
+Creates the third generation of a sierpinsky triangle through simple transformation rules.
+A simple http-File to execute and send to the server.
+
+#### UML to Petrinet
+Genereates a Petrinet from the given UML diagram hostgraph and transformations rules.
+A simple http-File to execute and send to the server
+
+#### TicTacToe
+A very simple TicTacToe game againt a computer player powered by graph transformations.
+This testcase consists of a very basic web app built on the Vue.js Framework.
+You can install the project by first running `npm install`, then `npm run dev`. 
 
 ## SwaggerUI / OpenAPI
 
